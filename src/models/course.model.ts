@@ -23,6 +23,7 @@ export interface ICourse {
   }[];
   lectures: Types.ObjectId[];
   instructor: Types.ObjectId;
+  announcements: Types.ObjectId[];
   isPublished: boolean;
   totalLectures: number;
   totalDuration: number;
@@ -42,7 +43,10 @@ type TCourseModel = mongoose.Model<
   ICourseVirtuals
 >;
 
-type TCourseDoc = mongoose.HydratedDocument<ICourse, ICourseMethods>;
+type TCourseDoc = mongoose.HydratedDocument<
+  ICourse,
+  ICourseMethods & ICourseVirtuals
+>;
 const courseSchema = new mongoose.Schema<
   ICourse,
   TCourseModel,
@@ -125,6 +129,15 @@ const courseSchema = new mongoose.Schema<
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "course instructor is required"],
+    },
+    announcements: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Announcement",
+        },
+      ],
+      default: [],
     },
     isPublished: {
       type: Boolean,
