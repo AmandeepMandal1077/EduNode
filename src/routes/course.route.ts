@@ -8,6 +8,7 @@ import {
   getCourseDetails,
   addLectureToCourse,
   getCourseLectures,
+  announceMessage,
 } from "../controllers/course.controller.js";
 import upload from "../utils/multer.js";
 import {
@@ -26,6 +27,7 @@ router.get("/search", searchCourses);
 // Protected routes
 router.use(authenticateUserMiddleware);
 
+//Check course is purchased middleware can be added later here
 // Course management
 router
   .route("/")
@@ -45,6 +47,11 @@ router
     upload.single("thumbnail"),
     updateCourseDetails,
   );
+
+//announce
+router
+  .route("/c/:courseId/announce")
+  .post(restrictToInstructor(), announceMessage);
 
 // Lecture management
 router
