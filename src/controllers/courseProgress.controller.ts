@@ -52,11 +52,13 @@ export const updateLectureProgress = asyncHandler(
       throw new ApiError("Invalid lectureId", 400);
     }
 
-    const { isCompleted, watchTime, lastWatched } = req.body;
+    const { isCompleted, watchTime, lastWatchedPosition, lastWatched } = req.body;
+    const position =
+      lastWatchedPosition !== undefined ? lastWatchedPosition : watchTime;
     const updateBody = Object.fromEntries(
       Object.entries({
         "lectureProgress.$.isCompleted": isCompleted,
-        "lectureProgress.$.watchTime": watchTime,
+        "lectureProgress.$.lastWatchedPosition": position,
         "lectureProgress.$.lastWatched": lastWatched,
       }).filter(([_, value]) => value !== undefined),
     );
