@@ -123,7 +123,6 @@ const deleteMediaAuto = async (publicId: string): Promise<any> => {
 export {
   generateUploadSignature,
   verifyUploadSignature,
-  confirmUpload,
   deleteMedia,
   deleteMediaAuto,
 };

@@ -1,7 +1,7 @@
 import type { ICourse } from "../models/course.model.js";
 import { CacheKeys, generateKey } from "./keys.js";
 import { getJSON, setJSON } from "./query.js";
-import cache, { content_expiration_duration } from "./redis-setup.js";
+import cache, { content_expiration_duration } from "./index.js";
 
 export const savePublishedCoursesToCache = async (courses: ICourse[]) => {
   // const key = generateKey(CacheKeys.PUBLISHED_COURSES, userId);

@@ -222,6 +222,18 @@ export const handleStripeWebhook = asyncHandler(
       ) {
         courseOrder.status = PaymentStatus.FAILED;
       } else {
+        //TODO: may be done in single query
+        const course = await Course.findById(courseOrder.course);
+        course!.enrolledStudents.push({
+          student: new mongoose.Types.ObjectId(session.metadata.userId),
+        });
+        await course!.save();
+
+        const user = await User.findById(session.metadata.userId);
+        user!.enrolledCourses?.push({
+          course: new mongoose.Types.ObjectId(courseOrder.course),
+        });
+        await user!.save();
         courseOrder.paymentId = session.payment_intent as string;
         courseOrder.status = PaymentStatus.COMPLETED;
       }
@@ -291,20 +303,32 @@ export const getPurchasedCourses = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
 
-    const purchasedCoursesIds = await CoursePurchase.find({
-      user: new mongoose.Types.ObjectId(userId),
-      status: PaymentStatus.COMPLETED,
-    }).select("course -_id");
+    // const purchasedCoursesIds = await CoursePurchase.find({
+    //   user: new mongoose.Types.ObjectId(userId),
+    //   status: PaymentStatus.COMPLETED,
+    // }).select("course -_id");
 
-    const courseIds = purchasedCoursesIds.map((course) => course.course);
-    const purchasedCourses = await Course.find({
-      _id: { $in: courseIds },
-    });
+    // const courseIds = purchasedCoursesIds.map((course) => course.course);
+    // const purchasedCourses = await Course.find({
+    //   _id: { $in: courseIds },
+    // });
+
+    const userWithCourses = await User.findById(
+      new mongoose.Types.ObjectId(userId),
+    )
+      .populate({
+        path: "enrolledCourses.course",
+      })
+      .select("enrolledCourses");
+
+    const courses = userWithCourses?.enrolledCourses
+      ?.map((item) => item.course)
+      .filter((course) => course != null) || [];
 
     res.status(200).json({
       success: true,
       message: "purchased courses fetched successfully",
-      data: purchasedCourses,
+      data: courses,
     });
   },
 );

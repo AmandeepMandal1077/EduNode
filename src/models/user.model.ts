@@ -40,7 +40,7 @@ export interface IUserVirtuals {
 }
 
 export type TUserModel = mongoose.Model<IUser, {}, IUserMethods, IUserVirtuals>;
-type TUserDoc = HydratedDocument<IUser, IUserMethods, {}, IUserVirtuals>;
+type TUserDoc = HydratedDocument<IUser, IUserMethods & IUserVirtuals>;
 
 const userSchema = new mongoose.Schema<
   IUser,

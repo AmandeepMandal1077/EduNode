@@ -13,6 +13,7 @@ import {
   getPublishedCoursesFromCache,
   savePublishedCoursesToCache,
 } from "../cache/courses-cache.js";
+import { Announcement } from "../models/announcement.model.js";
 
 /**
  * Create a new course
@@ -46,8 +47,6 @@ export const createNewCourse = asyncHandler(
       thumbnail, //thumbnail url
       instructor: new mongoose.Types.ObjectId(req.userId),
     });
-
-    await course.save();
 
     return res.status(201).json({
       success: true,
@@ -295,6 +294,43 @@ export const getCourseLectures = asyncHandler(
       success: true,
       message: "Lectures fetched successfully",
       data: { lectures },
+    });
+  },
+);
+
+/**
+ * Announce message to all students
+ * @route POST /api/v1/courses/:courseId/announce
+ */
+export const announceMessage = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { courseId } = req.params;
+    const { message } = req.body;
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid courseId", 400);
+    }
+    if (!message) {
+      throw new ApiError("Message is required", 400);
+    }
+    const course = await Course.findById(new mongoose.Types.ObjectId(courseId));
+    if (!course) {
+      throw new ApiError("Course not found", 404);
+    }
+    if (course.instructor.toString() !== req.userId) {
+      throw new ApiError("You are not authorized to perform this action", 403);
+    }
+
+    const announcement = await Announcement.create({
+      courseId: new mongoose.Types.ObjectId(courseId),
+      message: message,
+    });
+
+    course.announcements.push(announcement._id);
+    await course.save();
+    return res.status(200).json({
+      success: true,
+      message: "Message announced successfully",
+      data: { course },
     });
   },
 );
