@@ -1,7 +1,9 @@
+import type { HydratedDocumentFromSchema } from "mongoose";
 import mongoose, {
   type Document,
   type Types,
   type HydratedDocument,
+  type HydratedDocFromModel,
 } from "mongoose";
 
 export enum PaymentStatus {
@@ -23,8 +25,8 @@ export interface ICoursePurchase {
   refundAmount?: number;
   refundReason?: string;
   metadata?: Map<string, string>;
-  // createdAt: Date;
-  // updatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ICoursePurchaseMethods {
@@ -43,9 +45,7 @@ export type TCoursePurchaseModel = mongoose.Model<
 
 export type TCoursePurchaseDoc = HydratedDocument<
   ICoursePurchase,
-  ICoursePurchaseMethods,
-  {},
-  ICoursePurchaseVirtuals
+  ICoursePurchaseMethods & ICoursePurchaseVirtuals
 >;
 
 const coursePurchaseSchema = new mongoose.Schema<
