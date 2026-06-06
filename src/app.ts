@@ -20,9 +20,12 @@ import courseRouter from "./routes/course.route.js";
 import lectureRouter from "./routes/lecture.route.js";
 import mediaRouter from "./routes/media.route.js";
 import emailRouter from "./routes/email.route.js";
+import playbackRouter from "./routes/playback.route.js"
+
+//cron job
+import "./cron/syncHeatmaps.js"
 
 import type { ApiError } from "./utils/apiError.js";
-import connectdb from "./database/db.js";
 import { handleStripeWebhook } from "./controllers/coursePurchase.controller.js";
 import { handleCloudinaryWebhook } from "./controllers/media.controller.js";
 
@@ -89,6 +92,7 @@ app.use("/api/v1/courses", courseRouter);
 app.use("/api/v1/lecture", lectureRouter);
 app.use("/api/v1/media", mediaRouter);
 app.use("/api/v1/sendEmail", emailRouter);
+app.use("/api/v1/playback", playbackRouter);
 
 //failed route
 app.use((req: Request, res: Response, next: NextFunction) => {

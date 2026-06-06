@@ -12,8 +12,8 @@ export interface ILecture {
   order?: number;
 }
 
-export interface ILectureMethods {}
-export interface ILectureVirtuals {}
+export interface ILectureMethods { }
+export interface ILectureVirtuals { }
 
 export type TLectureModel = mongoose.Model<
   ILecture,
