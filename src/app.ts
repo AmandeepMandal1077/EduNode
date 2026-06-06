@@ -1,7 +1,3 @@
-import dotenv from "dotenv";
-//env config
-dotenv.config();
-
 import express, {
   type Request,
   type Response,
@@ -10,7 +6,7 @@ import express, {
 import ExpressMongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-
+import dotenv from "dotenv";
 import morgan from "morgan";
 import hpp from "hpp";
 import cors from "cors";
@@ -23,11 +19,15 @@ import stripePaymentRouter from "./routes/purchaseCourse.route.js";
 import courseRouter from "./routes/course.route.js";
 import lectureRouter from "./routes/lecture.route.js";
 import mediaRouter from "./routes/media.route.js";
+import emailRouter from "./routes/email.route.js";
 
 import type { ApiError } from "./utils/apiError.js";
 import connectdb from "./database/db.js";
 import { handleStripeWebhook } from "./controllers/coursePurchase.controller.js";
 import { handleCloudinaryWebhook } from "./controllers/media.controller.js";
+
+//env config
+dotenv.config();
 
 const app = express();
 
@@ -58,7 +58,9 @@ app.post(
   express.raw({ type: "application/json" }),
   handleCloudinaryWebhook,
 );
+
 app.use(express.json({ limit: "20kb" }));
+
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 
@@ -79,8 +81,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-// connectdb(); // connection moved to index.ts
-
 //routes
 app.use("/health", healthCheckRouter);
 app.use("/api/v1/users", userRouter);
@@ -88,6 +88,7 @@ app.use("/api/v1/payments", stripePaymentRouter);
 app.use("/api/v1/courses", courseRouter);
 app.use("/api/v1/lecture", lectureRouter);
 app.use("/api/v1/media", mediaRouter);
+app.use("/api/v1/sendEmail", emailRouter);
 
 //failed route
 app.use((req: Request, res: Response, next: NextFunction) => {
