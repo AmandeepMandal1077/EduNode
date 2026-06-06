@@ -1,4 +1,4 @@
-import cache from "./redis-setup.js";
+import cache from "./index.js";
 
 export const setJSON = async <T>(
   key: string,
