@@ -6,8 +6,9 @@ import mongoose, {
 
 export interface ILectureProgress {
   lecture: Types.ObjectId;
+  userId: Types.ObjectId;
   isCompleted: boolean;
-  watchTime: number;
+  lastWatchedPosition: number;
   lastWatched: Date;
 }
 
@@ -24,7 +25,7 @@ export interface ICourseProgressMethods {
   updateLastAccessed(): Promise<void>;
 }
 
-export interface ICourseProgressVirtuals {}
+export interface ICourseProgressVirtuals { }
 
 export type TCourseProgressModel = mongoose.Model<
   ICourseProgress,
@@ -44,11 +45,16 @@ const lectureProgressSchema = new mongoose.Schema({
     ref: "Lecture",
     required: [true, "lecture is required"],
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: [true, "user is required"]
+  },
   isCompleted: {
     type: Boolean,
     default: false,
   },
-  watchTime: {
+  lastWatchedPosition: {
     type: Number,
     default: 0,
   },
@@ -109,7 +115,7 @@ courseProgressSchema.pre("save", function (this: TCourseProgressDoc) {
     this.completionPercentage = Math.round(
       (this.lectureProgress.filter((lecture) => lecture.isCompleted).length /
         this.lectureProgress.length) *
-        100,
+      100,
     );
 
     this.isCompleted = this.completionPercentage === 100;

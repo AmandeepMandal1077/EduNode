@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { authenticateUser } from "../controllers/user.controller.js";
 import {
   getComments,
   getLectureDetails,
 } from "../controllers/lecture.controller.js";
+import { authenticateUserMiddleware } from "../middlewares/auth.middleware.js";
 const router = Router();
 
-router.use(authenticateUser);
+router.use(authenticateUserMiddleware);
 
 router.route("/:lectureId").get(getLectureDetails);
 router.route("/:lectureId/comments").get(getComments);
