@@ -38,5 +38,4 @@ ai/context
 
 .vscode
 # uploads
-./src/uploads/
-
+src/uploads/
