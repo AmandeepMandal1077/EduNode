@@ -28,3 +28,13 @@ export const getJSON = async <T>(key: string) => {
   if (!json) return null;
   return JSON.parse(json) as T;
 };
+
+export const incByNum = async (key: string, value: number, expireAt: Date | null = null) => {
+  if (expireAt) {
+    await cache.incrByFloat(key, value);
+    await cache.pExpireAt(key, expireAt.getTime())
+  }
+  else {
+    await cache.incrByFloat(key, value);
+  }
+}

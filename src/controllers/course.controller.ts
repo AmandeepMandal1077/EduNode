@@ -93,7 +93,7 @@ export const getPublishedCourses = asyncHandler(
     let courses = await getPublishedCoursesFromCache();
     if (!courses) {
       courses = await Course.find({ isPublished: true });
-      savePublishedCoursesToCache(courses);
+      await savePublishedCoursesToCache(courses);
     }
 
     return res.status(200).json({
