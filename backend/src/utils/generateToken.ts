@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { ApiError } from "./apiError.js";
 import type { Response } from "express";
+import type { TokenPayload } from "../types/tokenPayload.js";
 
 const generateToken = (res: Response, userId: string, message: string) => {
   try {
