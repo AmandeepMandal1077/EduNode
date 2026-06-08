@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const commentSchema = z.object({
-  courseId: z.string({ error: "courseId is required" }),
   lectureId: z.string({ error: "lectureId is required" }),
   content: z
     .string({ error: "content is required" })
