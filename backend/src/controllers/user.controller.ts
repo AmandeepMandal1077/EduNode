@@ -77,7 +77,7 @@ export const signOutUser = asyncHandler(async (_: Request, res: Response) => {
     .clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: true,
+      sameSite: "lax",
     })
     .json({
       message: "User logout Successfully",
@@ -168,10 +168,12 @@ export const changeUserPassword = asyncHandler(
  * @route POST /api/v1/users/forgot-password
  */
 export const forgotPassword = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { userId } = req;
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
 
-    const user = await User.findById(new mongoose.Types.ObjectId(userId));
+    const user = await User.findOne({
+      email: email
+    });
 
     if (!user) {
       throw new ApiError("No user found", 401);
@@ -236,7 +238,7 @@ export const deleteUserAccount = asyncHandler(
       .clearCookie("token", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: true,
+        sameSite: "lax",
       })
       .json({
         success: true,
