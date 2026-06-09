@@ -112,22 +112,21 @@ export const updateUserProfile = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { userId } = req;
     const { name, bio } = req.body;
-    if (!name && !bio) {
-      throw new ApiError("Either name or Bio is required", 400);
+    if (!name && bio === undefined) {
+      throw new ApiError("Either name or bio is required", 400);
     }
     const user = await User.findById(new mongoose.Types.ObjectId(userId));
     if (!user) {
       throw new ApiError("User not found", 404);
     }
-    user.name = name;
-    user.bio = bio;
+    if (name) user.name = name;
+    if (bio !== undefined) user.bio = bio;
     await user.save();
     res.status(200).json({
       message: "User profile updated successfully",
       success: true,
       data: {
-        name,
-        bio,
+        user,
       },
     });
   },

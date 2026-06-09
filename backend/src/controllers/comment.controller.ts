@@ -172,7 +172,7 @@ export const getComments = asyncHandler(
       lectureId: new mongoose.Types.ObjectId(lectureId),
     }).populate({
       path: "userId",
-      select: "name",
+      select: "name avatar",
     });
 
     // Fetch active user's likes and dislikes for comments of this lecture
@@ -195,7 +195,7 @@ export const getComments = asyncHandler(
     return res.status(200).json({
       success: true,
       message: "Comments fetched successfully",
-      data: { 
+      data: {
         comments,
         likedCommentIds,
         dislikedCommentIds
