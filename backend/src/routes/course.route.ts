@@ -9,6 +9,7 @@ import {
   addLectureToCourse,
   getCourseLectures,
   announceMessage,
+  getCourseAnnouncements,
 } from "../controllers/course.controller.js";
 import upload from "../utils/multer.js";
 import {
@@ -58,6 +59,11 @@ router
 router
   .route("/:courseId/announce")
   .post(restrictToInstructor(), announceMessage);
+
+// announcements
+router
+  .route("/:courseId/announcements")
+  .get(getCourseAnnouncements);
 
 // Lecture management
 router

@@ -364,3 +364,27 @@ export const announceMessage = asyncHandler(
     });
   },
 );
+
+/**
+ * Get announcements for a course
+ * @route GET /api/v1/courses/:courseId/announcements
+ */
+export const getCourseAnnouncements = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { courseId } = req.params;
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid courseId", 400);
+    }
+    const announcements = await Announcement.find({
+      courseId: new mongoose.Types.ObjectId(courseId),
+    })
+      .select("+sentAt")
+      .sort({ sentAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Announcements fetched successfully",
+      data: { announcements },
+    });
+  },
+);
