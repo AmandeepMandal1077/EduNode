@@ -1,5 +1,5 @@
 import type { Response } from "express";
-import { Comment } from "../models/comment.model.js";
+import { Comment, CommentLike, CommentDislike } from "../models/comment.model.js";
 import type { AuthenticatedRequest } from "../types/user.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import mongoose from "mongoose";
@@ -79,7 +79,7 @@ export const likeComment = asyncHandler(
       throw new ApiError("Comment not found", 404);
     }
 
-    comment.likeComment(userId); //saved in method
+    await comment.likeComment(userId); //saved in method
     res.status(200).json({
       success: true,
       message: "Comment liked successfully",
@@ -113,7 +113,7 @@ export const dislikeComment = asyncHandler(
       throw new ApiError("Comment not found", 404);
     }
 
-    comment.dislikeComment(userId); //saved in method
+    await comment.dislikeComment(userId); //saved in method
     res.status(200).json({
       success: true,
       message: "Comment disliked successfully",
@@ -154,3 +154,53 @@ export const deleteComment = asyncHandler(
     });
   },
 );
+
+/**
+ * Get comments for a lecture
+ * @route GET /api/v1/lecture/:lectureId/comments
+ */
+export const getComments = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { lectureId } = req.params;
+    if (!lectureId) {
+      throw new ApiError("All fields are required", 400);
+    }
+    if (!mongoose.Types.ObjectId.isValid(lectureId)) {
+      throw new ApiError("Invalid lectureId", 400);
+    }
+    const comments = await Comment.find({
+      lectureId: new mongoose.Types.ObjectId(lectureId),
+    }).populate({
+      path: "userId",
+      select: "name",
+    });
+
+    // Fetch active user's likes and dislikes for comments of this lecture
+    const commentIds = comments.map(c => c._id);
+    const userId = req.userId;
+
+    const userLikes = await CommentLike.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      commentId: { $in: commentIds }
+    }).select("commentId");
+
+    const userDislikes = await CommentDislike.find({
+      userId: new mongoose.Types.ObjectId(userId),
+      commentId: { $in: commentIds }
+    }).select("commentId");
+
+    const likedCommentIds = userLikes.map(l => l.commentId.toString());
+    const dislikedCommentIds = userDislikes.map(d => d.commentId.toString());
+
+    return res.status(200).json({
+      success: true,
+      message: "Comments fetched successfully",
+      data: { 
+        comments,
+        likedCommentIds,
+        dislikedCommentIds
+      },
+    });
+  },
+);
+

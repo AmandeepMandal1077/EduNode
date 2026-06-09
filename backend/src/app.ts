@@ -20,7 +20,9 @@ import courseRouter from "./routes/course.route.js";
 import lectureRouter from "./routes/lecture.route.js";
 import mediaRouter from "./routes/media.route.js";
 import emailRouter from "./routes/email.route.js";
-import playbackRouter from "./routes/playback.route.js"
+import playbackRouter from "./routes/playback.route.js";
+import courseProgressRouter from "./routes/courseProgress.route.js";
+import commentRouter from "./routes/comment.route.js";
 
 //cron job
 import "./cron/syncHeatmaps.js"
@@ -77,8 +79,8 @@ app.use((req, res, next) => {
 
 //cors
 const corsOptions = {
-  origin: "*",
-  methods: ["GET", "PUT", "POST", "DELETE"],
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  methods: ["GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
@@ -93,6 +95,8 @@ app.use("/api/v1/lecture", lectureRouter);
 app.use("/api/v1/media", mediaRouter);
 app.use("/api/v1/sendEmail", emailRouter);
 app.use("/api/v1/playback", playbackRouter);
+app.use("/api/v1/progress", courseProgressRouter);
+app.use("/api/v1/comment", commentRouter);
 
 //failed route
 app.use((req: Request, res: Response, next: NextFunction) => {

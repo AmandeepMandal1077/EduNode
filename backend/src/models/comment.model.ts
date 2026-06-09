@@ -46,7 +46,7 @@ const commentLikeSchema = new mongoose.Schema({
   },
 });
 commentLikeSchema.index({ commentId: 1, userId: 1 }, { unique: true });
-const CommentLike = mongoose.model("CommentLike", commentLikeSchema);
+export const CommentLike = mongoose.model("CommentLike", commentLikeSchema);
 
 const commentDislikeSchema = new mongoose.Schema({
   commentId: {
@@ -61,7 +61,7 @@ const commentDislikeSchema = new mongoose.Schema({
   },
 });
 commentDislikeSchema.index({ commentId: 1, userId: 1 }, { unique: true });
-const CommentDislike = mongoose.model("CommentDislike", commentDislikeSchema);
+export const CommentDislike = mongoose.model("CommentDislike", commentDislikeSchema);
 
 const commentSchema = new mongoose.Schema<
   IComment,

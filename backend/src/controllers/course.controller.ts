@@ -14,6 +14,7 @@ import {
   savePublishedCoursesToCache,
 } from "../cache/courses-cache.js";
 import { Announcement } from "../models/announcement.model.js";
+import { CoursePurchase } from "../models/coursePurchase.model.js";
 
 /**
  * Create a new course
@@ -71,9 +72,15 @@ export const searchCourses = asyncHandler(
       .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const courses = await Course.find({
-      $text: { $search: escapedSearchString },
+      isPublished: true,
+      $or: [
+        { title: { $regex: escapedSearchString, $options: "i" } },
+        { subtitle: { $regex: escapedSearchString, $options: "i" } },
+        { description: { $regex: escapedSearchString, $options: "i" } },
+        { category: { $regex: escapedSearchString, $options: "i" } },
+      ],
     }).select(
-      "title subtitle description category level price thumbnail instructor",
+      "title subtitle description category level price thumbnail instructor slug totalDuration totalLectures",
     );
 
     return res.status(200).json({
@@ -269,6 +276,29 @@ export const addLectureToCourse = asyncHandler(
       success: true,
       message: "Lecture added successfully",
       data: { lecture },
+    });
+  },
+);
+
+/**
+ * Get purchasaed courses
+ * @route GET /api/v1/courses/purchased
+ */
+export const getPurchasedCourses = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.userId;
+
+    const courses = await CoursePurchase.find({
+      user: new mongoose.Types.ObjectId(userId),
+      status: "SUCCESS",
+    }).select("course")
+      .populate("course")
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Purchased courses fetched successfully",
+      data: { courses },
     });
   },
 );

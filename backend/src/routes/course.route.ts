@@ -17,6 +17,7 @@ import {
 } from "../middlewares/auth.middleware.js";
 import { validator, SourceType } from "../middlewares/validator.middleware.js";
 import { courseValidator } from "../validator/course.zod.js";
+import { getPurchasedCourses } from "../controllers/coursePurchase.controller.js";
 
 const router = express.Router();
 
@@ -38,9 +39,14 @@ router
   )
   .get(getMyCreatedCourses);
 
+// Purchases courses
+router
+  .route("/purchased")
+  .get(getPurchasedCourses);
+
 // Course details and updates
 router
-  .route("/c/:courseId")
+  .route("/:courseId")
   .get(getCourseDetails)
   .patch(
     restrictToInstructor(),
@@ -50,12 +56,12 @@ router
 
 //announce
 router
-  .route("/c/:courseId/announce")
+  .route("/:courseId/announce")
   .post(restrictToInstructor(), announceMessage);
 
 // Lecture management
 router
-  .route("/c/:courseId/lectures")
+  .route("/:courseId/lectures")
   .get(getCourseLectures)
   .post(restrictToInstructor(), upload.single("video"), addLectureToCourse);
 
