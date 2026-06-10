@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getLectureDetails,
+  deleteLecture,
 } from "../controllers/lecture.controller.js";
 import {
   getComments,
@@ -10,7 +11,9 @@ const router = Router();
 
 router.use(authenticateUserMiddleware);
 
-router.route("/:lectureId").get(getLectureDetails);
+router.route("/:lectureId")
+  .get(getLectureDetails)
+  .delete(deleteLecture);
 router.route("/:lectureId/comments").get(getComments);
 
 export default router;

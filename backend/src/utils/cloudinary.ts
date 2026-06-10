@@ -38,11 +38,12 @@ const generateUploadSignature = (
   // Cloudinary webhook URL - receives POST when upload completes
   const notificationUrl = `${process.env.BACKEND_URL}/api/v1/media/webhook`;
 
-  // notification_url MUST be included in signed params to prevent tampering
+  // Cloudinary Upload Widget automatically appends source: "uw" to signed uploads.
+  // We must sign timestamp, folder, and source: "uw" to match the widget's signature format.
   const paramsToSign: Record<string, any> = {
     timestamp,
     folder,
-    notification_url: notificationUrl,
+    source: "uw",
   };
 
   const signature = cloudinary.utils.api_sign_request(paramsToSign, apiSecret);

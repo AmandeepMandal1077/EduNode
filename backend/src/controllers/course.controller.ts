@@ -12,6 +12,7 @@ import { Lecture } from "../models/lecture.model.js";
 import {
   getPublishedCoursesFromCache,
   savePublishedCoursesToCache,
+  invalidatePublishedCoursesInCache,
 } from "../cache/courses-cache.js";
 import { Announcement } from "../models/announcement.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
@@ -49,6 +50,8 @@ export const createNewCourse = asyncHandler(
       instructor: new mongoose.Types.ObjectId(req.userId),
     });
 
+    await invalidatePublishedCoursesInCache();
+
     return res.status(201).json({
       success: true,
       message: "Course created successfully",
@@ -79,9 +82,11 @@ export const searchCourses = asyncHandler(
         { description: { $regex: escapedSearchString, $options: "i" } },
         { category: { $regex: escapedSearchString, $options: "i" } },
       ],
-    }).select(
-      "title subtitle description category level price thumbnail instructor slug totalDuration totalLectures",
-    );
+    })
+      .select(
+        "title subtitle description category level price thumbnail instructor slug totalDuration totalLectures",
+      )
+      .populate("instructor", "name bio avatar");
 
     return res.status(200).json({
       success: true,
@@ -99,7 +104,7 @@ export const getPublishedCourses = asyncHandler(
   async (_: Request, res: Response) => {
     let courses = await getPublishedCoursesFromCache();
     if (!courses) {
-      courses = await Course.find({ isPublished: true });
+      courses = await Course.find({ isPublished: true }).populate("instructor", "name bio avatar");
       await savePublishedCoursesToCache(courses);
     }
 
@@ -182,6 +187,8 @@ export const updateCourseDetails = asyncHandler(
       },
     );
 
+    await invalidatePublishedCoursesInCache();
+
     return res.status(200).json({
       success: true,
       message: "Course updated successfully",
@@ -202,7 +209,7 @@ export const getCourseDetails = asyncHandler(
       throw new ApiError("Invalid courseId", 400);
     }
 
-    const course = await Course.findById(new mongoose.Types.ObjectId(courseId));
+    const course = await Course.findById(new mongoose.Types.ObjectId(courseId)).populate("instructor", "name bio avatar");
 
     return res.status(200).json({
       success: true,
@@ -388,3 +395,62 @@ export const getCourseAnnouncements = asyncHandler(
     });
   },
 );
+
+/**
+ * Rate a course
+ * @route POST /api/v1/courses/:courseId/rate
+ */
+export const rateCourse = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { courseId } = req.params;
+    const userId = req.userId;
+    const { rating } = req.body;
+
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid courseId", 400);
+    }
+
+    if (rating === undefined || typeof rating !== "number" || rating < 1 || rating > 5) {
+      throw new ApiError("Rating must be a number between 1 and 5", 400);
+    }
+
+    const course = await Course.findById(new mongoose.Types.ObjectId(courseId));
+    if (!course) {
+      throw new ApiError("Course not found", 404);
+    }
+
+    if (!userId) {
+      throw new ApiError("User not authenticated", 401);
+    }
+
+    // Check if the user is enrolled
+    const enrollmentIndex = course.enrolledStudents.findIndex(
+      (e) => e.student.toString() === userId.toString()
+    );
+
+    if (enrollmentIndex === -1) {
+      throw new ApiError("You must be enrolled in this course to rate it", 403);
+    }
+
+    const enrollmentRecord = course.enrolledStudents[enrollmentIndex];
+    if (!enrollmentRecord) {
+      throw new ApiError("Enrollment record not found", 404);
+    }
+
+    // Set the rating (supports creating and editing reviews)
+    enrollmentRecord.rating = rating;
+    await course.save();
+
+    await invalidatePublishedCoursesInCache();
+
+    return res.status(200).json({
+      success: true,
+      message: "Course rated successfully",
+      data: {
+        averageRating: course.averageRating,
+        reviewCount: course.enrolledStudents.filter((s) => s.rating !== undefined).length,
+      },
+    });
+  }
+);
+

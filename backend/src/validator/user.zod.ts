@@ -47,6 +47,7 @@ const signupSchema = z.object({
     .trim()
     .min(8, { error: "Password must be at least 8 characters long" })
     .max(20, { error: "Password must be at most 20 characters long" }),
+  role: z.enum(["student", "instructor"], { error: "Invalid role" }).optional().default("student"),
 });
 
 const signinSchema = z.object({
@@ -56,6 +57,7 @@ const signinSchema = z.object({
     .trim()
     .min(8, { error: "Password must be at least 8 characters long" })
     .max(20, { error: "Password must be at most 20 characters long" }),
+  role: z.enum(["student", "instructor"], { error: "Invalid role" }).optional(),
 });
 
 const changePasswordSchema = z.object({

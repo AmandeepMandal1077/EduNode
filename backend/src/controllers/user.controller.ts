@@ -13,7 +13,7 @@ import { success } from "zod";
  */
 export const createUserAccount = asyncHandler(
   async (req: Request, res: Response) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       throw new ApiError("Email or Password is missing", 400);
@@ -29,6 +29,7 @@ export const createUserAccount = asyncHandler(
       name,
       email,
       password,
+      role,
     });
 
     res.status(201).json({
@@ -47,7 +48,7 @@ export const createUserAccount = asyncHandler(
  */
 export const authenticateUser = asyncHandler(
   async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || !password) {
       throw new ApiError("Email or Password is missing", 400);
@@ -56,6 +57,10 @@ export const authenticateUser = asyncHandler(
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
       throw new ApiError("User not found", 404);
+    }
+
+    if (role && user.role !== role) {
+      throw new ApiError(`You are not registered as an ${role}`, 403);
     }
 
     const isPasswordValid = await user.comparePassword(password);

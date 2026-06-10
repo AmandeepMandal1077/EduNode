@@ -1,7 +1,7 @@
 import express from "express";
 import {
   getCoursePurchaseStatus,
-  getPurchasedCourses,
+  getPurchaseHistory,
   handleStripeWebhook,
   initiateStripeCheckout,
   verifyStripeSession,
@@ -22,6 +22,7 @@ router
   .route("/course/:courseId/detail-with-status")
   .get(authenticateUserMiddleware, getCoursePurchaseStatus);
 
-router.route("/").get(authenticateUserMiddleware, getPurchasedCourses);
+router.route("/").get(authenticateUserMiddleware, getPurchaseHistory);
+
 
 export default router;

@@ -10,8 +10,8 @@ import {
   getCourseLectures,
   announceMessage,
   getCourseAnnouncements,
+  rateCourse,
 } from "../controllers/course.controller.js";
-import upload from "../utils/multer.js";
 import {
   authenticateUserMiddleware,
   restrictToInstructor,
@@ -34,7 +34,6 @@ router.use(authenticateUserMiddleware);
 router
   .route("/")
   .post(
-    upload.single("thumbnail"),
     validator(SourceType.BODY, courseValidator),
     createNewCourse,
   )
@@ -51,7 +50,6 @@ router
   .get(getCourseDetails)
   .patch(
     restrictToInstructor(),
-    upload.single("thumbnail"),
     updateCourseDetails,
   );
 
@@ -65,10 +63,15 @@ router
   .route("/:courseId/announcements")
   .get(getCourseAnnouncements);
 
+// rate course
+router
+  .route("/:courseId/rate")
+  .post(rateCourse);
+
 // Lecture management
 router
   .route("/:courseId/lectures")
   .get(getCourseLectures)
-  .post(restrictToInstructor(), upload.single("video"), addLectureToCourse);
+  .post(restrictToInstructor(), addLectureToCourse);
 
 export default router;
