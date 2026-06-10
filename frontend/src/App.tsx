@@ -1,122 +1,172 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "./store";
+import { checkAuthThunk } from "./store/authSlice";
+import { AppLayout } from "./components/layout/AppLayout";
 
-function App() {
-  const [count, setCount] = useState(0)
+import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { ExplorePage } from "./pages/ExplorePage";
+import { CourseDetailPage } from "./pages/CourseDetailPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { MyCoursesPage } from "./pages/MyCoursesPage";
+import { LearningRoomPage } from "./pages/LearningRoomPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { InstructorCoursesPage } from "./pages/InstructorCoursesPage";
+import { CreateCoursePage } from "./pages/CreateCoursePage";
+import { InstructorCourseManagePage } from "./pages/InstructorCourseManagePage";
+import { SuccessPage } from "./pages/SuccessPage";
+import { CancelPage } from "./pages/CancelPage";
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { isInitialized, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+          ))}
         </div>
-        <div>
-          <h1 className="bg-blue-500">Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </div>
+    );
+  }
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 }
 
-export default App
+export default function App() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(checkAuthThunk());
+  }, [dispatch]);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public */}
+        <Route
+          path="/"
+          element={
+            <AppLayout>
+              <LandingPage />
+            </AppLayout>
+          }
+        />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/explore"
+          element={
+            <AppLayout>
+              <ExplorePage />
+            </AppLayout>
+          }
+        />
+        <Route
+          path="/course/:id"
+          element={
+            <AppLayout>
+              <CourseDetailPage />
+            </AppLayout>
+          }
+        />
+
+        {/* Protected */}
+        <Route
+          path="/success"
+          element={
+            <AuthGuard>
+              <SuccessPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/cancel"
+          element={
+            <AuthGuard>
+              <CancelPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <DashboardPage />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/my-courses"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <MyCoursesPage />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/learn/:courseId/lecture/:lectureId"
+          element={
+            <AuthGuard>
+              {/* No AppLayout — Learning Room hides nav for full screen */}
+              <LearningRoomPage />
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <ProfilePage />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/instructor/courses"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <InstructorCoursesPage />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/instructor/courses/create"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <CreateCoursePage />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+        <Route
+          path="/instructor/courses/:courseId/manage"
+          element={
+            <AuthGuard>
+              <AppLayout>
+                <InstructorCourseManagePage />
+              </AppLayout>
+            </AuthGuard>
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
