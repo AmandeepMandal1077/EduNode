@@ -54,7 +54,7 @@ cron.schedule("*/5 * * * *", async () => {
             }
         }
 
-    } catch (err: any) {
-        console.log("Error in syncHeatmaps cron", err)
+    } catch (err: unknown) {
+        console.error("Error in syncHeatmaps cron", err);
     }
-})
+});

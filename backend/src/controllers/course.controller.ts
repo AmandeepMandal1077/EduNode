@@ -70,23 +70,17 @@ export const searchCourses = asyncHandler(
     if (!searchString || searchString.trim() === "") {
       throw new ApiError("Search string is required", 400);
     }
-    const escapedSearchString = searchString
-      .toLowerCase()
-      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const courses = await Course.find({
       isPublished: true,
-      $or: [
-        { title: { $regex: escapedSearchString, $options: "i" } },
-        { subtitle: { $regex: escapedSearchString, $options: "i" } },
-        { description: { $regex: escapedSearchString, $options: "i" } },
-        { category: { $regex: escapedSearchString, $options: "i" } },
-      ],
+      $text: { $search: searchString },
     })
       .select(
-        "title subtitle description category level price thumbnail instructor slug totalDuration totalLectures",
+        "title subtitle description category level price thumbnail instructor slug totalDuration totalLectures enrolledStudents",
       )
-      .populate("instructor", "name bio avatar");
+      .populate("instructor", "name bio avatar")
+      .sort({ score: { $meta: "textScore" } })
+      .limit(50);
 
     return res.status(200).json({
       success: true,
@@ -112,6 +106,22 @@ export const getPublishedCourses = asyncHandler(
       success: true,
       message: "Published courses fetched successfully",
       data: { courses },
+    });
+  },
+);
+
+/**
+ * Get all course categories
+ * @route GET /api/v1/courses/categories
+ */
+export const getCourseCategories = asyncHandler(
+  async (_: Request, res: Response) => {
+    const categories = await Course.distinct("category", { isPublished: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Categories fetched successfully",
+      data: { categories: categories.sort() },
     });
   },
 );
@@ -170,7 +180,7 @@ export const updateCourseDetails = asyncHandler(
         price,
         thumbnail,
         isPublished,
-      }).filter((_, value) => value !== undefined),
+      }).filter(([_, val]) => val !== undefined),
     );
 
     const course = await Course.findOneAndUpdate(
@@ -245,39 +255,54 @@ export const addLectureToCourse = asyncHandler(
       throw new ApiError("Lecture with this title already exists", 400);
     }
 
-    lecture = await Lecture.create({
-      title,
-      description,
-      videoUrl,
-      publicId,
-      courseId: new mongoose.Types.ObjectId(courseId),
-    });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const push: any = {
-      $each: [lecture._id],
-    };
+    try {
+      const createdLectures = await Lecture.create([{
+        title,
+        description,
+        videoUrl,
+        publicId,
+        courseId: new mongoose.Types.ObjectId(courseId),
+      }], { session });
 
-    if (order != null) {
-      push.$position = order - 1;
+      lecture = createdLectures[0]!;
+
+      const push: { $each: mongoose.Types.ObjectId[]; $position?: number } = {
+        $each: [lecture!._id as mongoose.Types.ObjectId],
+      };
+
+      if (order != null) {
+        push.$position = order - 1;
+      }
+
+      await Course.findOneAndUpdate(
+        {
+          instructor: new mongoose.Types.ObjectId(userId),
+          _id: new mongoose.Types.ObjectId(courseId),
+        },
+        {
+          $inc: {
+            totalLectures: 1,
+          },
+          $push: {
+            lectures: push,
+          },
+        },
+        {
+          runValidators: true,
+          session,
+        },
+      );
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
-
-    await Course.findOneAndUpdate(
-      {
-        instructor: new mongoose.Types.ObjectId(userId),
-        _id: new mongoose.Types.ObjectId(courseId),
-      },
-      {
-        $inc: {
-          totalLectures: 1,
-        },
-        $push: {
-          lectures: push,
-        },
-      },
-      {
-        runValidators: true,
-      },
-    );
 
     return res.status(201).json({
       success: true,
@@ -287,28 +312,6 @@ export const addLectureToCourse = asyncHandler(
   },
 );
 
-/**
- * Get purchasaed courses
- * @route GET /api/v1/courses/purchased
- */
-export const getPurchasedCourses = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const userId = req.userId;
-
-    const courses = await CoursePurchase.find({
-      user: new mongoose.Types.ObjectId(userId),
-      status: "SUCCESS",
-    }).select("course")
-      .populate("course")
-
-
-    return res.status(200).json({
-      success: true,
-      message: "Purchased courses fetched successfully",
-      data: { courses },
-    });
-  },
-);
 
 /**
  * Get course lectures
@@ -357,13 +360,27 @@ export const announceMessage = asyncHandler(
       throw new ApiError("You are not authorized to perform this action", 403);
     }
 
-    const announcement = await Announcement.create({
-      courseId: new mongoose.Types.ObjectId(courseId),
-      message: message,
-    });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    course.announcements.push(announcement._id);
-    await course.save();
+    let announcement;
+    try {
+      const createdAnnouncements = await Announcement.create([{
+        courseId: new mongoose.Types.ObjectId(courseId),
+        message: message,
+      }], { session });
+
+      announcement = createdAnnouncements[0];
+
+      course.announcements.push(announcement!._id);
+      await course.save({ session });
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
     return res.status(200).json({
       success: true,
       message: "Message announced successfully",
@@ -397,6 +414,36 @@ export const getCourseAnnouncements = asyncHandler(
 );
 
 /**
+ * Get announcements for all purchased courses
+ * @route GET /api/v1/courses/my-announcements
+ */
+export const getMyAnnouncements = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.userId;
+
+    const purchases = await CoursePurchase.find({
+      user: new mongoose.Types.ObjectId(userId),
+      status: "completed",
+    }).select("course");
+
+    const courseIds = purchases.map((p) => p.course);
+
+    const announcements = await Announcement.find({
+      courseId: { $in: courseIds },
+    })
+      .select("+sentAt")
+      .sort({ sentAt: -1 })
+      .populate("courseId", "title");
+
+    return res.status(200).json({
+      success: true,
+      message: "My announcements fetched successfully",
+      data: { announcements },
+    });
+  },
+);
+
+/**
  * Rate a course
  * @route POST /api/v1/courses/:courseId/rate
  */
@@ -414,32 +461,23 @@ export const rateCourse = asyncHandler(
       throw new ApiError("Rating must be a number between 1 and 5", 400);
     }
 
-    const course = await Course.findById(new mongoose.Types.ObjectId(courseId));
-    if (!course) {
-      throw new ApiError("Course not found", 404);
-    }
-
     if (!userId) {
       throw new ApiError("User not authenticated", 401);
     }
 
-    // Check if the user is enrolled
-    const enrollmentIndex = course.enrolledStudents.findIndex(
-      (e) => e.student.toString() === userId.toString()
+    // Atomic update — no full document load
+    const result = await Course.findOneAndUpdate(
+      {
+        _id: new mongoose.Types.ObjectId(courseId),
+        "enrolledStudents.student": new mongoose.Types.ObjectId(userId),
+      },
+      { $set: { "enrolledStudents.$.rating": rating } },
+      { new: true, runValidators: true }
     );
 
-    if (enrollmentIndex === -1) {
+    if (!result) {
       throw new ApiError("You must be enrolled in this course to rate it", 403);
     }
-
-    const enrollmentRecord = course.enrolledStudents[enrollmentIndex];
-    if (!enrollmentRecord) {
-      throw new ApiError("Enrollment record not found", 404);
-    }
-
-    // Set the rating (supports creating and editing reviews)
-    enrollmentRecord.rating = rating;
-    await course.save();
 
     await invalidatePublishedCoursesInCache();
 
@@ -447,8 +485,8 @@ export const rateCourse = asyncHandler(
       success: true,
       message: "Course rated successfully",
       data: {
-        averageRating: course.averageRating,
-        reviewCount: course.enrolledStudents.filter((s) => s.rating !== undefined).length,
+        averageRating: result.averageRating,
+        reviewCount: result.enrolledStudents.filter((s) => s.rating !== undefined).length,
       },
     });
   }

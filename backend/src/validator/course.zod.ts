@@ -48,4 +48,23 @@ export const courseSchema = z.object({
   totalDuration: z.number().default(0),
 });
 
+export const courseUpdateSchema = courseSchema
+  .pick({
+    title: true,
+    subtitle: true,
+    description: true,
+    category: true,
+    level: true,
+    price: true,
+    isPublished: true,
+  })
+  .partial()
+  .extend({
+    thumbnail: z.string().url().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "At least one field must be provided for update",
+  });
+
 export { courseSchema as courseValidator };
+

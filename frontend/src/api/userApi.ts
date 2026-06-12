@@ -127,13 +127,15 @@ export async function apiForgotPassword(email: string): Promise<void> {
 }
 
 /**
- * @desc: Reset the password using a valid token
- * @input: body (object containing token: string, newPassword: string)
+ * @desc: Reset the password using a valid token from the email link
+ * @input: body (object containing email: string, token: string, newPassword: string)
  * @return: Promise<void>
  * @access: Public
  */
 export async function apiResetPassword(body: {
-  resetPasswordToken: string;
+  email: string;
+  token: string;
+  newPassword: string;
 }): Promise<void> {
   await apiClient.post("/users/reset-password", body);
 }

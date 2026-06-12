@@ -44,13 +44,15 @@ if (process.env.NODE_ENV === "development") {
 //security
 app.use(hpp());
 app.use(helmet());
-// app.use(
-//   "/api",
-//   rateLimit({
-//     windowMs: 15 * 60 * 1000, //15 min
-//     limit: 100,
-//   }),
-// );
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  limit: 10,
+  message: "Too many requests from this IP, please try again after 15 minutes",
+});
+app.use("/api/v1/users/signin", authLimiter);
+app.use("/api/v1/users/signup", authLimiter);
+app.use("/api/v1/users/forgot-password", authLimiter);
+app.use("/api/v1/users/reset-password", authLimiter);
 
 //body-parsing
 app.post(

@@ -1,14 +1,14 @@
-import { useState } from "react";
+
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import { Star, Users, Clock, BookOpen, Award, Play, Pencil } from "lucide-react";
+import { Star, Users, Clock, BookOpen, Award, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";
 import { fetchEnrolledCoursesThunk } from "@/store/courseSlice";
-import { rateCourse } from "@/services/courseService";
+
 import type { Course, Enrollment } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -23,24 +23,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { currentUser: user } = useSelector((state: RootState) => state.auth);
-
-  const [hoverRating, setHoverRating] = useState(0);
-  const [localRating, setLocalRating] = useState(0);
-  const [isEditingRating, setIsEditingRating] = useState(false);
-
-  const userRating = course.enrolledStudents?.find((s) => s.student === user?.id)?.rating;
-
-  const handleRateCourse = async (ratingVal: number) => {
-    try {
-      await rateCourse(course.id, ratingVal);
-      setLocalRating(ratingVal);
-      setIsEditingRating(false);
-      dispatch(fetchEnrolledCoursesThunk());
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save rating. Please try again.");
-    }
-  };
 
   const handleCardClick = () => {
     if (enrollment) {
@@ -209,59 +191,7 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
                 : "Continue"}
             </Button>
 
-            {/* Rating Option below Continue Button */}
-            <div
-              className="mt-1 pt-2 border-t border-slate-100 flex items-center justify-between flex-shrink-0"
-              onClick={(ev) => ev.stopPropagation()}
-            >
-              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                {userRating !== undefined && !isEditingRating
-                  ? "Your Rating"
-                  : isEditingRating
-                  ? "Edit Rating"
-                  : "Rate Course"}
-              </span>
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const localRat = localRating || userRating || 0;
-                    const canInteract = userRating === undefined || isEditingRating;
-                    const isLit = star <= (hoverRating || localRat);
 
-                    return (
-                      <Star
-                        key={star}
-                        onClick={() => canInteract && handleRateCourse(star)}
-                        onMouseEnter={() => canInteract && setHoverRating(star)}
-                        onMouseLeave={() => canInteract && setHoverRating(0)}
-                        className={cn(
-                          "w-3.5 h-3.5",
-                          canInteract ? "cursor-pointer transition-colors duration-150" : "",
-                          isLit ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"
-                        )}
-                      />
-                    );
-                  })}
-                </div>
-                {userRating !== undefined && !isEditingRating && (
-                  <button
-                    onClick={() => setIsEditingRating(true)}
-                    className="text-indigo-600 hover:text-indigo-800 transition-colors p-0.5"
-                    title="Edit Rating"
-                  >
-                    <Pencil className="w-3 h-3" />
-                  </button>
-                )}
-                {isEditingRating && (
-                  <button
-                    onClick={() => setIsEditingRating(false)}
-                    className="text-[9px] text-slate-500 hover:text-slate-700 font-semibold ml-1"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
         )}
 

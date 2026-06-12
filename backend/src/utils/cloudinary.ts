@@ -38,8 +38,6 @@ const generateUploadSignature = (
   // Cloudinary webhook URL - receives POST when upload completes
   const notificationUrl = `${process.env.BACKEND_URL}/api/v1/media/webhook`;
 
-  // Cloudinary Upload Widget automatically appends source: "uw" to signed uploads.
-  // We must sign timestamp, folder, and source: "uw" to match the widget's signature format.
   const paramsToSign: Record<string, any> = {
     timestamp,
     folder,
@@ -81,20 +79,6 @@ const verifyUploadSignature = (params: VerifyUploadParams): boolean => {
   return expectedSignature === signature;
 };
 
-const deleteMedia = async (
-  publicId: string,
-  type: "image" | "video",
-): Promise<any> => {
-  try {
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: type,
-    });
-    return result;
-  } catch (error) {
-    console.error("ERROR: ", error);
-    throw new ApiError("Failed to delete media", 500);
-  }
-};
 
 /**
  * Delete media without knowing the resource type.
@@ -124,6 +108,5 @@ const deleteMediaAuto = async (publicId: string): Promise<any> => {
 export {
   generateUploadSignature,
   verifyUploadSignature,
-  deleteMedia,
   deleteMediaAuto,
 };

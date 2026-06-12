@@ -114,3 +114,17 @@ export interface User {
   role: "student" | "instructor" | "admin";
   purchases: Purchase[];
 }
+
+export interface EnrolledCourse {
+  course: Course;
+  enrollment: Enrollment;
+}
+
+export interface AnnouncementItem {
+  id: string;
+  courseId: string;
+  lastLectureId: string;
+  courseTitle: string;
+  message: string;
+  time: string;
+}

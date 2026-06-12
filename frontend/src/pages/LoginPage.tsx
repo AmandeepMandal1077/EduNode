@@ -1,35 +1,26 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/store";
-import { loginThunk, clearError } from "@/store/authSlice";
+import { GraduationCap } from "lucide-react";
+
+import { useLogin } from "@/hooks/useLogin";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
-  const [showPassword, setShowPassword] = useState(false);
-  
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    role,
+    setRole,
+    loading,
+    error,
+    handleSubmit,
+  } = useLogin();
 
-  useEffect(() => {
-    dispatch(clearError());
-  }, [dispatch]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = await dispatch(loginThunk({ email, password, role }));
-    if (loginThunk.fulfilled.match(result)) {
-      navigate("/dashboard");
-    }
-  };
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   return (
     <div
@@ -38,7 +29,6 @@ export function LoginPage() {
         background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
       }}
     >
-      {/* Background blobs */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute top-1/4 -left-32 w-72 h-72 rounded-full blur-3xl opacity-40"
@@ -57,7 +47,6 @@ export function LoginPage() {
         className="relative w-full max-w-md"
       >
         <div className="glass rounded-3xl shadow-2xl p-8 sm:p-10">
-          {/* Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-8">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
               <GraduationCap className="w-5 h-5 text-white" />
@@ -74,123 +63,25 @@ export function LoginPage() {
             Sign in to continue your learning journey
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {/* Role Selection Tabs */}
-            <div className="flex gap-2 p-1 bg-slate-100/80 border border-slate-200/50 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setRole("student")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                  role === "student"
-                    ? "bg-white text-indigo-700 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Sign In as Student
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole("instructor")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                  role === "instructor"
-                    ? "bg-white text-indigo-700 shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Sign In as Instructor
-              </button>
-            </div>
+          <LoginForm
+            email={email}
+            setEmail={setEmail}
+            password={password}
+            setPassword={setPassword}
+            role={role}
+            setRole={setRole}
+            loading={loading}
+            error={error}
+            handleSubmit={handleSubmit}
+            onForgotPassword={() => setForgotOpen(true)}
+          />
 
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="login-email" className="text-sm font-medium text-slate-700">
-                Email address
-              </Label>
-              <div className="input-glow rounded-xl border border-slate-200 flex items-center bg-white overflow-hidden">
-                <Mail className="w-4 h-4 text-slate-400 ml-3 flex-shrink-0" />
-                <Input
-                  id="login-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  maxLength={50}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="border-0 shadow-none focus-visible:ring-0 bg-transparent pl-2"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="login-password" className="text-sm font-medium text-slate-700">
-                  Password
-                </Label>
-                <button
-                  type="button"
-                  className="text-xs text-indigo-600 hover:underline"
-                  tabIndex={-1}
-                >
-                  Forgot password?
-                </button>
-              </div>
-              <div className="input-glow rounded-xl border border-slate-200 flex items-center bg-white overflow-hidden">
-                <Lock className="w-4 h-4 text-slate-400 ml-3 flex-shrink-0" />
-                <Input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  maxLength={32}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-0 shadow-none focus-visible:ring-0 bg-transparent pl-2"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  className="p-3 text-slate-400 hover:text-slate-600"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all"
-              id="login-submit-btn"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <ArrowRight className="w-4 h-4 mr-2" />
-              )}
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-
-          {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-slate-100" />
             <span className="text-xs text-slate-400">or</span>
             <div className="flex-1 h-px bg-slate-100" />
           </div>
 
-          {/* Demo hint */}
           <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-6">
             <p className="text-xs text-indigo-700 text-center">
               <strong>Demo:</strong> Use any email and any password (min 6 chars)
@@ -205,6 +96,14 @@ export function LoginPage() {
           </p>
         </div>
       </motion.div>
+
+      <ForgotPasswordModal
+        open={forgotOpen}
+        defaultEmail={email}
+        onClose={() => setForgotOpen(false)}
+      />
     </div>
   );
 }
+
+

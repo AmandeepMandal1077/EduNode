@@ -5,9 +5,9 @@
  */
 
 import { apiSignin, apiSignup, apiSignout } from "../api/userApi";
-import { setAuthenticated, isAuthenticated, checkAuthStatus } from "./userService";
+import { checkAuthStatus } from "./userService";
 
-export { isAuthenticated, checkAuthStatus };
+export { checkAuthStatus };
 
 /**
  * @desc: Log in a user with email and password
@@ -25,7 +25,6 @@ export async function login(
   }
   try {
     await apiSignin({ email, password, role });
-    setAuthenticated(true);
     return { success: true };
   } catch (err: unknown) {
     const msg =
@@ -55,7 +54,6 @@ export async function register(
   }
   try {
     await apiSignup({ name, email, password, role });
-    setAuthenticated(true);
     return { success: true };
   } catch (err: unknown) {
     const msg =
@@ -72,9 +70,5 @@ export async function register(
  * @access: Private
  */
 export async function logout(): Promise<void> {
-  try {
-    await apiSignout();
-  } finally {
-    setAuthenticated(false);
-  }
+  await apiSignout();
 }

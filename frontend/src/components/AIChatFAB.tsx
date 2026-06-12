@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { MessageCircle, X, Send, Bot, User, Sparkles, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
 
 interface Message {
   id: string;
@@ -30,19 +31,18 @@ const AI_RESPONSES = [
   "This is covered in detail in the next lecture. The short answer: it depends on your use case, but the general rule is to prefer composition over inheritance.",
 ];
 
-export function AIChatFAB() {
+export function AIChatFAB({ courseId }: { courseId?: string }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
-    if (open && scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (open && bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isTyping, open]);
 
@@ -164,12 +164,11 @@ export function AIChatFAB() {
               </div>
             ) : (
               <>
-                {/* Messages — native scroll, flex-1 min-h-0 */}
-                <div
-                  ref={scrollRef}
-                  className="flex-1 min-h-0 overflow-y-auto px-4 py-4"
-                  style={{ overscrollBehavior: "contain", maxHeight: "calc(100% - 120px)" }}
+                {/* Messages — ScrollArea for smooth scrolling */}
+                <ScrollArea
+                  className="flex-1 min-h-0"
                 >
+                  <div className="px-4 py-4">
                   <div className="flex flex-col gap-3">
                     {messages.map((msg) => (
                       <motion.div
@@ -191,8 +190,8 @@ export function AIChatFAB() {
                         </div>
                         <div
                           className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-all ${msg.role === "assistant"
-                              ? "bg-slate-100 text-slate-800 rounded-tl-sm"
-                              : "bg-indigo-600 text-white rounded-tr-sm"
+                            ? "bg-slate-100 text-slate-800 rounded-tl-sm"
+                            : "bg-indigo-600 text-white rounded-tr-sm"
                             }`}
                         >
                           {msg.content}
@@ -219,7 +218,8 @@ export function AIChatFAB() {
                     )}
                     <div ref={bottomRef} />
                   </div>
-                </div>
+                  </div>
+                </ScrollArea>
 
                 {/* Input — flex-shrink-0 so it never collapses */}
                 <div className="flex-shrink-0 px-4 py-3 border-t border-slate-100 flex gap-2 bg-white">
