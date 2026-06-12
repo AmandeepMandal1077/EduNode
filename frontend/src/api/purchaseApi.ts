@@ -11,6 +11,7 @@
 
 import apiClient from "./client";
 import type { BackendCourse } from "./courseApi";
+import type { CourseProgressResponse } from "./progressApi";
 
 export interface PurchaseRecord {
   _id: string;
@@ -80,6 +81,16 @@ export async function createCheckoutSession(
 }
 
 /**
+ * @desc: Enroll in a free (price=0) course without going through Stripe
+ * @input: courseId (string)
+ * @return: Promise<void>
+ * @access: Private
+ */
+export async function enrollFreeCourse(courseId: string): Promise<void> {
+  await apiClient.post("/payments/enroll-free", { courseId });
+}
+
+/**
  * @desc: Verify a Stripe checkout session's payment completion status
  * @input: sessionId (string)
  * @return: Promise<{ success: boolean; purchase: PurchaseRecord }>
@@ -88,6 +99,23 @@ export async function createCheckoutSession(
 export async function verifyCheckoutSession(
   sessionId: string
 ): Promise<{ paid: boolean; purchase: PurchaseRecord }> {
-  const res = await apiClient.post(`/payments/checkout/verify?session_id=${sessionId}`);
+  const res = await apiClient.post(`/payments/checkout/verify`, { session_id: sessionId });
   return res.data?.data ?? res.data;
+}
+
+export interface BackendEnrollmentData {
+  purchase: PurchaseRecord;
+  course: BackendCourse;
+  progress: CourseProgressResponse | null;
+}
+
+/**
+ * @desc: Fetch all aggregated enrollment data for the user
+ * @input: none
+ * @return: Promise<BackendEnrollmentData[]>
+ * @access: Private
+ */
+export async function fetchMyEnrollments(): Promise<BackendEnrollmentData[]> {
+  const res = await apiClient.get("/payments/my-enrollments");
+  return res.data?.data?.enrollments ?? [];
 }

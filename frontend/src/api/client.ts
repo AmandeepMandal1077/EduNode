@@ -1,4 +1,6 @@
 import axios from "axios";
+import { store } from "../store";
+import { logoutThunk } from "../store/authSlice";
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api/v1",
@@ -22,7 +24,7 @@ apiClient.interceptors.response.use(
           path === "/register";
 
         if (!isPublicPath) {
-          window.location.href = "/login";
+          store.dispatch(logoutThunk());
         }
       }
     }

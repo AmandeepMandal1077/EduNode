@@ -30,6 +30,8 @@ export async function openCloudinaryWidget(
         uploadSignatureTimestamp: signatureData.timestamp,
         folder: signatureData.folder,
         resourceType: resourceType,
+        multiple: false, // Disallow selecting multiple files
+        maxFiles: 1, // Restrict upload to a single file
         // Match the application's clean design system
         theme: "minimal",
         styles: {

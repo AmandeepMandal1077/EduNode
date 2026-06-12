@@ -81,6 +81,17 @@ export async function fetchPublishedCourses(): Promise<BackendCourse[]> {
 }
 
 /**
+ * @desc: Fetch all unique course categories
+ * @input: none
+ * @return: Promise<string[]>
+ * @access: Public
+ */
+export async function fetchCategories(): Promise<string[]> {
+  const res = await apiClient.get("/courses/categories");
+  return res.data?.data?.categories ?? res.data?.categories ?? [];
+}
+
+/**
  * @desc: Search for published courses using query text and category
  * @input: query (string, optional), category (string, optional)
  * @return: Promise<BackendCourse[]>
@@ -189,6 +200,17 @@ export async function fetchPurchasedCoursesNew(): Promise<BackendCourse[]> {
  */
 export async function fetchCourseAnnouncements(courseId: string): Promise<BackendAnnouncement[]> {
   const res = await apiClient.get(`/courses/${courseId}/announcements`);
+  return res.data?.data?.announcements ?? res.data?.announcements ?? [];
+}
+
+/**
+ * @desc: Fetch announcements for all purchased courses
+ * @input: none
+ * @return: Promise<BackendAnnouncement[]>
+ * @access: Private
+ */
+export async function fetchMyAnnouncements(): Promise<BackendAnnouncement[]> {
+  const res = await apiClient.get("/courses/my-announcements");
   return res.data?.data?.announcements ?? res.data?.announcements ?? [];
 }
 

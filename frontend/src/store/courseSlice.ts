@@ -110,8 +110,8 @@ export const updateLectureProgressThunk = createAsyncThunk(
         lastWatchedPosition: watchedSeconds,
       });
       return { courseId, lectureId, isCompleted };
-    } catch (err: any) {
-      return rejectWithValue(err.message || "Failed to update lecture progress");
+    } catch (err: unknown) {
+      return rejectWithValue(err instanceof Error ? err.message : "Failed to update lecture progress");
     }
   }
 );
@@ -212,8 +212,8 @@ const courseSlice = createSlice({
         const { courseId, progress } = action.payload;
         if (progress && progress.lectureProgress) {
           state.completedLectures[courseId] = progress.lectureProgress
-            .filter((lp: any) => lp.isCompleted)
-            .map((lp: any) => lp.lecture);
+            .filter((lp: { isCompleted: boolean; lecture: string }) => lp.isCompleted)
+            .map((lp: { isCompleted: boolean; lecture: string }) => lp.lecture);
         } else {
           state.completedLectures[courseId] = [];
         }

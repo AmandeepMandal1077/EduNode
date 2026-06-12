@@ -12,8 +12,9 @@ import {
   fetchSearchCourses,
   fetchCourseDetails,
   fetchCourseLectures,
-  fetchPurchasedCoursesNew,
   fetchCourseAnnouncements,
+  fetchMyAnnouncements,
+  fetchCategories,
   createCourse as apiCreateCourse,
   fetchMyCreatedCourses as apiFetchMyCreatedCourses,
   apiUpdateCourseDetails,
@@ -25,9 +26,8 @@ import {
   type BackendAnnouncement,
 } from "../api/courseApi";
 import {
-  fetchPurchasedCourses,
   fetchCoursePurchaseStatus,
-  type PurchaseRecord,
+  fetchMyEnrollments,
 } from "../api/purchaseApi";
 import {
   fetchCourseProgress,
@@ -163,14 +163,14 @@ function mapCourse(bc: BackendCourse, lectures?: BackendLecture[]): Course {
 function buildEnrollment(
   courseId: string,
   progress: CourseProgressResponse | null,
-  purchase: PurchaseRecord | null,
-  firstLectureId?: string
+  firstLectureId?: string,
+  enrolledAt?: string
 ): Enrollment {
   return {
-    id:              purchase?._id ?? `enr_${courseId}`,
+    id:              `enr_${courseId}`,
     courseId,
     userId:          progress?.user ?? "",
-    enrolledAt:      purchase?.createdAt ?? new Date().toISOString(),
+    enrolledAt:      enrolledAt ?? new Date().toISOString(),
     progressPercent: progress?.completionPercentage ?? 0,
     lastLectureId:
       progress?.lectureProgress.find((lp) => !lp.isCompleted)?.lecture ??
@@ -291,9 +291,11 @@ export async function searchCourses(
  * @access: Public
  */
 export async function getCategories(): Promise<string[]> {
-  const bc = await fetchPublishedCourses();
-  const cats = Array.from(new Set(bc.map((c) => c.category)));
-  return cats.sort();
+  try {
+    return await fetchCategories();
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -306,97 +308,26 @@ export async function getEnrolledCourses(): Promise<
   { course: Course; enrollment: Enrollment }[]
 > {
   try {
-    const backendCourses = await fetchPurchasedCoursesNew();
-    const results = await Promise.allSettled(
-      backendCourses.map(async (bc) => {
-        const courseId = bc._id;
-        const [lectures, progress] = await Promise.allSettled([
-          fetchCourseLectures(courseId),
-          fetchCourseProgress(courseId),
-        ]);
-
-        const course = mapCourse(
-          bc,
-          lectures.status === "fulfilled" ? lectures.value : undefined
-        );
-        const firstLecture =
-          lectures.status === "fulfilled" ? lectures.value[0]?._id : undefined;
-
-        // Mock a purchase record since the backend doesn't return full purchase records here
-        const mockPurchase: PurchaseRecord = {
-          _id: `purchase_${courseId}`,
-          course: bc,
-          user: progress.status === "fulfilled" && progress.value ? progress.value.user : "",
-          amount: bc.price,
-          currency: "INR",
-          status: "completed",
-          paymentMethod: "card",
-          paymentId: "seeded",
-          createdAt: bc.createdAt,
-          updatedAt: bc.updatedAt,
-        };
-
-        const enrollment = buildEnrollment(
-          courseId,
-          progress.status === "fulfilled" ? progress.value : null,
-          mockPurchase,
-          firstLecture
-        );
-
-        return { course, enrollment };
-      })
-    );
-
-    return results
-      .filter(
-        (r): r is PromiseFulfilledResult<{ course: Course; enrollment: Enrollment }> =>
-          r.status === "fulfilled" && r.value !== null
-      )
-      .map((r) => r.value!);
+    const backendData = await fetchMyEnrollments();
+    return backendData.map((data) => {
+      const courseId = data.course._id;
+      const course = mapCourse(data.course, Array.isArray(data.course.lectures) ? (data.course.lectures as unknown as BackendLecture[]) : undefined);
+      const firstLecture = Array.isArray(data.course.lectures) && data.course.lectures.length > 0 
+                           ? (data.course.lectures[0] as any)._id 
+                           : undefined;
+      const enrollment = buildEnrollment(
+        courseId,
+        data.progress,
+        firstLecture,
+        data.purchase.createdAt
+      );
+      return { course, enrollment };
+    });
   } catch {
     return [];
   }
 }
 
-/**
- * @desc: Fetch lightweight enrollment records for all active courses
- * @input: none
- * @return: Promise<Enrollment[]>
- * @access: Private
- */
-export async function getEnrollments(): Promise<Enrollment[]> {
-  const enrolled = await getEnrolledCourses();
-  return enrolled.map((e) => e.enrollment);
-}
-
-/**
- * @desc: Check if a course is purchased by the current user
- * @input: courseId (string)
- * @return: Promise<boolean>
- * @access: Private
- */
-export async function isEnrolled(courseId: string): Promise<boolean> {
-  try {
-    const data = await fetchCoursePurchaseStatus(courseId);
-    return data.isPurchased || data.status === "completed";
-  } catch {
-    return false;
-  }
-}
-
-/**
- * @desc: Initiate Stripe checkout session for a course (stub, handles Stripe redirect internally)
- * @input: _courseId (string)
- * @return: Promise<Enrollment>
- * @access: Private
- */
-export async function enrollInCourse(_courseId: string): Promise<Enrollment> {
-  // Actual purchase is handled via purchaseApi.createCheckoutSession.
-  // This stub keeps the old call-site signature working.
-  throw new Error(
-    "Direct enrollment is disabled — use purchaseApi.createCheckoutSession instead."
-  );
-}
 
 /**
  * @desc: Update progress and mark completion of a lecture
@@ -432,6 +363,35 @@ export async function getCourseAnnouncements(courseId: string): Promise<BackendA
     return await fetchCourseAnnouncements(courseId);
   } catch {
     return [];
+  }
+}
+
+/**
+ * @desc: Fetch all announcements for purchased courses
+ * @input: none
+ * @return: Promise<BackendAnnouncement[]>
+ * @access: Private
+ */
+export async function getMyAnnouncements(): Promise<BackendAnnouncement[]> {
+  try {
+    return await fetchMyAnnouncements();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * @desc: Check if a course is purchased by the current user
+ * @input: courseId (string)
+ * @return: Promise<boolean>
+ * @access: Private
+ */
+export async function isEnrolled(courseId: string): Promise<boolean> {
+  try {
+    const data = await fetchCoursePurchaseStatus(courseId);
+    return data.isPurchased || data.status === "completed";
+  } catch {
+    return false;
   }
 }
 

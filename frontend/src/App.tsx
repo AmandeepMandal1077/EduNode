@@ -8,6 +8,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { ExplorePage } from "./pages/ExplorePage";
 import { CourseDetailPage } from "./pages/CourseDetailPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -60,6 +61,7 @@ export default function App() {
         />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/explore"
           element={

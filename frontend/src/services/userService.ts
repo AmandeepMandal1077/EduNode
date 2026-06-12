@@ -102,21 +102,8 @@ export async function getPurchaseHistory() {
 // Auth is managed server-side via HTTP-only cookies.
 // We probe the /users/profile endpoint to determine auth status.
 
-let _authCache: boolean | null = null;
-
 /**
- * @desc: Synchronously check if cached authentication status is true
- * @input: none
- * @return: boolean
- * @access: Public
- */
-export function isAuthenticated(): boolean {
-  // Sync fallback — returns cached value from last async probe
-  return _authCache ?? false;
-}
-
-/**
- * @desc: Asynchronously probe profile API to refresh the cached auth status
+ * @desc: Asynchronously probe profile API to determine auth status
  * @input: none
  * @return: Promise<boolean>
  * @access: Public
@@ -124,20 +111,8 @@ export function isAuthenticated(): boolean {
 export async function checkAuthStatus(): Promise<boolean> {
   try {
     await apiGetProfile();
-    _authCache = true;
     return true;
   } catch {
-    _authCache = false;
     return false;
   }
-}
-
-/**
- * @desc: Set the internal authentication cache flag manually
- * @input: value (boolean)
- * @return: void
- * @access: Public
- */
-export function setAuthenticated(value: boolean): void {
-  _authCache = value;
 }
