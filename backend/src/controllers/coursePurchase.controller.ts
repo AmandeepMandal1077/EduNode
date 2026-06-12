@@ -109,7 +109,7 @@ export const initiateStripeCheckout = asyncHandler(
  */
 export const verifyStripeSession = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { session_id } = req.query;
+    const { session_id } = req.body;
 
     if (!session_id || typeof session_id !== "string") {
       throw new ApiError("Session id is required", 400);
@@ -171,8 +171,8 @@ export const handleStripeWebhook = asyncHandler(
         sig,
         webhookSecret,
       );
-    } catch (err: any) {
-      console.error("Invalid webhook signature:", err.message);
+    } catch (err: unknown) {
+      console.error("Invalid webhook signature:", err instanceof Error ? err.message : "Unknown error");
       return res.status(400).send();
     }
 
@@ -187,82 +187,85 @@ export const handleStripeWebhook = asyncHandler(
 
       if (!courseOrderId) return res.status(200).send();
 
-      const courseOrder = await CoursePurchase.findById(
-        new mongoose.Types.ObjectId(courseOrderId),
-      );
-      if (!courseOrder) return res.status(200).send();
-
-      if (courseOrder.status === PaymentStatus.COMPLETED) {
-        return res.status(200).send();
-      }
-
-      if (
-        courseOrder.amount * 100 !== session.amount_total ||
-        courseOrder.currency.toLowerCase() !==
-        session.currency?.toLowerCase() ||
-        session.payment_status !== "paid" ||
-        courseOrder.user.toString() !== session.metadata?.userId ||
-        courseOrder.course.toString() !== session.metadata?.courseId ||
-        !session.payment_intent
-      ) {
-        courseOrder.status = PaymentStatus.FAILED;
-      } else {
-        const course = await Course.findById(courseOrder.course);
-        if (course) {
-          const isStudentEnrolled = course.enrolledStudents.some(
-            (s) => s.student.toString() === courseOrder.user.toString(),
-          );
-          if (!isStudentEnrolled) {
-            course.enrolledStudents.push({
-              student: new mongoose.Types.ObjectId(courseOrder.user.toString()),
-            });
-            await course.save();
-          }
+      const sessionMongoose = await mongoose.startSession();
+      sessionMongoose.startTransaction();
+      try {
+        const courseOrder = await CoursePurchase.findById(
+          new mongoose.Types.ObjectId(courseOrderId),
+        ).session(sessionMongoose);
+        if (!courseOrder) {
+          await sessionMongoose.abortTransaction();
+          sessionMongoose.endSession();
+          return res.status(200).send();
         }
 
-        const user = await User.findById(courseOrder.user);
-        if (user) {
-          const isCourseEnrolled = user.enrolledCourses?.some(
-            (item) => item.course.toString() === courseOrder.course.toString(),
-          );
-          if (!isCourseEnrolled) {
-            user.enrolledCourses?.push({
-              course: new mongoose.Types.ObjectId(courseOrder.course.toString()),
-            });
-            await user.save();
-          }
+        if (courseOrder.status === PaymentStatus.COMPLETED) {
+          await sessionMongoose.abortTransaction();
+          sessionMongoose.endSession();
+          return res.status(200).send();
         }
 
-        // Idempotently create CourseProgress record
-        const existingProgress = await CourseProgress.findOne({
-          user: courseOrder.user,
-          course: courseOrder.course,
-        });
+        if (
+          courseOrder.amount * 100 !== session.amount_total ||
+          courseOrder.currency.toLowerCase() !==
+          session.currency?.toLowerCase() ||
+          session.payment_status !== "paid" ||
+          courseOrder.user.toString() !== session.metadata?.userId ||
+          courseOrder.course.toString() !== session.metadata?.courseId ||
+          !session.payment_intent
+        ) {
+          courseOrder.status = PaymentStatus.FAILED;
+        } else {
+          const course = await Course.findById(courseOrder.course).session(sessionMongoose);
+          if (course) {
+            const isStudentEnrolled = course.enrolledStudents.some(
+              (s) => s.student.toString() === courseOrder.user.toString(),
+            );
+            if (!isStudentEnrolled) {
+              course.enrolledStudents.push({
+                student: new mongoose.Types.ObjectId(courseOrder.user.toString()),
+              });
+              await course.save({ session: sessionMongoose });
+            }
+          }
 
-        if (!existingProgress && course) {
-          const lectures = course.lectures || [];
-          const lectureProgressEntries = lectures.map((lectureId: any) => ({
-            lecture: lectureId,
-            userId: courseOrder.user,
-            isCompleted: false,
-            lastWatchedPosition: 0,
-            lastWatched: new Date(),
-          }));
-
-          await CourseProgress.create({
+          // Idempotently create CourseProgress record
+          const existingProgress = await CourseProgress.findOne({
             user: courseOrder.user,
             course: courseOrder.course,
-            isCompleted: false,
-            completionPercentage: 0,
-            lectureProgress: lectureProgressEntries,
-          });
+          }).session(sessionMongoose);
+
+          if (!existingProgress && course) {
+            const lectures = course.lectures || [];
+            const lectureProgressEntries = lectures.map((lectureId: mongoose.Types.ObjectId) => ({
+              lecture: lectureId,
+              userId: courseOrder.user,
+              isCompleted: false,
+              lastWatchedPosition: 0,
+              lastWatched: new Date(),
+            }));
+
+            await CourseProgress.create([{
+              user: courseOrder.user,
+              course: courseOrder.course,
+              isCompleted: false,
+              completionPercentage: 0,
+              lectureProgress: lectureProgressEntries,
+            }], { session: sessionMongoose });
+          }
+
+          courseOrder.paymentId = session.payment_intent as string;
+          courseOrder.status = PaymentStatus.COMPLETED;
         }
 
-        courseOrder.paymentId = session.payment_intent as string;
-        courseOrder.status = PaymentStatus.COMPLETED;
+        await courseOrder.save({ session: sessionMongoose });
+        await sessionMongoose.commitTransaction();
+      } catch (error) {
+        await sessionMongoose.abortTransaction();
+        throw error;
+      } finally {
+        sessionMongoose.endSession();
       }
-
-      await courseOrder.save();
     } else if (
       eventType === "checkout.session.async_payment_failed" ||
       eventType === "checkout.session.expired"
@@ -303,16 +306,25 @@ export const getCoursePurchaseStatus = asyncHandler(
     const coursePurchase = await CoursePurchase.findOne({
       user: new mongoose.Types.ObjectId(userId),
       course: new mongoose.Types.ObjectId(courseId),
+      status: PaymentStatus.COMPLETED,
     }).select("status");
 
     if (!coursePurchase) {
-      throw new ApiError("Course not purchased", 404);
+      return res.status(200).json({
+        success: true,
+        message: "Course not purchased",
+        data: {
+          isPurchased: false,
+          status: null,
+        },
+      });
     }
 
     res.status(200).json({
       success: true,
       message: "Course purchase status fetched successfully",
       data: {
+        isPurchased: true,
         status: coursePurchase.status,
       },
     });
@@ -327,27 +339,14 @@ export const getPurchasedCourses = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
 
-    // const purchasedCoursesIds = await CoursePurchase.find({
-    //   user: new mongoose.Types.ObjectId(userId),
-    //   status: PaymentStatus.COMPLETED,
-    // }).select("course -_id");
+    const purchases = await CoursePurchase.find({
+      user: new mongoose.Types.ObjectId(userId),
+      status: PaymentStatus.COMPLETED,
+    }).populate("course");
 
-    // const courseIds = purchasedCoursesIds.map((course) => course.course);
-    // const purchasedCourses = await Course.find({
-    //   _id: { $in: courseIds },
-    // });
-
-    const userWithCourses = await User.findById(
-      new mongoose.Types.ObjectId(userId),
-    )
-      .populate({
-        path: "enrolledCourses.course",
-      })
-      .select("enrolledCourses");
-
-    const courses = userWithCourses?.enrolledCourses
-      ?.map((item) => item.course)
-      .filter((course) => course != null) || [];
+    const courses = purchases
+      .map((purchase) => purchase.course)
+      .filter((course) => course != null);
 
     res.status(200).json({
       success: true,
@@ -375,5 +374,168 @@ export const getPurchaseHistory = asyncHandler(
       data: { purchases },
     });
   },
+);
+
+/**
+ * Get aggregated enrollments (Course + Purchase + Progress)
+ * @route GET /api/v1/payments/my-enrollments
+ */
+export const getMyEnrollments = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.userId;
+
+    const purchases = await CoursePurchase.find({
+      user: new mongoose.Types.ObjectId(userId),
+      status: PaymentStatus.COMPLETED,
+    }).lean();
+
+    const courseIds = purchases.map((p) => p.course);
+
+    const [courses, progresses] = await Promise.all([
+      Course.find({ _id: { $in: courseIds } })
+        .populate("instructor", "name bio avatar")
+        .populate("lectures")
+        .lean(),
+      CourseProgress.find({
+        user: new mongoose.Types.ObjectId(userId),
+        course: { $in: courseIds },
+      }).lean(),
+    ]);
+
+    const enrollments = purchases.map((purchase) => {
+      const course = courses.find((c) => c._id.toString() === purchase.course.toString());
+      const progress = progresses.find((p) => p.course.toString() === purchase.course.toString());
+
+      return {
+        purchase,
+        course,
+        progress: progress || null,
+      };
+    }).filter((e) => e.course != null);
+
+    res.status(200).json({
+      success: true,
+      message: "Enrollments fetched successfully",
+      data: { enrollments },
+    });
+  }
+);
+
+/**
+ * Enroll in a free course (price = 0) without Stripe
+ * @route POST /api/v1/payments/enroll-free
+ */
+export const enrollFreeCourse = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const userId = req.userId;
+    const { courseId } = req.body;
+
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid course id", 400);
+    }
+
+    const course = await Course.findById(new mongoose.Types.ObjectId(courseId));
+    if (!course) {
+      throw new ApiError("Course not found", 404);
+    }
+
+    if (course.price !== 0) {
+      throw new ApiError("This course is not free", 400);
+    }
+
+    if (!course.isPublished) {
+      throw new ApiError("Course is not published", 400);
+    }
+
+    // Idempotency: return existing completed purchase if already enrolled
+    const existingPurchase = await CoursePurchase.findOne({
+      user: userId,
+      course: courseId,
+      status: PaymentStatus.COMPLETED,
+    });
+
+    if (existingPurchase) {
+      return res.status(200).json({
+        success: true,
+        message: "Already enrolled in this course",
+        data: { purchase: existingPurchase },
+      });
+    }
+
+    const mongoSession = await mongoose.startSession();
+    mongoSession.startTransaction();
+    try {
+      // Create a completed purchase record
+      const [purchase] = await CoursePurchase.create(
+        [
+          {
+            course: courseId,
+            user: userId,
+            amount: 0,
+            currency: "inr",
+            status: PaymentStatus.COMPLETED,
+            paymentMethod: "free",
+            paymentId: "free",
+          },
+        ],
+        { session: mongoSession }
+      );
+
+      // Add to enrolledStudents if not already there
+      const isAlreadyEnrolled = course.enrolledStudents.some(
+        (s) => s.student.toString() === userId
+      );
+      if (!isAlreadyEnrolled) {
+        course.enrolledStudents.push({
+          student: new mongoose.Types.ObjectId(userId!),
+        });
+        await course.save({ session: mongoSession });
+      }
+
+      // Create CourseProgress record
+      const existingProgress = await CourseProgress.findOne({
+        user: userId,
+        course: courseId,
+      }).session(mongoSession);
+
+      if (!existingProgress) {
+        const userObjectId = new mongoose.Types.ObjectId(userId!);
+        const lectureProgressEntries = course.lectures.map(
+          (lectureId: mongoose.Types.ObjectId) => ({
+            lecture: lectureId,
+            userId: userObjectId,
+            isCompleted: false,
+            lastWatchedPosition: 0,
+            lastWatched: new Date(),
+          })
+        );
+        await CourseProgress.create(
+          [
+            {
+              user: userObjectId,
+              course: courseId,
+              isCompleted: false,
+              completionPercentage: 0,
+              lectureProgress: lectureProgressEntries,
+            },
+          ],
+          { session: mongoSession }
+        );
+      }
+
+      await mongoSession.commitTransaction();
+
+      return res.status(200).json({
+        success: true,
+        message: "Enrolled in free course successfully",
+        data: { purchase },
+      });
+    } catch (error) {
+      await mongoSession.abortTransaction();
+      throw error;
+    } finally {
+      mongoSession.endSession();
+    }
+  }
 );
 

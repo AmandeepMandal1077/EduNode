@@ -146,6 +146,10 @@ export const deleteComment = asyncHandler(
       throw new ApiError("Comment not found", 404);
     }
 
+    if (comment.userId.toString() !== req.userId) {
+      throw new ApiError("You can only delete your own comments", 403);
+    }
+
     comment.deleteComment(); //saved in method
     res.status(200).json({
       success: true,

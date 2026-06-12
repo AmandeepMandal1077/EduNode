@@ -16,4 +16,7 @@ router.route("/signature").post(generateSignature);
 // Verify upload signature
 router.route("/verify").post(verifySignature);
 
+// Note: /api/v1/media/webhook is registered separately in app.ts 
+// because it requires express.raw() body parsing for signature verification.
+
 export default router;

@@ -16,15 +16,9 @@ export interface IUser {
   role: Role;
   avatar?: string;
   bio?: string;
-  enrolledCourses?: {
-    course: Types.ObjectId;
-  }[];
   enrolledAt?: Date;
-  createdCourses?: {
-    course: Types.ObjectId;
-  }[];
-  resetPasswordToken?: string;
-  resetPasswordTokenExpiry?: Date;
+  resetPasswordToken?: string | undefined;
+  resetPasswordTokenExpiry?: Date | undefined;
   lastActive?: Date;
 }
 
@@ -35,9 +29,7 @@ export interface IUserMethods {
   updateLastActive(): Promise<void>;
 }
 
-export interface IUserVirtuals {
-  totalEnrolledCourses: number;
-}
+export interface IUserVirtuals {}
 
 export type TUserModel = mongoose.Model<IUser, {}, IUserMethods, IUserVirtuals>;
 type TUserDoc = HydratedDocument<IUser, IUserMethods & IUserVirtuals>;
@@ -87,26 +79,10 @@ const userSchema = new mongoose.Schema<
       type: String,
       maxLength: [200, "bio can be atmost 200 characters long"],
     },
-    enrolledCourses: [
-      {
-        course: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Course",
-        },
-      },
-    ],
     enrolledAt: {
       type: Date,
       default: Date.now,
     },
-    createdCourses: [
-      {
-        course: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Course",
-        },
-      },
-    ],
 
     resetPasswordToken: {
       type: String,
@@ -170,9 +146,6 @@ userSchema.methods.updateLastActive = async function (this: TUserDoc) {
   await this.save({ validateBeforeSave: false });
 };
 
-//virtuals
-userSchema.virtual("totalEnrolledCourses").get(function (this: TUserDoc) {
-  return this?.enrolledCourses?.length || 0;
-});
+
 
 export const User = mongoose.model<IUser, TUserModel>("User", userSchema);

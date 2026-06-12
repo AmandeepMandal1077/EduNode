@@ -51,8 +51,8 @@ router.patch(
   validator(SourceType.BODY, changePasswordValidator),
   changeUserPassword,
 );
-router.post("/forgot-password", authenticateUserMiddleware, forgotPassword);
-router.post("/reset-password", authenticateUserMiddleware, resetPassword);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // Account management
 router.delete("/account", authenticateUserMiddleware, deleteUserAccount);

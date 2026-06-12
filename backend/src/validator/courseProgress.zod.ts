@@ -16,4 +16,14 @@ export const courseProgressSchema = z.object({
   lastAccessed: z.date().default(() => new Date()),
 });
 
+export const updateLectureProgressSchema = z.object({
+  isCompleted: z.boolean().optional(),
+  watchTime: z.number().min(0).optional(),
+  lastWatchedPosition: z.number().min(0).optional(),
+  lastWatched: z.string().datetime().optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "At least one progress field is required",
+});
+
 export { courseProgressSchema as courseProgressValidator };
+

@@ -81,6 +81,12 @@
  *
  * LOGIN CREDENTIALS FOR ALL SEEDED USERS:
  *   Password: Seeded@123
+ * 
+ * Test Videos URLs:
+ * https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204928/YTDown_YouTube_30-Minute-Timer_Media_LNYm40RmRzs_006_144p_abgtx2.mp4
+ * https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204830/YTDown_YouTube_10-Minute-Timer_Media_lMVv3qz-rHs_006_144p_sfyo5y.mp4
+ * https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204580/1_Hour_Timer_-_Online_Alarm_Kur_144p_h264_jalyuk.mp4
+ * 
  */
 
 import mongoose, { type Types } from "mongoose";
@@ -95,31 +101,31 @@ const Role = { STUDENT: "student", INSTRUCTOR: "instructor" } as const;
 const CourseLevel = { BEGINNER: "beginner", INTERMEDIATE: "intermediate", ADVANCE: "advance" } as const;
 const PaymentStatus = { COMPLETED: "completed", REFUNDED: "refunded" } as const;
 
-type CourseLevelVal   = typeof CourseLevel[keyof typeof CourseLevel];
+type CourseLevelVal = typeof CourseLevel[keyof typeof CourseLevel];
 type PaymentStatusVal = typeof PaymentStatus[keyof typeof PaymentStatus];
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CFG = {
-  NUM_INSTRUCTORS:     10,
-  NUM_STUDENTS:        50,
-  COURSES_PER_INSTR:   3,
-  MIN_LECTURES:        8,
-  MAX_LECTURES:        15,
-  ANN_MIN:             1,
-  ANN_MAX:             3,
-  ENROLL_MIN:          2,
-  ENROLL_MAX:          8,
-  COMMENTS_MIN:        3,
-  COMMENTS_MAX:        10,
-  HEATMAP_SEGMENTS:    12,
+  NUM_INSTRUCTORS: 10,
+  NUM_STUDENTS: 50,
+  COURSES_PER_INSTR: 3,
+  MIN_LECTURES: 8,
+  MAX_LECTURES: 15,
+  ANN_MIN: 1,
+  ANN_MAX: 3,
+  ENROLL_MIN: 2,
+  ENROLL_MAX: 8,
+  COMMENTS_MIN: 3,
+  COMMENTS_MAX: 10,
+  HEATMAP_SEGMENTS: 100,
 };
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
-const randInt  = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
-const shuffle  = <T>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
-const sample   = <T>(arr: T[], n: number): T[] => shuffle(arr).slice(0, Math.min(n, arr.length));
-const pickOne  = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-const toSlug   = (text: string, suffix?: string | number): string => {
+const randInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+const shuffle = <T>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
+const sample = <T>(arr: T[], n: number): T[] => shuffle(arr).slice(0, Math.min(n, arr.length));
+const pickOne = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+const toSlug = (text: string, suffix?: string | number): string => {
   const base = text.toLowerCase().trim()
     .replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 40);
   return suffix !== undefined ? `${base}-${suffix}` : base;
@@ -133,23 +139,23 @@ const CATEGORIES = [
 ];
 
 const COURSE_TITLES: Record<string, string[]> = {
-  "Web Development":    ["React 19 from Zero to Hero", "Next.js 14 Full-Stack Mastery", "Node.js Microservices in Production", "Modern TypeScript for Enterprise", "GraphQL API Design Patterns", "Vue 3 Composition API Deep Dive", "Svelte and SvelteKit Complete Guide", "HTMX and Hypermedia Patterns"],
-  "Data Science":       ["Python for Data Analysis", "Pandas and NumPy Mastery", "Data Visualization with Matplotlib", "Statistics for Data Scientists", "SQL Advanced Analytics", "Apache Spark for Big Data", "Excel to Python Migration", "Exploratory Data Analysis Bootcamp"],
-  "Machine Learning":   ["Deep Learning with TensorFlow 2", "Scikit-Learn Complete Guide", "PyTorch Neural Networks from Scratch", "NLP Mastery", "Computer Vision with OpenCV", "Reinforcement Learning Fundamentals", "MLOps Models to Production", "Transformers and LLM Fine-tuning"],
+  "Web Development": ["React 19 from Zero to Hero", "Next.js 14 Full-Stack Mastery", "Node.js Microservices in Production", "Modern TypeScript for Enterprise", "GraphQL API Design Patterns", "Vue 3 Composition API Deep Dive", "Svelte and SvelteKit Complete Guide", "HTMX and Hypermedia Patterns"],
+  "Data Science": ["Python for Data Analysis", "Pandas and NumPy Mastery", "Data Visualization with Matplotlib", "Statistics for Data Scientists", "SQL Advanced Analytics", "Apache Spark for Big Data", "Excel to Python Migration", "Exploratory Data Analysis Bootcamp"],
+  "Machine Learning": ["Deep Learning with TensorFlow 2", "Scikit-Learn Complete Guide", "PyTorch Neural Networks from Scratch", "NLP Mastery", "Computer Vision with OpenCV", "Reinforcement Learning Fundamentals", "MLOps Models to Production", "Transformers and LLM Fine-tuning"],
   "Mobile Development": ["Flutter 3 Cross-Platform Apps", "React Native for Production", "SwiftUI Complete Masterclass", "Jetpack Compose for Android", "Expo SDK Zero to App Store", "Kotlin Multiplatform Mobile", "iOS Architecture Patterns", "Android Jetpack Fundamentals"],
-  "DevOps & Cloud":     ["Docker and Kubernetes in Production", "AWS Solutions Architect Prep", "Terraform Infrastructure as Code", "CI/CD with GitHub Actions", "Linux System Administration", "Prometheus and Grafana Monitoring", "Ansible Automation Mastery", "GCP Professional Cloud Architect"],
-  "Cybersecurity":      ["Ethical Hacking Complete Course", "OWASP Top 10 for Developers", "Network Security Fundamentals", "Penetration Testing Bootcamp", "Web Application Security Testing", "Zero Trust Architecture Design", "CISSP Certification Prep", "Malware Analysis and Reverse Engineering"],
-  "UI/UX Design":       ["Figma UI Design Masterclass", "UX Research Methods and Practice", "Design Systems at Scale", "Mobile App UX Best Practices", "Accessibility in Modern Design", "Prototyping with Adobe XD", "Motion Design with After Effects", "User Psychology and Behavioral Design"],
-  "Blockchain":         ["Solidity Smart Contract Development", "Ethereum DApp from Scratch", "Web3.js and Ethers.js Complete Guide", "DeFi Protocol Architecture", "NFT Marketplace Development", "Rust for Solana Development", "Zero Knowledge Proofs Explained", "Blockchain Security Auditing"],
-  "Game Development":   ["Unity 3D Game Development Bootcamp", "Unreal Engine 5 Complete Guide", "Godot 4 from Zero to Game Store", "2D Pixel Art Game Design", "Multiplayer Game Architecture", "Game AI Programming Fundamentals", "Shader Development with GLSL", "Mobile Game Monetization Strategy"],
-  "Database Design":    ["MongoDB Advanced Aggregations", "PostgreSQL Performance Tuning", "Redis Architecture and Caching Patterns", "Database Design and Normalization", "Cassandra for High-Scale Systems", "ElasticSearch Complete Guide", "Neo4j Graph Database Mastery", "TimescaleDB for Time-Series Data"],
+  "DevOps & Cloud": ["Docker and Kubernetes in Production", "AWS Solutions Architect Prep", "Terraform Infrastructure as Code", "CI/CD with GitHub Actions", "Linux System Administration", "Prometheus and Grafana Monitoring", "Ansible Automation Mastery", "GCP Professional Cloud Architect"],
+  "Cybersecurity": ["Ethical Hacking Complete Course", "OWASP Top 10 for Developers", "Network Security Fundamentals", "Penetration Testing Bootcamp", "Web Application Security Testing", "Zero Trust Architecture Design", "CISSP Certification Prep", "Malware Analysis and Reverse Engineering"],
+  "UI/UX Design": ["Figma UI Design Masterclass", "UX Research Methods and Practice", "Design Systems at Scale", "Mobile App UX Best Practices", "Accessibility in Modern Design", "Prototyping with Adobe XD", "Motion Design with After Effects", "User Psychology and Behavioral Design"],
+  "Blockchain": ["Solidity Smart Contract Development", "Ethereum DApp from Scratch", "Web3.js and Ethers.js Complete Guide", "DeFi Protocol Architecture", "NFT Marketplace Development", "Rust for Solana Development", "Zero Knowledge Proofs Explained", "Blockchain Security Auditing"],
+  "Game Development": ["Unity 3D Game Development Bootcamp", "Unreal Engine 5 Complete Guide", "Godot 4 from Zero to Game Store", "2D Pixel Art Game Design", "Multiplayer Game Architecture", "Game AI Programming Fundamentals", "Shader Development with GLSL", "Mobile Game Monetization Strategy"],
+  "Database Design": ["MongoDB Advanced Aggregations", "PostgreSQL Performance Tuning", "Redis Architecture and Caching Patterns", "Database Design and Normalization", "Cassandra for High-Scale Systems", "ElasticSearch Complete Guide", "Neo4j Graph Database Mastery", "TimescaleDB for Time-Series Data"],
 };
 
 const LECTURE_PREFIXES = ["Introduction to", "Deep Dive into", "Mastering", "Advanced", "Understanding", "Building with", "Optimizing", "Testing", "Deploying", "Debugging", "Securing", "Scaling", "Integrating", "Refactoring", "Patterns in"];
-const LECTURE_TOPICS   = ["Core Concepts", "Architecture Patterns", "Configuration and Setup", "State Management", "Error Handling", "Performance Optimization", "Authentication and Authorization", "Database Integration", "API Design", "Unit Testing", "End-to-End Testing", "Deployment Strategies", "Monitoring and Logging", "CI/CD Pipelines", "Security Hardening"];
+const LECTURE_TOPICS = ["Core Concepts", "Architecture Patterns", "Configuration and Setup", "State Management", "Error Handling", "Performance Optimization", "Authentication and Authorization", "Database Integration", "API Design", "Unit Testing", "End-to-End Testing", "Deployment Strategies", "Monitoring and Logging", "CI/CD Pipelines", "Security Hardening"];
 
 const makeLectureTitle = () => `${pickOne(LECTURE_PREFIXES)} ${pickOne(LECTURE_TOPICS)}`;
-const makeCourseTitle  = (cat: string) => {
+const makeCourseTitle = (cat: string) => {
   const pool = COURSE_TITLES[cat] ?? [];
   return pool.length ? pool[randInt(0, pool.length - 1)] : faker.lorem.words(5);
 };
@@ -169,7 +175,7 @@ async function seed() {
   await mongoose.connect(MONGO_URI, { family: 4, serverSelectionTimeoutMS: 5000 });
   console.log("Connected!\n");
 
-  const db  = mongoose.connection.db!;
+  const db = mongoose.connection.db!;
   const now = new Date();
 
   // ── Step 0: Wipe all target collections ─────────────────────────────────────
@@ -192,25 +198,25 @@ async function seed() {
   console.log(`Seeding ${CFG.NUM_INSTRUCTORS} instructors + ${CFG.NUM_STUDENTS} students...`);
 
   const makeUser = (role: string) => ({
-    name:           faker.person.fullName().slice(0, 50),
-    email:          faker.internet.email({ provider: "edunode.dev" }).toLowerCase(),
-    password:       SHARED_HASH,
+    name: faker.person.fullName().slice(0, 50),
+    email: faker.internet.email({ provider: "edunode.dev" }).toLowerCase(),
+    password: SHARED_HASH,
     role,
-    avatar:         `https://api.dicebear.com/8.x/avataaars/svg?seed=${faker.string.alphanumeric(8)}`,
-    bio:            faker.lorem.sentences(2).slice(0, 198),
-    enrolledCourses:  [],
-    createdCourses:   [],
-    lastActive:       faker.date.recent({ days: 30 }),
-    createdAt:        now,
-    updatedAt:        now,
+    avatar: `https://api.dicebear.com/8.x/avataaars/svg?seed=${faker.string.alphanumeric(8)}`,
+    bio: faker.lorem.sentences(2).slice(0, 198),
+    enrolledCourses: [],
+    createdCourses: [],
+    lastActive: faker.date.recent({ days: 30 }),
+    createdAt: now,
+    updatedAt: now,
   });
 
-  const instrResult  = await db.collection("users").insertMany(Array.from({ length: CFG.NUM_INSTRUCTORS }, () => makeUser(Role.INSTRUCTOR)));
-  const studResult   = await db.collection("users").insertMany(Array.from({ length: CFG.NUM_STUDENTS  }, () => makeUser(Role.STUDENT)));
+  const instrResult = await db.collection("users").insertMany(Array.from({ length: CFG.NUM_INSTRUCTORS }, () => makeUser(Role.INSTRUCTOR)));
+  const studResult = await db.collection("users").insertMany(Array.from({ length: CFG.NUM_STUDENTS }, () => makeUser(Role.STUDENT)));
 
   const instructorIds = Object.values(instrResult.insertedIds) as Types.ObjectId[];
-  const studentIds    = Object.values(studResult.insertedIds)  as Types.ObjectId[];
-  const allUserIds    = [...instructorIds, ...studentIds];
+  const studentIds = Object.values(studResult.insertedIds) as Types.ObjectId[];
+  const allUserIds = [...instructorIds, ...studentIds];
   console.log(`  Created ${allUserIds.length} users.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -224,9 +230,9 @@ async function seed() {
   for (const instructorId of instructorIds) {
     const cats = shuffle(CATEGORIES).slice(0, CFG.COURSES_PER_INSTR);
     for (const cat of cats) {
-      let title  = makeCourseTitle(cat).slice(0, 48);
-      let slug   = toSlug(title);
-      let att    = 0;
+      let title = makeCourseTitle(cat).slice(0, 48);
+      let slug = toSlug(title);
+      let att = 0;
       while (seenCourseSlugs.has(slug)) { att++; slug = toSlug(title, att); }
       seenCourseSlugs.add(slug);
 
@@ -235,19 +241,19 @@ async function seed() {
 
       courseDocs.push({
         slug, title,
-        subtitle:     faker.lorem.words(randInt(8, 14)).slice(0, 98),
-        description:  faker.lorem.sentences(2).slice(0, 196),
-        category:     cat,
+        subtitle: faker.lorem.words(randInt(8, 14)).slice(0, 98),
+        description: faker.lorem.sentences(2).slice(0, 196),
+        category: cat,
         level,
         price,
-        thumbnail:    `https://picsum.photos/seed/${slug}/800/450`,
-        instructor:   instructorId,
-        isPublished:  true,
+        thumbnail: `https://picsum.photos/seed/${slug}/800/450`,
+        instructor: instructorId,
+        isPublished: true,
         totalLectures: 0,
         totalDuration: 0,
         enrolledStudents: [],
-        lectures:         [],
-        announcements:    [],
+        lectures: [],
+        announcements: [],
         createdAt: faker.date.past({ years: 2 }),
         updatedAt: now,
       });
@@ -255,7 +261,7 @@ async function seed() {
   }
 
   const courseResult = await db.collection("courses").insertMany(courseDocs, { ordered: false });
-  const courseIds    = Object.values(courseResult.insertedIds) as Types.ObjectId[];
+  const courseIds = Object.values(courseResult.insertedIds) as Types.ObjectId[];
   console.log(`  Created ${courseIds.length} courses.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -267,32 +273,38 @@ async function seed() {
   const lectureIndex = new Map<string, { _id: Types.ObjectId; duration: number }[]>();
 
   for (const courseId of courseIds) {
-    const n          = randInt(CFG.MIN_LECTURES, CFG.MAX_LECTURES);
-    const usedSlugs  = new Set<string>();
+    const n = randInt(CFG.MIN_LECTURES, CFG.MAX_LECTURES);
+    const usedSlugs = new Set<string>();
     const batch: object[] = [];
     let totalDuration = 0;
 
     for (let i = 0; i < n; i++) {
       let title = makeLectureTitle().slice(0, 48);
-      let slug  = toSlug(title);
-      let att   = 0;
+      let slug = toSlug(title);
+      let att = 0;
       while (usedSlugs.has(slug)) { att++; slug = toSlug(title, att); }
       usedSlugs.add(slug);
 
       const dur = randInt(300, 3600);
       totalDuration += dur;
 
+      const TEST_VIDEOS = [
+        "https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204928/YTDown_YouTube_30-Minute-Timer_Media_LNYm40RmRzs_006_144p_abgtx2.mp4",
+        "https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204830/YTDown_YouTube_10-Minute-Timer_Media_lMVv3qz-rHs_006_144p_sfyo5y.mp4",
+        "https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204580/1_Hour_Timer_-_Online_Alarm_Kur_144p_h264_jalyuk.mp4",
+      ];
+
       batch.push({
         title, slug,
         courseId,
         description: faker.lorem.sentences(2).slice(0, 98),
-        videoUrl:    `https://storage.googleapis.com/edunode-seed/${courseId}/lec-${i + 1}.mp4`,
-        publicId:    `edunode/${courseId}/lec-${i + 1}`,
-        duration:    dur,
-        isPreview:   i < 2,
-        order:       i + 1,
-        createdAt:   now,
-        updatedAt:   now,
+        videoUrl: TEST_VIDEOS[i % TEST_VIDEOS.length],
+        publicId: `edunode/${courseId}/lec-${i + 1}`,
+        duration: dur,
+        isPreview: i < 2,
+        order: i + 1,
+        createdAt: now,
+        updatedAt: now,
       });
     }
 
@@ -327,8 +339,8 @@ async function seed() {
     for (let i = 0; i < count; i++) {
       annBatch.push({
         courseId,
-        message:   faker.lorem.sentences(randInt(1, 3)).slice(0, 498),
-        sentAt:    faker.date.recent({ days: 120 }),
+        message: faker.lorem.sentences(randInt(1, 3)).slice(0, 498),
+        sentAt: faker.date.recent({ days: 120 }),
         createdAt: now,
         updatedAt: now,
       });
@@ -336,7 +348,7 @@ async function seed() {
   }
 
   const annResult = await db.collection("announcements").insertMany(annBatch, { ordered: false });
-  const annIds    = Object.values(annResult.insertedIds) as Types.ObjectId[];
+  const annIds = Object.values(annResult.insertedIds) as Types.ObjectId[];
 
   // Back-link announcement IDs to their parent courses
   let annOffset = 0;
@@ -360,25 +372,25 @@ async function seed() {
 
   for (const studentId of studentIds) {
     const numEnroll = randInt(CFG.ENROLL_MIN, CFG.ENROLL_MAX);
-    const chosen    = sample(courseIds, numEnroll);
+    const chosen = sample(courseIds, numEnroll);
     const enrolled: Types.ObjectId[] = [];
 
     for (const courseId of chosen) {
       const isRefunded = Math.random() < 0.06;
-      const status     = (isRefunded ? PaymentStatus.REFUNDED : PaymentStatus.COMPLETED) as PaymentStatusVal;
-      const courseDoc  = courseDocs.find((c) => c._id?.toString() === courseId.toString());
-      const amount     = (courseDoc?.price ?? 0) as number;
+      const status = (isRefunded ? PaymentStatus.REFUNDED : PaymentStatus.COMPLETED) as PaymentStatusVal;
+      const courseDoc = courseDocs.find((c) => c._id?.toString() === courseId.toString());
+      const amount = (courseDoc?.price ?? 0) as number;
 
       const purchase: Record<string, unknown> = {
         course: courseId, user: studentId,
         amount, currency: "RUPEES", status,
         paymentMethod: pickOne(["card", "upi", "netbanking", "wallet"]),
-        paymentId:     `pay_${faker.string.alphanumeric(16)}`,
-        createdAt:     faker.date.past({ years: 1 }),
-        updatedAt:     now,
+        paymentId: `pay_${faker.string.alphanumeric(16)}`,
+        createdAt: faker.date.past({ years: 1 }),
+        updatedAt: now,
       };
       if (isRefunded) {
-        purchase.refundId     = `rfnd_${faker.string.alphanumeric(14)}`;
+        purchase.refundId = `rfnd_${faker.string.alphanumeric(14)}`;
         purchase.refundAmount = amount;
         purchase.refundReason = faker.lorem.sentence();
       }
@@ -415,30 +427,30 @@ async function seed() {
       const lecs = lectureIndex.get(courseId.toString()) ?? [];
       if (!lecs.length) continue;
 
-      const fraction  = Math.random();
-      const numDone   = Math.floor(lecs.length * fraction);
-      const doneSet   = new Set(shuffle(lecs).slice(0, numDone).map((l) => l._id.toString()));
+      const fraction = Math.random();
+      const numDone = Math.floor(lecs.length * fraction);
+      const doneSet = new Set(shuffle(lecs).slice(0, numDone).map((l) => l._id.toString()));
 
       const lectureProgress = lecs.map((lec) => {
         const done = doneSet.has(lec._id.toString());
         return {
-          lecture:             lec._id,
-          userId:              studentId,
-          isCompleted:         done,
+          lecture: lec._id,
+          userId: studentId,
+          isCompleted: done,
           lastWatchedPosition: done ? lec.duration : randInt(0, lec.duration),
-          lastWatched:         faker.date.recent({ days: 60 }),
+          lastWatched: faker.date.recent({ days: 60 }),
         };
       });
 
       const pct = Math.round((numDone / lecs.length) * 100);
       progressBatch.push({
         user: studentId, course: courseId,
-        isCompleted:          pct === 100,
+        isCompleted: pct === 100,
         completionPercentage: pct,
         lectureProgress,
         lastAccessed: faker.date.recent({ days: 30 }),
-        createdAt:    now,
-        updatedAt:    now,
+        createdAt: now,
+        updatedAt: now,
       });
     }
   }
@@ -460,42 +472,42 @@ async function seed() {
     const n = randInt(CFG.COMMENTS_MIN, CFG.COMMENTS_MAX);
     for (let i = 0; i < n; i++) {
       commentBatch.push({
-        lectureId:  lecId,
-        userId:     pickOne(allUserIds),
-        content:    faker.lorem.sentences(randInt(1, 4)),
-        likes:      randInt(0, 120),
-        dislikes:   randInt(0, 20),
+        lectureId: lecId,
+        userId: pickOne(allUserIds),
+        content: faker.lorem.sentences(randInt(1, 4)),
+        likes: randInt(0, 120),
+        dislikes: randInt(0, 20),
         replyCount: 0,
-        isDeleted:  Math.random() < 0.03,
-        deletedAt:  null,
-        createdAt:  faker.date.recent({ days: 180 }),
-        updatedAt:  faker.date.recent({ days: 60 }),
+        isDeleted: Math.random() < 0.03,
+        deletedAt: null,
+        createdAt: faker.date.recent({ days: 180 }),
+        updatedAt: faker.date.recent({ days: 60 }),
       });
     }
   }
 
   const commentResult = await db.collection("comments").insertMany(commentBatch, { ordered: false });
-  const commentIds    = Object.values(commentResult.insertedIds) as Types.ObjectId[];
+  const commentIds = Object.values(commentResult.insertedIds) as Types.ObjectId[];
 
   // 15% of top-level comments get 1–4 replies
-  const parents    = sample(commentIds, Math.floor(commentIds.length * 0.15));
+  const parents = sample(commentIds, Math.floor(commentIds.length * 0.15));
   const replyBatch: object[] = [];
 
   for (const parentId of parents) {
     const numReplies = randInt(1, 4);
     for (let r = 0; r < numReplies; r++) {
       replyBatch.push({
-        lectureId:       pickOne(allLecIds),
-        userId:          pickOne(allUserIds),
-        content:         faker.lorem.sentences(randInt(1, 2)),
-        likes:           randInt(0, 30),
-        dislikes:        randInt(0, 5),
+        lectureId: pickOne(allLecIds),
+        userId: pickOne(allUserIds),
+        content: faker.lorem.sentences(randInt(1, 2)),
+        likes: randInt(0, 30),
+        dislikes: randInt(0, 5),
         parentCommentId: parentId,
-        replyCount:      0,
-        isDeleted:       false,
-        deletedAt:       null,
-        createdAt:       faker.date.recent({ days: 90 }),
-        updatedAt:       faker.date.recent({ days: 30 }),
+        replyCount: 0,
+        isDeleted: false,
+        deletedAt: null,
+        createdAt: faker.date.recent({ days: 90 }),
+        updatedAt: faker.date.recent({ days: 30 }),
       });
     }
     await db.collection("comments").updateOne({ _id: parentId }, { $set: { replyCount: numReplies } });
@@ -514,10 +526,10 @@ async function seed() {
   const heatmapBatch: object[] = [];
   for (const lecId of allLecIds) {
     for (let seg = 0; seg < CFG.HEATMAP_SEGMENTS; seg++) {
-      const pos    = seg / CFG.HEATMAP_SEGMENTS;
+      const pos = seg / CFG.HEATMAP_SEGMENTS;
       const weight = pos < 0.15 ? 0.85 + Math.random() * 0.15
-                   : pos > 0.85 ? 0.65 + Math.random() * 0.25
-                   :              0.35 + Math.random() * 0.50;
+        : pos > 0.85 ? 0.65 + Math.random() * 0.25
+          : 0.35 + Math.random() * 0.50;
       const seconds = Math.round(weight * randInt(40, 280));
       if (seconds > 0) {
         heatmapBatch.push({ lectureId: lecId, segmentIndex: seg, secondsWatched: seconds, createdAt: now, updatedAt: now });

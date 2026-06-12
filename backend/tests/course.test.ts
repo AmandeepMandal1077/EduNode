@@ -242,15 +242,14 @@ describe("Course Controller Integration Tests", () => {
       });
 
       const response = await request(app)
-        .get("/api/v1/courses") // Based on route "/"
+        .get("/api/v1/courses/")
         .set("Cookie", [instructorToken]);
 
       expect(response.status).toBe(200);
-      expect(response.body.data.courses).toBeDefined();
-      // Should find the course
-      expect(
-        response.body.data.courses.some((c: any) => c.title === "My Course"),
-      ).toBe(true);
+      expect(response.body.data.courses.length).toBeGreaterThan(0);
+      expect(response.body.data.courses[0].instructor.toString()).toBe(
+        instructorId,
+      );
     });
   });
 

@@ -97,27 +97,6 @@ export const handleCloudinaryWebhook = asyncHandler(
       return res.status(200).json({ received: true });
     }
 
-    // Send a notification to frontend via WebSocket/SSE
-    // res.setHeader("Content-Type", "text/event-stream");
-    // res.setHeader("Access-Control-Allow-Origin", "*"); //frontend url
-    // res.setHeader("Connection", "keep-alive");
-    // res.setHeader("Cache-Control", "no-cache");
-    // res.setHeader("X-Accel-Buffering", "no");
-
-    // const intervalId = setInterval(() => {
-    //   res.write(
-    //     `data: ${JSON.stringify({
-    //       publicId: public_id,
-    //       url: secure_url,
-    //       type: resource_type,
-    //     })}\n\n`,
-    //   );
-    // }, 1000);
-
-    // res.on("close", () => {
-    //   console.log("Client connection closed");
-    //   clearInterval(intervalId);
-    // });
 
     console.log("Upload verified via webhook:", {
       publicId: public_id,

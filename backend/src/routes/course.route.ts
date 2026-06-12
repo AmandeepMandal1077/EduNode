@@ -10,14 +10,18 @@ import {
   getCourseLectures,
   announceMessage,
   getCourseAnnouncements,
+  getMyAnnouncements,
   rateCourse,
+  getCourseCategories,
 } from "../controllers/course.controller.js";
 import {
   authenticateUserMiddleware,
   restrictToInstructor,
 } from "../middlewares/auth.middleware.js";
 import { validator, SourceType } from "../middlewares/validator.middleware.js";
-import { courseValidator } from "../validator/course.zod.js";
+import { courseValidator, courseUpdateSchema } from "../validator/course.zod.js";
+import { announcementSchema } from "../validator/announcement.zod.js";
+import { ratingSchema } from "../validator/rating.zod.js";
 import { getPurchasedCourses } from "../controllers/coursePurchase.controller.js";
 
 const router = express.Router();
@@ -25,6 +29,7 @@ const router = express.Router();
 // Public routes
 router.get("/published", getPublishedCourses);
 router.get("/search", searchCourses);
+router.get("/categories", getCourseCategories);
 
 // Protected routes
 router.use(authenticateUserMiddleware);
@@ -44,19 +49,29 @@ router
   .route("/purchased")
   .get(getPurchasedCourses);
 
+// announcements
+router
+  .route("/my-announcements")
+  .get(getMyAnnouncements);
+
 // Course details and updates
 router
   .route("/:courseId")
   .get(getCourseDetails)
   .patch(
     restrictToInstructor(),
+    validator(SourceType.BODY, courseUpdateSchema),
     updateCourseDetails,
   );
 
 //announce
 router
   .route("/:courseId/announce")
-  .post(restrictToInstructor(), announceMessage);
+  .post(
+    restrictToInstructor(),
+    validator(SourceType.BODY, announcementSchema),
+    announceMessage,
+  );
 
 // announcements
 router
@@ -66,7 +81,10 @@ router
 // rate course
 router
   .route("/:courseId/rate")
-  .post(rateCourse);
+  .post(
+    validator(SourceType.BODY, ratingSchema),
+    rateCourse,
+  );
 
 // Lecture management
 router

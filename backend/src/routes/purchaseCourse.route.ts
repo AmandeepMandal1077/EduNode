@@ -5,6 +5,8 @@ import {
   handleStripeWebhook,
   initiateStripeCheckout,
   verifyStripeSession,
+  getMyEnrollments,
+  enrollFreeCourse,
 } from "../controllers/coursePurchase.controller.js";
 import { authenticateUserMiddleware } from "../middlewares/auth.middleware.js";
 
@@ -23,6 +25,10 @@ router
   .get(authenticateUserMiddleware, getCoursePurchaseStatus);
 
 router.route("/").get(authenticateUserMiddleware, getPurchaseHistory);
+
+router.route("/my-enrollments").get(authenticateUserMiddleware, getMyEnrollments);
+
+router.route("/enroll-free").post(authenticateUserMiddleware, enrollFreeCourse);
 
 
 export default router;

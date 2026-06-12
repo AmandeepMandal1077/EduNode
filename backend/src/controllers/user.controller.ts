@@ -4,8 +4,8 @@ import type { AuthenticatedRequest } from "../types/user.js";
 import { ApiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { generateToken } from "../utils/generateToken.js";
+import { addForgotPasswordJob } from "../queue/forgot-password.queue.js";
 import type { Request, Response } from "express";
-import { success } from "zod";
 
 /**
  * Create a new user account
@@ -175,19 +175,30 @@ export const forgotPassword = asyncHandler(
   async (req: Request, res: Response) => {
     const { email } = req.body;
 
-    const user = await User.findOne({
-      email: email
-    });
+    const user = await User.findOne({ email });
 
+    // Always respond 200 even if no user — prevents email enumeration
     if (!user) {
-      throw new ApiError("No user found", 401);
+      res.status(200).json({
+        success: true,
+        message: "If that email exists, a reset link has been sent.",
+      });
+      return;
     }
 
-    const resetPasswordToken = await user.getResetPasswordToken();
+    const token = await user.getResetPasswordToken();
+    const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+
+    await addForgotPasswordJob({
+      username: user.name,
+      email: user.email,
+      resetUrl,
+    });
+
     res.status(200).json({
       success: true,
-      message: "Reset password token generated",
-      data: { resetPasswordToken },
+      message: "If that email exists, a reset link has been sent.",
     });
   },
 );
@@ -197,32 +208,38 @@ export const forgotPassword = asyncHandler(
  * @route POST /api/v1/users/reset-password/
  */
 export const resetPassword = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response) => {
-    const { userId } = req;
-    const { resetPasswordToken } = req.body;
-    if (!resetPasswordToken) {
-      throw new ApiError("No reset password token", 400);
+  async (req: Request, res: Response) => {
+    const { email, token, newPassword } = req.body;
+
+    if (!email || !token || !newPassword) {
+      throw new ApiError("Email, token and new password are required", 400);
     }
 
-    const user = await User.findById(new mongoose.Types.ObjectId(userId));
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      throw new ApiError("No user found", 400);
+      throw new ApiError("Invalid or expired reset link", 400);
     }
     if (!user.resetPasswordTokenExpiry) {
-      throw new ApiError("No password token expiry", 400);
+      throw new ApiError("Invalid or expired reset link", 400);
     }
     if (user.resetPasswordTokenExpiry < new Date(Date.now())) {
-      throw new ApiError("Reset Password Token Expired", 403);
+      throw new ApiError("Reset link has expired. Please request a new one.", 403);
     }
 
-    const isValid = await user.compareResetPasswordToken(resetPasswordToken);
+    const isValid = await user.compareResetPasswordToken(token);
     if (!isValid) {
-      throw new ApiError("Invalid reset password token", 400);
+      throw new ApiError("Invalid or expired reset link", 400);
     }
+
+    // Set new password (pre-save hook will hash it)
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordTokenExpiry = undefined;
+    await user.save();
 
     res.status(200).json({
       success: true,
-      message: "Valid reset password token",
+      message: "Password reset successfully. You can now sign in.",
     });
   },
 );
