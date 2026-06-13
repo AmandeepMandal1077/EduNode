@@ -76,7 +76,6 @@ export function Navbar() {
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-8">
-        {/* Logo — left edge */}
         <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
             <GraduationCap className="w-4 h-4 text-white" />
@@ -86,7 +85,6 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Nav — immediately after logo, left-aligned */}
         <nav className="hidden md:flex items-center gap-1">
           {NAV_LINKS.filter((l) => !l.auth || authenticated).map((link) => (
             <Link
@@ -104,14 +102,13 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* Spacer pushes right-side items to the far right */}
+
         <div className="flex-1" />
 
-        {/* Right side — auth controls only */}
         <div className="flex items-center gap-2">
           {authenticated ? (
             <>
-              {/* User menu */}
+
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setUserMenuOpen((o) => !o)}
@@ -190,7 +187,7 @@ export function Navbar() {
             </>
           )}
 
-          {/* Mobile menu toggle */}
+
           <button
             className="md:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100"
             onClick={() => setMobileOpen((o) => !o)}
@@ -201,7 +198,7 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+
       <AnimatePresence>
         {mobileOpen && (
           <motion.div

@@ -30,7 +30,7 @@ export function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // If token or email is missing, show an invalid link state immediately
+
   const isLinkValid = Boolean(token && email);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,7 +54,7 @@ export function ResetPasswordPage() {
     try {
       await apiResetPassword({ email, token, newPassword });
       setSuccess(true);
-      // Redirect to login after 3s
+
       setTimeout(() => navigate("/login"), 3000);
     } catch (err: unknown) {
       const msg =
@@ -73,7 +73,7 @@ export function ResetPasswordPage() {
         background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
       }}
     >
-      {/* Background blobs */}
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div
           className="absolute top-1/4 -left-32 w-72 h-72 rounded-full blur-3xl opacity-40"
@@ -92,7 +92,7 @@ export function ResetPasswordPage() {
         className="relative w-full max-w-md"
       >
         <div className="glass rounded-3xl shadow-2xl p-8 sm:p-10">
-          {/* Logo */}
+
           <div className="flex items-center justify-center gap-2.5 mb-8">
             <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
               <GraduationCap className="w-5 h-5 text-white" />
@@ -103,7 +103,7 @@ export function ResetPasswordPage() {
           </div>
 
           <AnimatePresence mode="wait">
-            {/* ── Invalid link ── */}
+
             {!isLinkValid && (
               <motion.div
                 key="invalid"
@@ -129,7 +129,7 @@ export function ResetPasswordPage() {
               </motion.div>
             )}
 
-            {/* ── Success ── */}
+
             {isLinkValid && success && (
               <motion.div
                 key="success"
@@ -155,7 +155,7 @@ export function ResetPasswordPage() {
               </motion.div>
             )}
 
-            {/* ── Form ── */}
+
             {isLinkValid && !success && (
               <motion.div
                 key="form"
@@ -172,7 +172,7 @@ export function ResetPasswordPage() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                  {/* New password */}
+
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="rp-new" className="text-sm font-medium text-slate-700">
                       New Password
@@ -200,7 +200,7 @@ export function ResetPasswordPage() {
                     </div>
                   </div>
 
-                  {/* Confirm password */}
+
                   <div className="flex flex-col gap-1.5">
                     <Label htmlFor="rp-confirm" className="text-sm font-medium text-slate-700">
                       Confirm Password
@@ -220,7 +220,7 @@ export function ResetPasswordPage() {
                     </div>
                   </div>
 
-                  {/* Error */}
+
                   {error && (
                     <motion.div
                       initial={{ opacity: 0, y: -4 }}

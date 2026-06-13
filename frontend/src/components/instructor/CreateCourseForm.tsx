@@ -37,7 +37,7 @@ export function CreateCourseForm({
 }: CreateCourseFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      {/* Title */}
+
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
           <Label htmlFor="title" className="text-sm font-medium text-slate-700">Course Title</Label>
@@ -57,7 +57,7 @@ export function CreateCourseForm({
         <span className="text-[10px] text-slate-400 text-right">{form.title.length}/50</span>
       </div>
 
-      {/* Subtitle */}
+
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
           <Label htmlFor="subtitle" className="text-sm font-medium text-slate-700">Subtitle / Headline</Label>
@@ -77,7 +77,7 @@ export function CreateCourseForm({
         <span className="text-[10px] text-slate-400 text-right">{form.subtitle.length}/100</span>
       </div>
 
-      {/* Description */}
+
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
           <Label htmlFor="description" className="text-sm font-medium text-slate-700">Description</Label>
@@ -99,7 +99,7 @@ export function CreateCourseForm({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Category */}
+
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-baseline">
             <Label htmlFor="category" className="text-sm font-medium text-slate-700">Category</Label>
@@ -118,7 +118,7 @@ export function CreateCourseForm({
           />
         </div>
 
-        {/* Level */}
+
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="level" className="text-sm font-medium text-slate-700">Difficulty Level</Label>
           <select
@@ -134,7 +134,7 @@ export function CreateCourseForm({
           </select>
         </div>
 
-        {/* Price */}
+
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-baseline">
             <Label htmlFor="price" className="text-sm font-medium text-slate-700">Price (INR)</Label>
@@ -154,7 +154,7 @@ export function CreateCourseForm({
         </div>
       </div>
 
-      {/* Thumbnail */}
+
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
           <Label className="text-sm font-medium text-slate-700">Thumbnail Image File</Label>

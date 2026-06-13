@@ -1,14 +1,3 @@
-/**
- * purchaseApi.ts
- * All calls that map to /api/v1/payments
- *
- * Backend route reference:
- *   GET  /api/v1/payments/                               → getPurchasedCourses
- *   GET  /api/v1/payments/course/:courseId/detail-with-status → getCoursePurchaseStatus
- *   POST /api/v1/payments/create-checkout-session        → initiateStripeCheckout
- *   POST /api/v1/payments/checkout/verify                → verifyStripeSession
- */
-
 import apiClient from "./client";
 import type { BackendCourse } from "./courseApi";
 import type { CourseProgressResponse } from "./progressApi";
@@ -41,13 +30,12 @@ export interface CheckoutSession {
   url: string;
 }
 
-// ── API calls ─────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Fetch all purchases completed by the logged-in user
- * @input: none
- * @return: Promise<PurchaseRecord[]>
- * @access: Private
+ * @desc Fetch all purchases completed by the logged-in user.
+ * @input None
+ * @output {Promise<PurchaseRecord[]>} List of purchase records.
  */
 export async function fetchPurchasedCourses(): Promise<PurchaseRecord[]> {
   const res = await apiClient.get("/payments");
@@ -55,10 +43,9 @@ export async function fetchPurchasedCourses(): Promise<PurchaseRecord[]> {
 }
 
 /**
- * @desc: Fetch purchase status and record details for a specific course
- * @input: courseId (string)
- * @return: Promise<CoursePurchaseStatus>
- * @access: Private
+ * @desc Fetch purchase status and record details for a specific course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<CoursePurchaseStatus>} The purchase status data.
  */
 export async function fetchCoursePurchaseStatus(
   courseId: string
@@ -68,10 +55,9 @@ export async function fetchCoursePurchaseStatus(
 }
 
 /**
- * @desc: Create a Stripe checkout session to purchase a course
- * @input: courseId (string)
- * @return: Promise<CheckoutSession>
- * @access: Private
+ * @desc Create a Stripe checkout session to purchase a course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<CheckoutSession>} The checkout session details.
  */
 export async function createCheckoutSession(
   courseId: string
@@ -81,20 +67,18 @@ export async function createCheckoutSession(
 }
 
 /**
- * @desc: Enroll in a free (price=0) course without going through Stripe
- * @input: courseId (string)
- * @return: Promise<void>
- * @access: Private
+ * @desc Enroll in a free course without Stripe.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<void>} Resolves on successful enrollment.
  */
 export async function enrollFreeCourse(courseId: string): Promise<void> {
   await apiClient.post("/payments/enroll-free", { courseId });
 }
 
 /**
- * @desc: Verify a Stripe checkout session's payment completion status
- * @input: sessionId (string)
- * @return: Promise<{ success: boolean; purchase: PurchaseRecord }>
- * @access: Private
+ * @desc Verify a Stripe checkout session's payment completion status.
+ * @input {string} sessionId - The Stripe session ID.
+ * @output {Promise<{ paid: boolean; purchase: PurchaseRecord }>} The verification result.
  */
 export async function verifyCheckoutSession(
   sessionId: string
@@ -110,10 +94,9 @@ export interface BackendEnrollmentData {
 }
 
 /**
- * @desc: Fetch all aggregated enrollment data for the user
- * @input: none
- * @return: Promise<BackendEnrollmentData[]>
- * @access: Private
+ * @desc Fetch all aggregated enrollment data for the user.
+ * @input None
+ * @output {Promise<BackendEnrollmentData[]>} List of enrollments.
  */
 export async function fetchMyEnrollments(): Promise<BackendEnrollmentData[]> {
   const res = await apiClient.get("/payments/my-enrollments");

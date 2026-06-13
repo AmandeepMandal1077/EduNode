@@ -1,16 +1,3 @@
-/**
- * commentApi.ts
- * All calls that map to /api/v1/comment
- *
- * Backend route reference  (all require auth):
- *   POST   /api/v1/comment/           → writeComment  { lectureId, content, parentCommentId? }
- *   POST   /api/v1/comment/like       → likeComment   { commentId }
- *   POST   /api/v1/comment/dislike    → dislikeComment { commentId }
- *   DELETE /api/v1/comment/           → deleteComment  { commentId }
- *
- * NOTE: fetching comments for a lecture is not yet a dedicated route.
- *       This file is structured so it can be extended easily.
- */
 
 import apiClient from "./client";
 
@@ -33,13 +20,12 @@ export interface BackendComment {
   updatedAt: string;
 }
 
-// ── API calls ─────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Write a new top-level comment or reply to an existing one
- * @input: payload (object containing lectureId: string, content: string, parentCommentId?: string)
- * @return: Promise<BackendComment>
- * @access: Private
+ * @desc Write a new top-level comment or reply to an existing one.
+ * @input {Object} payload - Contains lectureId, content, and optional parentCommentId.
+ * @output {Promise<BackendComment>} The newly created or updated comment.
  */
 export async function postComment(payload: {
   lectureId: string;
@@ -51,10 +37,10 @@ export async function postComment(payload: {
 }
 
 /**
- * @desc: Toggle a like/upvote on a specific comment
- * @input: lectureId (string), commentId (string)
- * @return: Promise<BackendComment>
- * @access: Private
+ * @desc Toggle a like/upvote on a specific comment.
+ * @input {string} lectureId - The ID of the lecture.
+ * @input {string} commentId - The ID of the comment.
+ * @output {Promise<BackendComment>} The updated comment.
  */
 export async function likeComment(lectureId: string, commentId: string): Promise<BackendComment> {
   const res = await apiClient.post("/comment/like", { lectureId, commentId });
@@ -62,10 +48,10 @@ export async function likeComment(lectureId: string, commentId: string): Promise
 }
 
 /**
- * @desc: Toggle a dislike/downvote on a specific comment
- * @input: lectureId (string), commentId (string)
- * @return: Promise<BackendComment>
- * @access: Private
+ * @desc Toggle a dislike/downvote on a specific comment.
+ * @input {string} lectureId - The ID of the lecture.
+ * @input {string} commentId - The ID of the comment.
+ * @output {Promise<BackendComment>} The updated comment.
  */
 export async function dislikeComment(lectureId: string, commentId: string): Promise<BackendComment> {
   const res = await apiClient.post("/comment/dislike", { lectureId, commentId });
@@ -73,10 +59,10 @@ export async function dislikeComment(lectureId: string, commentId: string): Prom
 }
 
 /**
- * @desc: Soft-delete a comment by changing its deleted flag
- * @input: lectureId (string), commentId (string)
- * @return: Promise<void>
- * @access: Private
+ * @desc Soft-delete a comment by changing its deleted flag.
+ * @input {string} lectureId - The ID of the lecture.
+ * @input {string} commentId - The ID of the comment.
+ * @output {Promise<void>} Resolves when the comment is deleted.
  */
 export async function deleteComment(lectureId: string, commentId: string): Promise<void> {
   await apiClient.delete("/comment", { data: { lectureId, commentId } });
@@ -89,10 +75,9 @@ export interface FetchCommentsResponse {
 }
 
 /**
- * @desc: Fetch all comments associated with a specific lecture
- * @input: lectureId (string)
- * @return: Promise<FetchCommentsResponse>
- * @access: Private
+ * @desc Fetch all comments associated with a specific lecture.
+ * @input {string} lectureId - The ID of the lecture.
+ * @output {Promise<FetchCommentsResponse>} The comments and user's reaction states.
  */
 export async function fetchLectureComments(lectureId: string): Promise<FetchCommentsResponse> {
   const res = await apiClient.get(`/lecture/${lectureId}/comments`);

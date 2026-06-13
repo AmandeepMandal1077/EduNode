@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 interface VideoPlayerProps {
   src?: string;
   title?: string;
-  duration?: number; // seconds – used only as fallback when metadata not yet loaded
+  duration?: number;
   onProgress?: (seconds: number) => void;
   initialProgress?: number;
   className?: string;
@@ -31,7 +31,7 @@ export function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // ── Sync duration once metadata is available ────────────────────────────────
+
   const handleLoadedMetadata = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -39,7 +39,7 @@ export function VideoPlayer({
     if (initialProgress > 0) v.currentTime = initialProgress;
   };
 
-  // ── Sync progress as video plays ────────────────────────────────────────────
+
   const handleTimeUpdate = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -47,7 +47,7 @@ export function VideoPlayer({
     onProgress?.(v.currentTime);
   }, [onProgress]);
 
-  // ── Keep volume in sync ─────────────────────────────────────────────────────
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -55,7 +55,7 @@ export function VideoPlayer({
     v.muted = muted;
   }, [volume, muted]);
 
-  // ── Reset when src changes ───────────────────────────────────────────────────
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -64,14 +64,14 @@ export function VideoPlayer({
     v.load();
   }, [src]);
 
-  // ── Fullscreen listener ──────────────────────────────────────────────────────
+
   useEffect(() => {
     const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", handleFsChange);
     return () => document.removeEventListener("fullscreenchange", handleFsChange);
   }, []);
 
-  // ── Controls ─────────────────────────────────────────────────────────────────
+
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -133,7 +133,7 @@ export function VideoPlayer({
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
-      {/* ── Real <video> element ─────────────────────────────────────────────── */}
+
       <video
         ref={videoRef}
         src={src}
@@ -148,7 +148,7 @@ export function VideoPlayer({
         onClick={togglePlay}
       />
 
-      {/* Fallback overlay when no src is provided */}
+
       {!src && (
         <div
           className="absolute inset-0 flex items-center justify-center cursor-pointer"
@@ -169,7 +169,7 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Big play indicator when paused on a real video */}
+
       {src && !isPlaying && (
         <div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -180,14 +180,14 @@ export function VideoPlayer({
         </div>
       )}
 
-      {/* Heatmap injection point */}
+
       <div
         id="heatmap-container"
         className="heatmap-container absolute bottom-12 left-0 right-0 h-1.5 pointer-events-none"
         aria-hidden="true"
       />
 
-      {/* ── Controls overlay ─────────────────────────────────────────────────── */}
+
       <div
         className={cn(
           "absolute bottom-0 left-0 right-0 transition-opacity duration-300",
@@ -198,12 +198,12 @@ export function VideoPlayer({
           padding: "0.75rem 1.25rem 1rem",
         }}
       >
-        {/* Title */}
+
         {title && (
           <p className="text-white/70 text-sm font-medium truncate mb-1">{title}</p>
         )}
 
-        {/* Progress bar */}
+
         <input
           type="range"
           className="video-progress mb-2"
@@ -217,7 +217,7 @@ export function VideoPlayer({
           }}
         />
 
-        {/* Control row */}
+
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
