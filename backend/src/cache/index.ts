@@ -7,7 +7,7 @@ const cache = createClient({
 });
 
 export const content_expiration_duration =
-  process.env.CACHE_CONTENT_EXPIRATION_DUR || 600000; //10min
+  process.env.CACHE_CONTENT_EXPIRATION_DUR || 600000;
 
 const cacheConnect = async () => {
   try {

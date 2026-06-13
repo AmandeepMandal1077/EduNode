@@ -12,6 +12,11 @@ export type TEmailOptions = {
   html?: string;
 };
 
+/**
+ * @desc Initializes the email transporter if it is not already created.
+ * @input None
+ * @output None
+ */
 function getTransporter() {
   if (!transporter) {
     transporter = nodemailer.createTransport({
@@ -30,6 +35,11 @@ function getTransporter() {
   }
 }
 
+/**
+ * @desc Sends an email using the configured transporter.
+ * @input {TEmailOptions} options - The email configuration options (from, to, subject, etc.).
+ * @output {Promise<void>} Resolves when the email sending process is complete.
+ */
 export async function sendEmail(options: TEmailOptions) {
   getTransporter();
   try {
@@ -39,6 +49,11 @@ export async function sendEmail(options: TEmailOptions) {
   }
 }
 
+/**
+ * @desc Sends an announcement email to a subscribed student.
+ * @input {TEmailQueueJobData} options - The data for the announcement email (username, message, etc.).
+ * @output {Promise<void>} Resolves when the announcement email is sent.
+ */
 export async function sendAnnouncementMailToUser(options: TEmailQueueJobData) {
   const { username, email, courseName, message, instructor } = options;
 
@@ -59,6 +74,11 @@ export type TPasswordResetEmailData = {
   resetUrl: string;
 };
 
+/**
+ * @desc Sends a password reset email to a user with a unique reset link.
+ * @input {TPasswordResetEmailData} options - The user data and reset URL.
+ * @output {Promise<void>} Resolves when the password reset email is sent.
+ */
 export async function sendPasswordResetEmail(options: TPasswordResetEmailData) {
   const { username, email, resetUrl } = options;
 

@@ -1,6 +1,4 @@
 import mongoose, { type HydratedDocument } from "mongoose";
-import { Course } from "./course.model.js";
-import { ApiError } from "../utils/apiError.js";
 import { addAnnouncementJob } from "../queue/announcement.queue.js";
 
 export interface IAnnouncement {
@@ -57,6 +55,11 @@ announcementSchema.post("save", async function (doc, next) {
   next();
 });
 
+/**
+ * @desc Queues a job to send this announcement to all students subscribed to the associated course.
+ * @input None
+ * @output {Promise<void>} Resolves when the job is successfully added.
+ */
 announcementSchema.methods.sendToSubscribedStudents = async function () {
   return await addAnnouncementJob(this._id.toString());
 };

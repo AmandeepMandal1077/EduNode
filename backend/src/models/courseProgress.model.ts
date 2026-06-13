@@ -1,5 +1,4 @@
 import mongoose, {
-  type Document,
   type Types,
   type HydratedDocument,
 } from "mongoose";
@@ -110,6 +109,11 @@ courseProgressSchema.index({
   course: 1,
 });
 
+/**
+ * @desc Calculates and updates the completion percentage and isCompleted status before saving.
+ * @input None
+ * @output None
+ */
 courseProgressSchema.pre("save", function (this: TCourseProgressDoc) {
   if (this.lectureProgress) {
     this.completionPercentage = Math.round(
@@ -122,6 +126,11 @@ courseProgressSchema.pre("save", function (this: TCourseProgressDoc) {
   }
 });
 
+/**
+ * @desc Updates the lastAccessed timestamp for the course progress.
+ * @input None
+ * @output {Promise<void>} Resolves when the document is saved successfully.
+ */
 courseProgressSchema.methods.updateLastAccessed = async function (
   this: TCourseProgressDoc,
 ) {

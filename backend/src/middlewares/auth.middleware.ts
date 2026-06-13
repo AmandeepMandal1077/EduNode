@@ -7,6 +7,13 @@ import { User, type Role } from "../models/user.model.js";
 import mongoose from "mongoose";
 import { Course } from "../models/course.model.js";
 
+/**
+ * @desc Verifies JWT token and authenticates the user for protected routes.
+ * @input {AuthenticatedRequest} req - The Express request object containing the token in cookies or headers.
+ * @input {Response} _ - The Express response object.
+ * @input {NextFunction} next - The Express next middleware function.
+ * @output {Promise<void>} Calls next() if authenticated, else throws ApiError.
+ */
 const authenticateUserMiddleware = asyncHandler(
   async (req: AuthenticatedRequest, _: Response, next: NextFunction) => {
     const token =
@@ -28,6 +35,13 @@ const authenticateUserMiddleware = asyncHandler(
   },
 );
 
+/**
+ * @desc Restricts access to a specific course's routes to only the instructor who created it.
+ * @input {AuthenticatedRequest} req - The Express request object containing courseId in params.
+ * @input {Response} _ - The Express response object.
+ * @input {NextFunction} next - The Express next middleware function.
+ * @output {Promise<void>} Calls next() if authorized, else throws ApiError.
+ */
 function restrictToInstructor() {
   return asyncHandler(
     async (req: AuthenticatedRequest, _: Response, next: NextFunction) => {

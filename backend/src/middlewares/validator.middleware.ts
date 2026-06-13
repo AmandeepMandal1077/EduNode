@@ -9,10 +9,15 @@ export enum SourceType {
   HEADERS = "headers",
 }
 
+/**
+ * @desc Validates request data (body, query, params) against a provided Zod schema.
+ * @input {SourceType} source - The part of the request to validate.
+ * @input {z.ZodType} schema - The Zod schema to validate against.
+ * @output {Function} Express middleware function that validates the request.
+ */
 export function validator(source: SourceType, schema: z.ZodType) {
   return (req: Request, _: Response, next: NextFunction) => {
     try {
-      // console.log(req[source]);
       const data = schema.parse(req[source]);
       Object.assign(req[source], data);
       next();

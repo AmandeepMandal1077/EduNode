@@ -6,8 +6,10 @@ import { ApiError } from "../utils/apiError.js";
 import { CourseProgress } from "../models/courseProgress.model.js";
 
 /**
- * Get user's progress for a specific course
- * @route GET /api/v1/progress/:courseId
+ * @desc Retrieves the authenticated user's progress for a specific course.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the user's course progress data.
  */
 export const getUserCourseProgress = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -36,8 +38,10 @@ export const getUserCourseProgress = asyncHandler(
 );
 
 /**
- * Update progress for a specific lecture
- * @route PATCH /api/v1/progress/:courseId/lectures/:lectureId
+ * @desc Updates the user's viewing progress for a specific lecture.
+ * @input {AuthenticatedRequest} req - The Express request object containing courseId, lectureId, and progress data.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the updated lecture progress.
  */
 export const updateLectureProgress = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -91,8 +95,10 @@ export const updateLectureProgress = asyncHandler(
 );
 
 /**
- * Mark entire course as completed
- * @route PATCH /api/v1/progress/:courseId/complete
+ * @desc Marks an entire course as fully completed by the user.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the updated course progress.
  */
 export const markCourseAsCompleted = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -133,8 +139,10 @@ export const markCourseAsCompleted = asyncHandler(
 );
 
 /**
- * Reset course progress
- * @route PATCH /api/v1/progress/:courseId/reset
+ * @desc Resets the user's progress for a specific course back to zero.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the reset course progress.
  */
 export const resetCourseProgress = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {

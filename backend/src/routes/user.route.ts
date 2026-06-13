@@ -22,7 +22,6 @@ import {
 
 const router = express.Router();
 
-// Auth routes
 router.post(
   "/signup",
   validator(SourceType.BODY, signupValidator),
@@ -35,7 +34,6 @@ router.post(
 );
 router.post("/signout", signOutUser);
 
-// Profile routes
 router.get("/profile", authenticateUserMiddleware, getCurrentUserProfile);
 router.patch(
   "/profile",
@@ -44,7 +42,6 @@ router.patch(
   updateUserProfile,
 );
 
-// Password management
 router.patch(
   "/change-password",
   authenticateUserMiddleware,
@@ -54,7 +51,6 @@ router.patch(
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
-// Account management
 router.delete("/account", authenticateUserMiddleware, deleteUserAccount);
 
 export default router;

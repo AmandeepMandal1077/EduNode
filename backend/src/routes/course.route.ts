@@ -26,16 +26,12 @@ import { getPurchasedCourses } from "../controllers/coursePurchase.controller.js
 
 const router = express.Router();
 
-// Public routes
 router.get("/published", getPublishedCourses);
 router.get("/search", searchCourses);
 router.get("/categories", getCourseCategories);
 
-// Protected routes
 router.use(authenticateUserMiddleware);
 
-//Check course is purchased middleware can be added later here
-// Course management
 router
   .route("/")
   .post(
@@ -44,17 +40,14 @@ router
   )
   .get(getMyCreatedCourses);
 
-// Purchases courses
 router
   .route("/purchased")
   .get(getPurchasedCourses);
 
-// announcements
 router
   .route("/my-announcements")
   .get(getMyAnnouncements);
 
-// Course details and updates
 router
   .route("/:courseId")
   .get(getCourseDetails)
@@ -64,7 +57,6 @@ router
     updateCourseDetails,
   );
 
-//announce
 router
   .route("/:courseId/announce")
   .post(
@@ -73,12 +65,10 @@ router
     announceMessage,
   );
 
-// announcements
 router
   .route("/:courseId/announcements")
   .get(getCourseAnnouncements);
 
-// rate course
 router
   .route("/:courseId/rate")
   .post(
@@ -86,7 +76,6 @@ router
     rateCourse,
   );
 
-// Lecture management
 router
   .route("/:courseId/lectures")
   .get(getCourseLectures)

@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import mongoose, { Types, type HydratedDocument } from "mongoose";
+import mongoose, { type HydratedDocument } from "mongoose";
 
-//TODO: Remove role field to a new model, as an instructor could be a student too
+
 export enum Role {
   STUDENT = "student",
   INSTRUCTOR = "instructor",
@@ -103,7 +103,11 @@ const userSchema = new mongoose.Schema<
   },
 );
 
-//hooks
+/**
+ * @desc Hashes the user password before saving if it has been modified.
+ * @input None
+ * @output None
+ */
 userSchema.pre("save", async function (this: TUserDoc) {
   if (!this.isModified("password")) {
     return;
@@ -113,7 +117,11 @@ userSchema.pre("save", async function (this: TUserDoc) {
   this.password = hashedPassword;
 });
 
-//methods
+/**
+ * @desc Compares a given plain text password with the hashed password.
+ * @input {string} password - The plain text password to compare.
+ * @output {Promise<boolean>} True if the passwords match, false otherwise.
+ */
 userSchema.methods.comparePassword = async function (
   this: TUserDoc,
   password: string,
@@ -121,6 +129,11 @@ userSchema.methods.comparePassword = async function (
   return await bcrypt.compare(password, this.password);
 };
 
+/**
+ * @desc Generates and saves a reset password token and expiry time.
+ * @input None
+ * @output {Promise<string>} The plain text reset password token.
+ */
 userSchema.methods.getResetPasswordToken = async function (this: TUserDoc) {
   const token = crypto.randomBytes(20).toString("hex");
   this.resetPasswordToken = crypto
@@ -128,11 +141,16 @@ userSchema.methods.getResetPasswordToken = async function (this: TUserDoc) {
     .update(token)
     .digest("hex");
 
-  this.resetPasswordTokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10min
+  this.resetPasswordTokenExpiry = new Date(Date.now() + 10 * 60 * 1000);
   await this.save({ validateBeforeSave: false });
   return token;
 };
 
+/**
+ * @desc Compares a given plain text token with the hashed reset password token.
+ * @input {string} token - The plain text reset password token.
+ * @output {Promise<boolean>} True if the tokens match, false otherwise.
+ */
 userSchema.methods.compareResetPasswordToken = async function (
   this: TUserDoc,
   token: string,
@@ -141,6 +159,11 @@ userSchema.methods.compareResetPasswordToken = async function (
   return hashedToken === this.resetPasswordToken;
 };
 
+/**
+ * @desc Updates the lastActive timestamp for the user.
+ * @input None
+ * @output {Promise<void>} Resolves when the document is saved successfully.
+ */
 userSchema.methods.updateLastActive = async function (this: TUserDoc) {
   this.lastActive = new Date(Date.now());
   await this.save({ validateBeforeSave: false });

@@ -2,11 +2,9 @@ import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../types/user.js";
 import mongoose from "mongoose";
 
-//utils
 import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/apiError.js";
 
-//models
 import { Course, CourseLevel } from "../models/course.model.js";
 import { Lecture } from "../models/lecture.model.js";
 import {
@@ -18,8 +16,10 @@ import { Announcement } from "../models/announcement.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
 
 /**
- * Create a new course
- * @route POST /api/v1/courses
+ * @desc Creates a new course under the authenticated instructor's account.
+ * @input {AuthenticatedRequest} req - The Express request object containing course details.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the created course data.
  */
 export const createNewCourse = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -46,7 +46,7 @@ export const createNewCourse = asyncHandler(
       category,
       level,
       price,
-      thumbnail, //thumbnail url
+      thumbnail,
       instructor: new mongoose.Types.ObjectId(req.userId),
     });
 
@@ -61,8 +61,10 @@ export const createNewCourse = asyncHandler(
 );
 
 /**
- * Search courses with filters
- * @route GET /api/v1/courses/search
+ * @desc Searches published courses using a text search string.
+ * @input {Request} req - The Express request object containing the searchString query parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with matching courses.
  */
 export const searchCourses = asyncHandler(
   async (req: Request, res: Response) => {
@@ -91,8 +93,10 @@ export const searchCourses = asyncHandler(
 );
 
 /**
- * Get all published courses
- * @route GET /api/v1/courses/published
+ * @desc Fetches all published courses, utilizing a cache for performance.
+ * @input {Request} _ - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the published courses.
  */
 export const getPublishedCourses = asyncHandler(
   async (_: Request, res: Response) => {
@@ -111,8 +115,10 @@ export const getPublishedCourses = asyncHandler(
 );
 
 /**
- * Get all course categories
- * @route GET /api/v1/courses/categories
+ * @desc Retrieves all unique categories from published courses.
+ * @input {Request} _ - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with an array of sorted category strings.
  */
 export const getCourseCategories = asyncHandler(
   async (_: Request, res: Response) => {
@@ -127,8 +133,10 @@ export const getCourseCategories = asyncHandler(
 );
 
 /**
- * Get courses created by the current user
- * @route GET /api/v1/courses/my-courses
+ * @desc Fetches all courses created by the authenticated instructor.
+ * @input {AuthenticatedRequest} req - The Express request object containing the user ID.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the user's created courses.
  */
 export const getMyCreatedCourses = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -147,8 +155,10 @@ export const getMyCreatedCourses = asyncHandler(
 );
 
 /**
- * Update course details
- * @route PATCH /api/v1/courses/:courseId
+ * @desc Updates details of a course owned by the authenticated instructor.
+ * @input {AuthenticatedRequest} req - The Express request object containing courseId params and update fields in body.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the updated course data.
  */
 export const updateCourseDetails = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -208,8 +218,10 @@ export const updateCourseDetails = asyncHandler(
 );
 
 /**
- * Get course by ID
- * @route GET /api/v1/courses/:courseId
+ * @desc Fetches complete details of a specific course by its ID.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the course data.
  */
 export const getCourseDetails = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -229,10 +241,11 @@ export const getCourseDetails = asyncHandler(
   },
 );
 
-//TODO: fix setting up lecture
 /**
- * Add lecture to course
- * @route POST /api/v1/courses/:courseId/lectures
+ * @desc Adds a new lecture to a specific course owned by the instructor, using a transaction.
+ * @input {AuthenticatedRequest} req - The Express request object containing courseId and lecture details.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the newly created lecture.
  */
 export const addLectureToCourse = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -314,8 +327,10 @@ export const addLectureToCourse = asyncHandler(
 
 
 /**
- * Get course lectures
- * @route GET /api/v1/courses/:courseId/lectures
+ * @desc Fetches all lectures for a specific course.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the course's lectures.
  */
 export const getCourseLectures = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -339,8 +354,10 @@ export const getCourseLectures = asyncHandler(
 );
 
 /**
- * Announce message to all students
- * @route POST /api/v1/courses/:courseId/announce
+ * @desc Creates a new announcement for a course owned by the instructor.
+ * @input {AuthenticatedRequest} req - The Express request object containing courseId and message.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the updated course data.
  */
 export const announceMessage = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -390,8 +407,10 @@ export const announceMessage = asyncHandler(
 );
 
 /**
- * Get announcements for a course
- * @route GET /api/v1/courses/:courseId/announcements
+ * @desc Fetches all announcements for a specific course.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the course announcements.
  */
 export const getCourseAnnouncements = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -414,8 +433,10 @@ export const getCourseAnnouncements = asyncHandler(
 );
 
 /**
- * Get announcements for all purchased courses
- * @route GET /api/v1/courses/my-announcements
+ * @desc Fetches all announcements from all courses the authenticated user has purchased.
+ * @input {AuthenticatedRequest} req - The Express request object containing the user ID.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the user's announcements.
  */
 export const getMyAnnouncements = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -444,8 +465,10 @@ export const getMyAnnouncements = asyncHandler(
 );
 
 /**
- * Rate a course
- * @route POST /api/v1/courses/:courseId/rate
+ * @desc Allows an enrolled user to rate a course.
+ * @input {AuthenticatedRequest} req - The Express request object containing courseId and rating.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the updated average rating.
  */
 export const rateCourse = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -465,7 +488,6 @@ export const rateCourse = asyncHandler(
       throw new ApiError("User not authenticated", 401);
     }
 
-    // Atomic update — no full document load
     const result = await Course.findOneAndUpdate(
       {
         _id: new mongoose.Types.ObjectId(courseId),

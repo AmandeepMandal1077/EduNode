@@ -7,8 +7,10 @@ import { asyncHandler } from "../utils/asynchandler.js";
 import type { Response } from "express";
 
 /**
- * Get lecture details
- * @route GET /api/v1/lecture/:lectureId
+ * @desc Retrieves details of a specific lecture by ID.
+ * @input {AuthenticatedRequest} req - The Express request object containing the lectureId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the lecture data.
  */
 export const getLectureDetails = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -34,8 +36,10 @@ export const getLectureDetails = asyncHandler(
 );
 
 /**
- * Delete a lecture
- * @route DELETE /api/v1/lecture/:lectureId
+ * @desc Deletes a specific lecture from a course and updates the course's lecture count.
+ * @input {AuthenticatedRequest} req - The Express request object containing the lectureId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming successful deletion.
  */
 export const deleteLecture = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {

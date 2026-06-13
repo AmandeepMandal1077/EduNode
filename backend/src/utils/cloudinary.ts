@@ -1,9 +1,6 @@
-import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 import { ApiError } from "./apiError.js";
-import fs from "fs";
-import path from "path";
 
-// Configure cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
   api_key: process.env.CLOUDINARY_API_KEY as string,
@@ -25,8 +22,9 @@ export interface SignatureResponse {
 }
 
 /**
- * Generates a signed upload signature for frontend uploads.
- * Includes notification_url so Cloudinary will webhook your server on upload complete.
+ * @desc Generates a signed upload signature for frontend uploads.
+ * @input {SignatureParams} params - The optional configuration parameters for the signature.
+ * @output {SignatureResponse} The generated signature and associated details.
  */
 const generateUploadSignature = (
   params: SignatureParams = {},
@@ -35,7 +33,6 @@ const generateUploadSignature = (
   const folder = params.folder || "LMS";
   const apiSecret = process.env.CLOUDINARY_API_SECRET as string;
 
-  // Cloudinary webhook URL - receives POST when upload completes
   const notificationUrl = `${process.env.BACKEND_URL}/api/v1/media/webhook`;
 
   const paramsToSign: Record<string, any> = {
@@ -63,14 +60,14 @@ export interface VerifyUploadParams {
 }
 
 /**
- * Verifies that an upload was successful by checking the signature
- * Cloudinary sends back: signature = SHA1(public_id + version + api_secret)
+ * @desc Verifies that an upload was successful by checking the signature.
+ * @input {VerifyUploadParams} params - The parameters containing the publicId, version, and signature to verify.
+ * @output {boolean} True if the signature is valid, false otherwise.
  */
 const verifyUploadSignature = (params: VerifyUploadParams): boolean => {
   const { publicId, version, signature } = params;
   const apiSecret = process.env.CLOUDINARY_API_SECRET as string;
 
-  // Cloudinary's verification signature format
   const expectedSignature = cloudinary.utils.api_sign_request(
     { public_id: publicId, version: version.toString() },
     apiSecret,
@@ -81,8 +78,9 @@ const verifyUploadSignature = (params: VerifyUploadParams): boolean => {
 
 
 /**
- * Delete media without knowing the resource type.
- * Tries image, video, and raw types in order.
+ * @desc Deletes media without knowing the resource type by trying image, video, and raw types.
+ * @input {string} publicId - The public ID of the media to delete.
+ * @output {Promise<any>} The result of the deletion from Cloudinary.
  */
 const deleteMediaAuto = async (publicId: string): Promise<any> => {
   const types: ("image" | "video" | "raw")[] = ["image", "video", "raw"];
@@ -98,7 +96,6 @@ const deleteMediaAuto = async (publicId: string): Promise<any> => {
         return result;
       }
     } catch {
-      // Try next type
     }
   }
 

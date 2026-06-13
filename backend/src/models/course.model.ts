@@ -1,6 +1,4 @@
 import mongoose, { type Document, type Types } from "mongoose";
-import { User } from "./user.model.js";
-import { Lecture } from "./lecture.model.js";
 
 export enum CourseLevel {
   BEGINNER = "beginner",
@@ -164,18 +162,35 @@ courseSchema.index(
   { weights: { title: 10, subtitle: 5, category: 3, description: 1 }, name: "course_search_idx" }
 );
 courseSchema.index({ slug: 1 });
+courseSchema.index({ instructor: 1 });
+
+/**
+ * @desc Updates the totalLectures count before saving the course document.
+ * @input None
+ * @output None
+ */
 courseSchema.pre("save", function (this: TCourseDoc) {
   if (this.isModified("lectures") && this.lectures) {
     this.totalLectures = this.lectures.length;
   }
 });
 
+/**
+ * @desc Generates a URL-friendly slug based on the course title before validation.
+ * @input None
+ * @output None
+ */
 courseSchema.pre("validate", function (this: TCourseDoc) {
   if (this.isModified("title")) {
     this.slug = this.title.trim().toLowerCase().replace(/ /g, "-");
   }
 });
 
+/**
+ * @desc Calculates and returns the average rating of the course from enrolled students.
+ * @input None
+ * @output {number} The calculated average rating.
+ */
 courseSchema.virtual("averageRating").get(function (this: TCourseDoc) {
   if (!this.enrolledStudents || this.enrolledStudents.length === 0) return 0;
   const ratedStudents = this.enrolledStudents.filter(
