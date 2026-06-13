@@ -6,13 +6,14 @@ export interface UploadResult {
 }
 
 /**
- * Opens the Cloudinary Upload Widget.
- * Returns a Promise that resolves with the secure URL and public_id of the uploaded resource on success.
+ * @desc Opens the Cloudinary Upload Widget.
+ * @input {string} [resourceType="image"] - The type of resource to upload ("image" or "video").
+ * @output {Promise<UploadResult>} Resolves with the secure URL and public_id on success.
  */
 export async function openCloudinaryWidget(
   resourceType: "image" | "video" = "image"
 ): Promise<UploadResult> {
-  // 1. Get signed params from backend
+
   const signatureData = await fetchUploadSignature();
 
   return new Promise((resolve, reject) => {
@@ -30,9 +31,8 @@ export async function openCloudinaryWidget(
         uploadSignatureTimestamp: signatureData.timestamp,
         folder: signatureData.folder,
         resourceType: resourceType,
-        multiple: false, // Disallow selecting multiple files
-        maxFiles: 1, // Restrict upload to a single file
-        // Match the application's clean design system
+        multiple: false,
+        maxFiles: 1,
         theme: "minimal",
         styles: {
           palette: {
