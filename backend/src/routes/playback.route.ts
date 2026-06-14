@@ -14,7 +14,7 @@ router.route("/sync")
     )
     .get(
         authenticateUserMiddleware,
-        validator(SourceType.BODY, lastWatchPositionSchema),
+        validator(SourceType.QUERY, lastWatchPositionSchema),
         lectureLastWatchPosition
     );
 router.get("/heatmap/:lectureId", authenticateUserMiddleware, getLectureHeatmap);

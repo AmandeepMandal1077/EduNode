@@ -21,13 +21,13 @@ export function AnnouncementsTab({ announcements, announcementsLoading }: Announ
       ) : (
         <div className="flex flex-col gap-4">
           {announcements.map((ann) => (
-            <div key={ann.id} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+            <div key={ann._id} className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
               <p className="text-slate-700 leading-relaxed whitespace-pre-wrap break-words text-sm">
                 {ann.message}
               </p>
               <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
                 <span>By Instructor</span>
-                <span>{new Date(ann.createdAt).toLocaleDateString()}</span>
+                <span>{new Date(ann.sentAt).toLocaleDateString()}</span>
               </div>
             </div>
           ))}

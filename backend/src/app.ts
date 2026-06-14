@@ -26,6 +26,7 @@ import commentRouter from "./routes/comment.route.js";
 
 
 import "./cron/syncHeatmaps.js"
+import "./cron/syncProgress.js"
 
 import type { ApiError } from "./utils/apiError.js";
 import { handleStripeWebhook } from "./controllers/coursePurchase.controller.js";

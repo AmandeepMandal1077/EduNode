@@ -14,7 +14,7 @@ export const saveHeatmapSegmentToCache = async (heatmapData: HeatmapSegment) => 
     const getSegmentIdx = Math.min(Math.floor((heatmapData.previousPosition / heatmapData.lectureDuration) * 100), 99);
     const key = generateKey(CacheKeys.LECTURE_HEATMAP, `${heatmapData.lectureId}:${getSegmentIdx}`);
 
-    const watchLength = heatmapData.currentPosition - heatmapData.previousPosition + 1;
+    const watchLength = Math.abs(heatmapData.currentPosition - heatmapData.previousPosition) + 1;
 
     const expireTime = new Date(Date.now() + Number(content_expiration_duration));
 
