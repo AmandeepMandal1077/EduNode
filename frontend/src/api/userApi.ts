@@ -1,18 +1,3 @@
-/**
- * userApi.ts
- * All calls that map to /api/v1/users
- *
- * Backend route reference:
- *   POST  /api/v1/users/signup                → createUserAccount
- *   POST  /api/v1/users/signin                → authenticateUser
- *   POST  /api/v1/users/signout               → signOutUser
- *   GET   /api/v1/users/profile               → getCurrentUserProfile  [auth]
- *   PATCH /api/v1/users/profile               → updateUserProfile      [auth, multipart]
- *   PATCH /api/v1/users/change-password       → changeUserPassword     [auth]
- *   POST  /api/v1/users/forgot-password       → forgotPassword         [auth]
- *   POST  /api/v1/users/reset-password        → resetPassword          [auth]
- *   DELETE /api/v1/users/account              → deleteUserAccount      [auth]
- */
 
 import apiClient from "./client";
 
@@ -30,13 +15,12 @@ export interface BackendUser {
   updatedAt: string;
 }
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Register a new user account on the server
- * @input: body (object containing name: string, email: string, password: string, role?: string)
- * @return: Promise<{ user: BackendUser }>
- * @access: Public
+ * @desc Register a new user account on the server.
+ * @input {Object} body - Contains name, email, password, and optional role.
+ * @output {Promise<{ user: BackendUser }>} The created user data.
  */
 export async function apiSignup(body: {
   name: string;
@@ -49,10 +33,9 @@ export async function apiSignup(body: {
 }
 
 /**
- * @desc: Authenticate a user with email and password
- * @input: body (object containing email: string, password: string, role?: string)
- * @return: Promise<{ user: BackendUser }>
- * @access: Public
+ * @desc Authenticate a user with email and password.
+ * @input {Object} body - Contains email, password, and optional role.
+ * @output {Promise<{ user: BackendUser }>} The authenticated user data.
  */
 export async function apiSignin(body: {
   email: string;
@@ -64,22 +47,20 @@ export async function apiSignin(body: {
 }
 
 /**
- * @desc: Invalidate the current session and clear auth cookies
- * @input: none
- * @return: Promise<void>
- * @access: Private
+ * @desc Invalidate the current session and clear auth cookies.
+ * @input None
+ * @output {Promise<void>} Resolves on successful signout.
  */
 export async function apiSignout(): Promise<void> {
   await apiClient.post("/users/signout");
 }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Fetch the authenticated user's profile details
- * @input: none
- * @return: Promise<BackendUser>
- * @access: Private
+ * @desc Fetch the authenticated user's profile details.
+ * @input None
+ * @output {Promise<BackendUser>} The user's profile data.
  */
 export async function apiGetProfile(): Promise<BackendUser> {
   const res = await apiClient.get("/users/profile");
@@ -87,10 +68,9 @@ export async function apiGetProfile(): Promise<BackendUser> {
 }
 
 /**
- * @desc: Update the profile information or upload an avatar
- * @input: body (object containing name/bio, OR FormData containing avatar file)
- * @return: Promise<BackendUser>
- * @access: Private
+ * @desc Update the profile information or upload an avatar.
+ * @input {Object|FormData} body - The profile data to update.
+ * @output {Promise<BackendUser>} The updated user profile.
  */
 export async function apiUpdateProfile(
   body: { name?: string; bio?: string } | FormData
@@ -102,13 +82,12 @@ export async function apiUpdateProfile(
   return res.data?.data?.user ?? res.data?.user;
 }
 
-// ── Password ──────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Change the authenticated user's password
- * @input: body (object containing currentPassword: string, newPassword: string)
- * @return: Promise<void>
- * @access: Private
+ * @desc Change the authenticated user's password.
+ * @input {Object} body - Contains the new password.
+ * @output {Promise<void>} Resolves on successful password change.
  */
 export async function apiChangePassword(body: {
   password: string;
@@ -117,20 +96,18 @@ export async function apiChangePassword(body: {
 }
 
 /**
- * @desc: Trigger a forgot password recovery email
- * @input: email (string)
- * @return: Promise<void>
- * @access: Public
+ * @desc Trigger a forgot password recovery email.
+ * @input {string} email - The email address.
+ * @output {Promise<void>} Resolves on successful request.
  */
 export async function apiForgotPassword(email: string): Promise<void> {
   await apiClient.post("/users/forgot-password", { email });
 }
 
 /**
- * @desc: Reset the password using a valid token from the email link
- * @input: body (object containing email: string, token: string, newPassword: string)
- * @return: Promise<void>
- * @access: Public
+ * @desc Reset the password using a valid token from the email link.
+ * @input {Object} body - Contains email, token, and new password.
+ * @output {Promise<void>} Resolves on successful reset.
  */
 export async function apiResetPassword(body: {
   email: string;
@@ -140,13 +117,12 @@ export async function apiResetPassword(body: {
   await apiClient.post("/users/reset-password", body);
 }
 
-// ── Account ───────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Delete the authenticated user's account permanently
- * @input: none
- * @return: Promise<void>
- * @access: Private
+ * @desc Delete the authenticated user's account permanently.
+ * @input None
+ * @output {Promise<void>} Resolves on successful deletion.
  */
 export async function apiDeleteAccount(): Promise<void> {
   await apiClient.delete("/users/account");

@@ -8,8 +8,10 @@ import { addForgotPasswordJob } from "../queue/forgot-password.queue.js";
 import type { Request, Response } from "express";
 
 /**
- * Create a new user account
- * @route POST /api/v1/users/signup
+ * @desc Creates a new user account.
+ * @input {Request} req - The Express request object containing name, email, password, and optionally role.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming successful account creation.
  */
 export const createUserAccount = asyncHandler(
   async (req: Request, res: Response) => {
@@ -43,8 +45,10 @@ export const createUserAccount = asyncHandler(
 );
 
 /**
- * Authenticate user and get token
- * @route POST /api/v1/users/signin
+ * @desc Authenticates a user and sets a session token.
+ * @input {Request} req - The Express request object containing email, password, and role.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the user token and details.
  */
 export const authenticateUser = asyncHandler(
   async (req: Request, res: Response) => {
@@ -73,8 +77,10 @@ export const authenticateUser = asyncHandler(
 );
 
 /**
- * Sign out user and clear cookie
- * @route POST /api/v1/users/signout
+ * @desc Signs out the authenticated user by clearing the session token cookie.
+ * @input {Request} _ - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming successful signout.
  */
 export const signOutUser = asyncHandler(async (_: Request, res: Response) => {
   res
@@ -91,8 +97,10 @@ export const signOutUser = asyncHandler(async (_: Request, res: Response) => {
 });
 
 /**
- * Get current user profile
- * @route GET /api/v1/users/profile
+ * @desc Fetches the profile data of the currently authenticated user.
+ * @input {AuthenticatedRequest} req - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the user's profile data.
  */
 export const getCurrentUserProfile = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -110,8 +118,10 @@ export const getCurrentUserProfile = asyncHandler(
 );
 
 /**
- * Update user profile
- * @route PATCH /api/v1/users/profile
+ * @desc Updates the profile details (name, bio) of the authenticated user.
+ * @input {AuthenticatedRequest} req - The Express request object containing the updated fields.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the updated user data.
  */
 export const updateUserProfile = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -138,8 +148,10 @@ export const updateUserProfile = asyncHandler(
 );
 
 /**
- * Change user password
- * @route PATCH /api/v1/users/change-password
+ * @desc Allows an authenticated user to change their password.
+ * @input {AuthenticatedRequest} req - The Express request object containing the new password.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming successful password change.
  */
 export const changeUserPassword = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -168,8 +180,10 @@ export const changeUserPassword = asyncHandler(
 );
 
 /**
- * Request password reset
- * @route POST /api/v1/users/forgot-password
+ * @desc Initiates a password reset process by generating a token and sending an email.
+ * @input {Request} req - The Express request object containing the user's email.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming the process was initiated.
  */
 export const forgotPassword = asyncHandler(
   async (req: Request, res: Response) => {
@@ -177,7 +191,7 @@ export const forgotPassword = asyncHandler(
 
     const user = await User.findOne({ email });
 
-    // Always respond 200 even if no user — prevents email enumeration
+
     if (!user) {
       res.status(200).json({
         success: true,
@@ -204,8 +218,10 @@ export const forgotPassword = asyncHandler(
 );
 
 /**
- * Reset password
- * @route POST /api/v1/users/reset-password/
+ * @desc Resets a user's password using a valid reset token.
+ * @input {Request} req - The Express request object containing email, token, and newPassword.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming successful password reset.
  */
 export const resetPassword = asyncHandler(
   async (req: Request, res: Response) => {
@@ -231,7 +247,7 @@ export const resetPassword = asyncHandler(
       throw new ApiError("Invalid or expired reset link", 400);
     }
 
-    // Set new password (pre-save hook will hash it)
+
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordTokenExpiry = undefined;
@@ -245,8 +261,10 @@ export const resetPassword = asyncHandler(
 );
 
 /**
- * Delete user account
- * @route DELETE /api/v1/users/account
+ * @desc Deletes the authenticated user's account and clears their session.
+ * @input {AuthenticatedRequest} req - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming account deletion.
  */
 export const deleteUserAccount = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {

@@ -6,8 +6,10 @@ import mongoose from "mongoose";
 import { ApiError } from "../utils/apiError.js";
 
 /**
- * Write a comment
- * @route POST /api/v1/comment
+ * @desc Creates a new comment or a reply to an existing comment on a lecture.
+ * @input {AuthenticatedRequest} req - The Express request object containing lectureId, content, and optionally parentCommentId.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the created comment.
  */
 export const writeComment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -55,8 +57,10 @@ export const writeComment = asyncHandler(
 );
 
 /**
- * Like a comment
- * @route POST /api/v1/comment/like
+ * @desc Likes a specific comment on a lecture for the authenticated user.
+ * @input {AuthenticatedRequest} req - The Express request object containing lectureId and commentId.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the liked comment.
  */
 export const likeComment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -79,7 +83,7 @@ export const likeComment = asyncHandler(
       throw new ApiError("Comment not found", 404);
     }
 
-    await comment.likeComment(userId); //saved in method
+    await comment.likeComment(userId);
     res.status(200).json({
       success: true,
       message: "Comment liked successfully",
@@ -89,8 +93,10 @@ export const likeComment = asyncHandler(
 );
 
 /**
- * Dislike a comment
- * @route POST /api/v1/comment/dislike
+ * @desc Dislikes a specific comment on a lecture for the authenticated user.
+ * @input {AuthenticatedRequest} req - The Express request object containing lectureId and commentId.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the disliked comment.
  */
 export const dislikeComment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -113,7 +119,7 @@ export const dislikeComment = asyncHandler(
       throw new ApiError("Comment not found", 404);
     }
 
-    await comment.dislikeComment(userId); //saved in method
+    await comment.dislikeComment(userId);
     res.status(200).json({
       success: true,
       message: "Comment disliked successfully",
@@ -123,8 +129,10 @@ export const dislikeComment = asyncHandler(
 );
 
 /**
- * Delete a comment
- * @route DELETE /api/v1/comment/:id
+ * @desc Soft deletes a specific comment if the authenticated user is the author.
+ * @input {AuthenticatedRequest} req - The Express request object containing lectureId and commentId.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response indicating successful deletion.
  */
 export const deleteComment = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -150,7 +158,7 @@ export const deleteComment = asyncHandler(
       throw new ApiError("You can only delete your own comments", 403);
     }
 
-    comment.deleteComment(); //saved in method
+    await comment.deleteComment();
     res.status(200).json({
       success: true,
       message: "Comment deleted successfully",
@@ -160,8 +168,10 @@ export const deleteComment = asyncHandler(
 );
 
 /**
- * Get comments for a lecture
- * @route GET /api/v1/lecture/:lectureId/comments
+ * @desc Fetches comments for a specific lecture and returns the authenticated user's likes/dislikes.
+ * @input {AuthenticatedRequest} req - The Express request object containing lectureId in params.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with comments, likedCommentIds, and dislikedCommentIds.
  */
 export const getComments = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -179,7 +189,7 @@ export const getComments = asyncHandler(
       select: "name avatar",
     });
 
-    // Fetch active user's likes and dislikes for comments of this lecture
+
     const commentIds = comments.map(c => c._id);
     const userId = req.userId;
 

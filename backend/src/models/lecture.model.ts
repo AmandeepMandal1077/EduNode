@@ -71,7 +71,6 @@ const lectureSchema = new mongoose.Schema<
     },
     order: {
       type: Number,
-      // required: [true, "order is required"],
     },
   },
   {
@@ -84,12 +83,22 @@ const lectureSchema = new mongoose.Schema<
 
 lectureSchema.index({ courseId: 1, slug: 1 }, { unique: true });
 
+/**
+ * @desc Generates a slug from the lecture title before validation.
+ * @input None
+ * @output None
+ */
 lectureSchema.pre("validate", function (this: TLectureDoc) {
   if (this.isModified("title")) {
     this.slug = this.title.trim().toLowerCase().replace(/ /g, "-");
   }
 });
 
+/**
+ * @desc Rounds the lecture duration to two decimal places before saving.
+ * @input None
+ * @output None
+ */
 lectureSchema.pre("save", function (this: TLectureDoc) {
   if (this.duration) {
     this.duration = Math.round(this.duration * 100) / 100;

@@ -21,7 +21,7 @@ interface CourseState {
   enrolledCourses: { course: Course; enrollment: Enrollment }[];
   selectedCourse: Course | null;
   categories: string[];
-  completedLectures: Record<string, string[]>; // courseId -> list of completed lectureIds
+  completedLectures: Record<string, string[]>;
   loading: boolean;
   error: string | null;
 }
@@ -129,7 +129,7 @@ const courseSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Courses
+
       .addCase(fetchCoursesThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -143,7 +143,7 @@ const courseSlice = createSlice({
         state.error = action.error.message || "Failed to fetch courses";
       })
 
-      // Fetch Course Details
+
       .addCase(fetchCourseDetailsThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -157,17 +157,17 @@ const courseSlice = createSlice({
         state.error = action.error.message || "Failed to fetch course details";
       })
 
-      // Fetch Featured Courses
+
       .addCase(fetchFeaturedCoursesThunk.fulfilled, (state, action) => {
         state.featuredCourses = action.payload;
       })
 
-      // Fetch Bestseller Courses
+
       .addCase(fetchBestsellerCoursesThunk.fulfilled, (state, action) => {
         state.bestsellerCourses = action.payload;
       })
 
-      // Search Courses
+
       .addCase(searchCoursesThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -181,12 +181,12 @@ const courseSlice = createSlice({
         state.error = action.error.message || "Search failed";
       })
 
-      // Fetch Categories
+
       .addCase(fetchCategoriesThunk.fulfilled, (state, action) => {
         state.categories = action.payload;
       })
 
-      // Fetch Enrolled Courses
+
       .addCase(fetchEnrolledCoursesThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -194,7 +194,7 @@ const courseSlice = createSlice({
       .addCase(fetchEnrolledCoursesThunk.fulfilled, (state, action) => {
         state.enrolledCourses = action.payload;
         state.loading = false;
-        // Pre-populate completed lectures map
+
         action.payload.forEach((item) => {
           const courseId = item.course.id;
           state.completedLectures[courseId] = item.enrollment.lectureProgress
@@ -207,7 +207,7 @@ const courseSlice = createSlice({
         state.error = action.error.message || "Failed to fetch enrolled courses";
       })
 
-      // Fetch Course Progress
+
       .addCase(fetchCourseProgressThunk.fulfilled, (state, action) => {
         const { courseId, progress } = action.payload;
         if (progress && progress.lectureProgress) {
@@ -219,7 +219,7 @@ const courseSlice = createSlice({
         }
       })
 
-      // Update Lecture Progress
+
       .addCase(updateLectureProgressThunk.fulfilled, (state, action) => {
         const { courseId, lectureId, isCompleted } = action.payload;
         if (!state.completedLectures[courseId]) {

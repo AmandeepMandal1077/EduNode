@@ -12,10 +12,8 @@ import { updateLectureProgressSchema } from "../validator/courseProgress.zod.js"
 
 const router = express.Router();
 
-// Get course progress
 router.get("/:courseId", authenticateUserMiddleware, getUserCourseProgress);
 
-// Update lecture progress
 router.patch(
   "/:courseId/lectures/:lectureId",
   authenticateUserMiddleware,
@@ -23,14 +21,12 @@ router.patch(
   updateLectureProgress,
 );
 
-// Mark course as completed
 router.patch(
   "/:courseId/complete",
   authenticateUserMiddleware,
   markCourseAsCompleted,
 );
 
-// Reset course progress
 router.patch(
   "/:courseId/reset",
   authenticateUserMiddleware,

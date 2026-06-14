@@ -14,8 +14,10 @@ import { v2 as cloudinary } from "cloudinary";
 import express from "express";
 
 /**
- * Generate upload signature for frontend
- * POST /api/v1/media/signature
+ * @desc Generates an upload signature for frontend Cloudinary uploads.
+ * @input {AuthenticatedRequest} req - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the signature data.
  */
 export const generateSignature = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -35,8 +37,10 @@ export const generateSignature = asyncHandler(
 );
 
 /**
- * (backup if webhook fails)
- * POST /api/v1/media/verify
+ * @desc Verifies a Cloudinary upload signature from the frontend.
+ * @input {AuthenticatedRequest} req - The Express request object containing upload details.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming verification.
  */
 export const verifySignature = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -68,8 +72,10 @@ export const verifySignature = asyncHandler(
 );
 
 /**
- * Cloudinary Webhook Handler
- * POST /api/v1/media/webhook
+ * @desc Handles Cloudinary webhook events to verify uploads.
+ * @input {Request} req - The Express request object containing headers and body.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a 200 response to acknowledge receipt.
  */
 export const handleCloudinaryWebhook = asyncHandler(
   async (req: Request, res: Response) => {
@@ -90,7 +96,6 @@ export const handleCloudinaryWebhook = asyncHandler(
     }
 
     const notification = JSON.parse(req.body.toString());
-    // Verify the webhook is from Cloudinary by checking the signature
     const { public_id, version, secure_url, resource_type } = notification;
     if (!public_id || !version) {
       console.error("Invalid webhook payload - missing required fields");

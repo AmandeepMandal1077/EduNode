@@ -9,10 +9,10 @@ import { ApiError } from "../utils/apiError.js";
 import { saveHeatmapSegmentToCache, type HeatmapSegment } from "../cache/lecture-heatmap-cache.js";
 
 /**
- * @description Get Lecture last left position of the student
- * @route GET /api/v1/playback/sync
- * @access Private
- * @returns {void}
+ * @desc Fetches the last watched position of a lecture for the student.
+ * @input {AuthenticatedRequest} req - The Express request object containing lectureId and courseId.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the resume position.
  */
 export const lectureLastWatchPosition = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
@@ -44,10 +44,10 @@ export const lectureLastWatchPosition = asyncHandler(async (req: AuthenticatedRe
 })
 
 /**
- * @description Get Lecture heatmap
- * @route GET /api/v1/playback/heatmap
- * @access Private
- * @returns {void}
+ * @desc Fetches the heatmap data for a specific lecture.
+ * @input {Request} req - The Express request object containing the lectureId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the heatmap data.
  */
 export const getLectureHeatmap = asyncHandler(async (req: Request, res: Response) => {
     const { lectureId } = req.params;
@@ -83,7 +83,10 @@ export const getLectureHeatmap = asyncHandler(async (req: Request, res: Response
 })
 
 /**
- * 
+ * @desc Syncs lecture progress and heatmap data with the cache.
+ * @input {AuthenticatedRequest} req - The Express request object containing progress details.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming successful sync.
  */
 export const syncLectureProgressWithCache = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;

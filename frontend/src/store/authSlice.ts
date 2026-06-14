@@ -80,7 +80,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Check Auth
+
       .addCase(checkAuthThunk.pending, (state) => {
         state.loading = true;
       })
@@ -94,12 +94,12 @@ const authSlice = createSlice({
         state.loading = false;
         state.isInitialized = true;
       })
-      // Fetch Profile
+
       .addCase(fetchProfileThunk.fulfilled, (state, action) => {
         state.currentUser = action.payload;
         if (action.payload) state.isAuthenticated = true;
       })
-      // Login
+
       .addCase(loginThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -112,7 +112,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Register
+
       .addCase(registerThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -125,7 +125,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // Logout
+
       .addCase(logoutThunk.fulfilled, (state) => {
         state.isAuthenticated = false;
         state.currentUser = null;

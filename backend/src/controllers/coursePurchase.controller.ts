@@ -16,8 +16,10 @@ import { ApiError } from "../utils/apiError.js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 /**
- * Create a Stripe checkout session for course purchase
- * @route POST /api/v1/payments/create-checkout-session
+ * @desc Initiates a Stripe checkout session for purchasing a course.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId in the body.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the Stripe checkout URL.
  */
 export const initiateStripeCheckout = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -69,7 +71,7 @@ export const initiateStripeCheckout = asyncHandler(
         {
           price_data: {
             currency: "inr",
-            unit_amount: course.price * 100, //paise
+            unit_amount: course.price * 100,
             product_data: {
               name: course.title,
             },
@@ -104,8 +106,10 @@ export const initiateStripeCheckout = asyncHandler(
 );
 
 /**
- * Verify Stripe session
- * @route POST /api/v1/payments/verify-session
+ * @desc Verifies a completed Stripe checkout session.
+ * @input {AuthenticatedRequest} req - The Express request object containing session_id in the body.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming the session payment status.
  */
 export const verifyStripeSession = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -153,8 +157,10 @@ export const verifyStripeSession = asyncHandler(
 );
 
 /**
- * Handle Stripe webhook events
- * @route POST /api/v1/payments/webhook
+ * @desc Webhook handler for Stripe events to update course purchase status.
+ * @input {Request} req - The Express request object containing the raw body and signature.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a 200 response to acknowledge receipt.
  */
 export const handleStripeWebhook = asyncHandler(
   async (req: Request, res: Response) => {
@@ -229,7 +235,7 @@ export const handleStripeWebhook = asyncHandler(
             }
           }
 
-          // Idempotently create CourseProgress record
+
           const existingProgress = await CourseProgress.findOne({
             user: courseOrder.user,
             course: courseOrder.course,
@@ -291,8 +297,10 @@ export const handleStripeWebhook = asyncHandler(
 );
 
 /**
- * Get course details with purchase status
- * @route GET /api/v1/payments/courses/:courseId/purchase-status
+ * @desc Checks if a user has purchased a specific course.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the purchase status.
  */
 export const getCoursePurchaseStatus = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -332,8 +340,10 @@ export const getCoursePurchaseStatus = asyncHandler(
 );
 
 /**
- * Get all purchased courses
- * @route GET /api/v1/payments/purchased-courses
+ * @desc Fetches all courses purchased by the authenticated user.
+ * @input {AuthenticatedRequest} req - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the purchased courses.
  */
 export const getPurchasedCourses = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -357,8 +367,10 @@ export const getPurchasedCourses = asyncHandler(
 );
 
 /**
- * Get purchase history for the user
- * @route GET /api/v1/payments/
+ * @desc Retrieves the complete purchase history for the authenticated user.
+ * @input {AuthenticatedRequest} req - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the purchase history records.
  */
 export const getPurchaseHistory = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -377,8 +389,10 @@ export const getPurchaseHistory = asyncHandler(
 );
 
 /**
- * Get aggregated enrollments (Course + Purchase + Progress)
- * @route GET /api/v1/payments/my-enrollments
+ * @desc Retrieves aggregated enrollments including course, purchase, and progress data for the user.
+ * @input {AuthenticatedRequest} req - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the aggregated enrollment data.
  */
 export const getMyEnrollments = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -422,8 +436,10 @@ export const getMyEnrollments = asyncHandler(
 );
 
 /**
- * Enroll in a free course (price = 0) without Stripe
- * @route POST /api/v1/payments/enroll-free
+ * @desc Enrolls a user in a free course without requiring payment.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId in the body.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response confirming enrollment.
  */
 export const enrollFreeCourse = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -447,7 +463,7 @@ export const enrollFreeCourse = asyncHandler(
       throw new ApiError("Course is not published", 400);
     }
 
-    // Idempotency: return existing completed purchase if already enrolled
+
     const existingPurchase = await CoursePurchase.findOne({
       user: userId,
       course: courseId,
@@ -465,7 +481,7 @@ export const enrollFreeCourse = asyncHandler(
     const mongoSession = await mongoose.startSession();
     mongoSession.startTransaction();
     try {
-      // Create a completed purchase record
+
       const [purchase] = await CoursePurchase.create(
         [
           {
@@ -481,7 +497,7 @@ export const enrollFreeCourse = asyncHandler(
         { session: mongoSession }
       );
 
-      // Add to enrolledStudents if not already there
+
       const isAlreadyEnrolled = course.enrolledStudents.some(
         (s) => s.student.toString() === userId
       );
@@ -492,7 +508,7 @@ export const enrollFreeCourse = asyncHandler(
         await course.save({ session: mongoSession });
       }
 
-      // Create CourseProgress record
+
       const existingProgress = await CourseProgress.findOne({
         user: userId,
         course: courseId,

@@ -73,7 +73,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
     >
       <h2 className="text-lg font-bold text-slate-800">General Information</h2>
 
-      {/* Avatar */}
+
       <div className="flex items-center gap-4">
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0 overflow-hidden"

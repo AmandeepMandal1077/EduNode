@@ -1,19 +1,3 @@
-/**
- * progressApi.ts
- * Calls to /api/v1/progress and /api/v1/playback
- *
- * Backend route reference:
- *   GET   /api/v1/progress/:courseId                           → getUserCourseProgress
- *   PATCH /api/v1/progress/:courseId/lectures/:lectureId       → updateLectureProgress
- *   PATCH /api/v1/progress/:courseId/complete                  → markCourseAsCompleted
- *   PATCH /api/v1/progress/:courseId/reset                     → resetCourseProgress
- *   POST  /api/v1/playback/sync                                → syncLectureProgressWithCache
- *   GET   /api/v1/playback/sync?lectureId=&courseId=           → lectureLastWatchPosition
- *   GET   /api/v1/playback/heatmap/:lectureId                  → getLectureHeatmap
- *
- * NOTE: /api/v1/progress is not yet mounted in app.ts — this file is ready for
- *       when the route is added. Currently falls back gracefully.
- */
 
 import apiClient from "./client";
 
@@ -40,13 +24,12 @@ export interface HeatmapSegment {
   secondsWatched: number;
 }
 
-// ── Course Progress ───────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Fetch progress for a specific course by its ID
- * @input: courseId (string)
- * @return: Promise<CourseProgressResponse | null>
- * @access: Private
+ * @desc Fetch progress for a specific course by its ID.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<CourseProgressResponse | null>} Course progress details or null.
  */
 export async function fetchCourseProgress(
   courseId: string
@@ -64,10 +47,11 @@ export async function fetchCourseProgress(
 }
 
 /**
- * @desc: Update progress parameters for a specific lecture
- * @input: courseId (string), lectureId (string), payload (object containing isCompleted: boolean, lastWatchedPosition: number)
- * @return: Promise<void>
- * @access: Private
+ * @desc Update progress parameters for a specific lecture.
+ * @input {string} courseId - The ID of the course.
+ * @input {string} lectureId - The ID of the lecture.
+ * @input {Object} payload - The updated progress (isCompleted, lastWatchedPosition).
+ * @output {Promise<void>} Resolves on success.
  */
 export async function updateLectureProgress(
   courseId: string,
@@ -78,32 +62,29 @@ export async function updateLectureProgress(
 }
 
 /**
- * @desc: Mark a specific course as completed
- * @input: courseId (string)
- * @return: Promise<void>
- * @access: Private
+ * @desc Mark a specific course as completed.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<void>} Resolves on success.
  */
 export async function markCourseCompleted(courseId: string): Promise<void> {
   await apiClient.patch(`/progress/${courseId}/complete`);
 }
 
 /**
- * @desc: Reset progress for a specific course
- * @input: courseId (string)
- * @return: Promise<void>
- * @access: Private
+ * @desc Reset progress for a specific course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<void>} Resolves on success.
  */
 export async function resetCourseProgress(courseId: string): Promise<void> {
   await apiClient.patch(`/progress/${courseId}/reset`);
 }
 
-// ── Playback / Heatmap ────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Sync current video playback position to Redis cache
- * @input: payload (object containing lectureId: string, courseId: string, watchedSeconds: number)
- * @return: Promise<void>
- * @access: Private
+ * @desc Sync current video playback position to Redis cache.
+ * @input {Object} payload - Contains lectureId, courseId, and watchedSeconds.
+ * @output {Promise<void>} Resolves on success.
  */
 export async function syncPlaybackPosition(payload: {
   lectureId: string;
@@ -114,10 +95,10 @@ export async function syncPlaybackPosition(payload: {
 }
 
 /**
- * @desc: Fetch the last saved watch position for a specific lecture
- * @input: lectureId (string), courseId (string)
- * @return: Promise<number>
- * @access: Private
+ * @desc Fetch the last saved watch position for a specific lecture.
+ * @input {string} lectureId - The ID of the lecture.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<number>} The last watched position in seconds.
  */
 export async function fetchLastWatchPosition(
   lectureId: string,
@@ -134,10 +115,9 @@ export async function fetchLastWatchPosition(
 }
 
 /**
- * @desc: Fetch the heatmap engagement data for a specific lecture
- * @input: lectureId (string)
- * @return: Promise<HeatmapSegment[]>
- * @access: Private
+ * @desc Fetch the heatmap engagement data for a specific lecture.
+ * @input {string} lectureId - The ID of the lecture.
+ * @output {Promise<HeatmapSegment[]>} List of heatmap segments.
  */
 export async function fetchLectureHeatmap(
   lectureId: string

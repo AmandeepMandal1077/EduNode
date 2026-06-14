@@ -43,7 +43,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
       role="article"
       aria-label={course.title}
     >
-      {/* Thumbnail */}
       <div
         className={cn("w-full relative overflow-hidden bg-slate-100 flex items-center justify-center", compact ? "h-36" : "h-44")}
       >
@@ -60,7 +59,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
               background: `linear-gradient(135deg, ${course.thumbnailAccent}dd 0%, ${course.thumbnailAccent}88 100%)`,
             }}
           >
-            {/* decorative circles */}
             <div
               className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20"
               style={{ background: "rgba(255,255,255,0.4)" }}
@@ -73,7 +71,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
           </div>
         )}
 
-        {/* Badges */}
         <div className="absolute top-3 left-3 flex gap-1.5 z-10">
           {course.isBestseller && (
             <Badge className="bg-amber-400 text-amber-900 text-[10px] font-bold px-2 py-0.5 border-0">
@@ -88,7 +85,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
           )}
         </div>
 
-        {/* Level */}
         <div className="absolute top-3 right-3 z-10">
           <Badge
             variant="secondary"
@@ -99,7 +95,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
         </div>
       </div>
 
-      {/* Content */}
       <div className={cn("flex flex-col gap-2 flex-1", compact ? "p-3" : "p-4")}>
         <div>
           <p className="text-xs font-medium text-indigo-600 mb-0.5 break-words">{course.category}</p>
@@ -116,7 +111,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
           )}
         </div>
 
-        {/* Rating */}
         {!enrollment && (
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-0.5">
@@ -152,7 +146,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
           </div>
         )}
 
-        {/* Enrollment progress & Actions */}
         {enrollment && (
           <div className="mt-auto pt-2 flex flex-col gap-2.5">
             <div>
@@ -169,7 +162,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
               <Progress value={enrollment.progressPercent} className="h-2" />
             </div>
 
-            {/* Action Button */}
             <Button
               size="sm"
               className={cn(
@@ -195,7 +187,6 @@ export function CourseCard({ course, enrollment, index = 0, compact = false }: C
           </div>
         )}
 
-        {/* Price */}
         {!enrollment && (
           <div className="mt-auto pt-2 flex items-center gap-2">
             {course.price === 0 ? (

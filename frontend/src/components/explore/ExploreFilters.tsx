@@ -43,7 +43,7 @@ export function ExploreFilters({
     <div className="bg-white border-b border-slate-200 sticky top-16 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
-          {/* Search */}
+
           <div className="input-glow flex-1 flex items-center gap-2.5 border border-slate-200 rounded-xl bg-white px-3.5 py-2.5">
             <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
             <Input
@@ -60,7 +60,7 @@ export function ExploreFilters({
             )}
           </div>
 
-          {/* Filters */}
+
           <div className="flex items-center gap-2 flex-wrap">
             <SlidersHorizontal className="w-4 h-4 text-slate-400 hidden sm:block" />
 

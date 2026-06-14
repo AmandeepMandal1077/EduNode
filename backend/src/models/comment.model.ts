@@ -121,6 +121,14 @@ const commentSchema = new mongoose.Schema<
   },
 );
 
+commentSchema.index({ lectureId: 1 });
+commentSchema.index({ parentCommentId: 1 });
+
+/**
+ * @desc Toggles the like status on a comment for a given user.
+ * @input {string} userId - The ID of the user liking the comment.
+ * @output {Promise<TCommentDoc>} The updated comment document.
+ */
 commentSchema.methods.likeComment = async function (
   this: TCommentDoc,
   userId: string,
@@ -153,6 +161,11 @@ commentSchema.methods.likeComment = async function (
   return this.save({ validateBeforeSave: false });
 };
 
+/**
+ * @desc Toggles the dislike status on a comment for a given user.
+ * @input {string} userId - The ID of the user disliking the comment.
+ * @output {Promise<TCommentDoc>} The updated comment document.
+ */
 commentSchema.methods.dislikeComment = async function (
   this: TCommentDoc,
   userId: string,
@@ -185,6 +198,11 @@ commentSchema.methods.dislikeComment = async function (
   return this.save({ validateBeforeSave: false });
 };
 
+/**
+ * @desc Soft deletes a comment by setting isDeleted to true and recording the deletion time.
+ * @input None
+ * @output {Promise<TCommentDoc>} The updated comment document.
+ */
 commentSchema.methods.deleteComment = async function (this: TCommentDoc) {
   this.isDeleted = true;
   this.deletedAt = new Date();

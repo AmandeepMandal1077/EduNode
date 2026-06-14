@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 class DbConnection {
   static MAX_RETRIES = 3;
-  static RETRY_INTERVAL = 5000; // 5 sec
+  static RETRY_INTERVAL = 5000;
 
   private isConnected: boolean;
   private retryCount: number;
@@ -50,11 +50,6 @@ class DbConnection {
       const configOptions: mongoose.ConnectOptions = {
         family: 4,
         maxPoolSize: 10,
-        //defaults
-        // serverSelectionTimeoutMS: 30000, //30 sec
-        // socketTimeoutMS: 10000, //10sec
-        // useNewUrlParser: true,
-        // useUnifiedTopology: true,
       };
 
       if (process.env.NODE_ENV === "development") {

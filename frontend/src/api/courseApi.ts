@@ -1,19 +1,8 @@
-/**
- * courseApi.ts
- * All calls that map to /api/v1/courses and /api/v1/lecture
- *
- * Backend route reference:
- *   GET  /api/v1/courses/published          → getPublishedCourses
- *   GET  /api/v1/courses/search?q=&cat=     → searchCourses
- *   GET  /api/v1/courses/:courseId        → getCourseDetails
- *   GET  /api/v1/courses/:courseId/lectures → getCourseLectures
- *   POST /api/v1/courses/:courseId/announce → announceMessage (instructor)
- *   GET  /api/v1/courses/                   → getMyCreatedCourses (instructor)
- */
+
 
 import apiClient from "./client";
 
-// ── Shape of what the backend returns ─────────────────────────────────────────
+
 
 export interface BackendLecture {
   _id: string;
@@ -22,7 +11,7 @@ export interface BackendLecture {
   courseId: string;
   description: string;
   videoUrl: string;
-  duration?: number; // seconds
+  duration?: number;
   isPreview?: boolean;
   publicId: string;
   order?: number;
@@ -54,7 +43,7 @@ export interface BackendCourse {
   announcements: string[];
   isPublished: boolean;
   totalLectures: number;
-  totalDuration: number; // seconds
+  totalDuration: number;
   averageRating: number;
   createdAt: string;
   updatedAt: string;
@@ -67,13 +56,12 @@ export interface BackendAnnouncement {
   sentAt: string;
 }
 
-// ── API calls ─────────────────────────────────────────────────────────────────
+
 
 /**
- * @desc: Fetch all published courses
- * @input: none
- * @return: Promise<BackendCourse[]>
- * @access: Public
+ * @desc Fetch all published courses.
+ * @input None
+ * @output {Promise<BackendCourse[]>} List of published courses.
  */
 export async function fetchPublishedCourses(): Promise<BackendCourse[]> {
   const res = await apiClient.get("/courses/published");
@@ -81,10 +69,9 @@ export async function fetchPublishedCourses(): Promise<BackendCourse[]> {
 }
 
 /**
- * @desc: Fetch all unique course categories
- * @input: none
- * @return: Promise<string[]>
- * @access: Public
+ * @desc Fetch all unique course categories.
+ * @input None
+ * @output {Promise<string[]>} List of categories.
  */
 export async function fetchCategories(): Promise<string[]> {
   const res = await apiClient.get("/courses/categories");
@@ -92,10 +79,10 @@ export async function fetchCategories(): Promise<string[]> {
 }
 
 /**
- * @desc: Search for published courses using query text and category
- * @input: query (string, optional), category (string, optional)
- * @return: Promise<BackendCourse[]>
- * @access: Public
+ * @desc Search for published courses using query text and category.
+ * @input {string} [query] - Optional search query string.
+ * @input {string} [category] - Optional category to filter by.
+ * @output {Promise<BackendCourse[]>} List of matching courses.
  */
 export async function fetchSearchCourses(
   query?: string,
@@ -109,10 +96,9 @@ export async function fetchSearchCourses(
 }
 
 /**
- * @desc: Fetch full details for a course by its ID
- * @input: courseId (string)
- * @return: Promise<BackendCourse>
- * @access: Private
+ * @desc Fetch full details for a course by its ID.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<BackendCourse>} The course details.
  */
 export async function fetchCourseDetails(courseId: string): Promise<BackendCourse> {
   const res = await apiClient.get(`/courses/${courseId}`);
@@ -120,10 +106,9 @@ export async function fetchCourseDetails(courseId: string): Promise<BackendCours
 }
 
 /**
- * @desc: Fetch all lectures associated with a specific course
- * @input: courseId (string)
- * @return: Promise<BackendLecture[]>
- * @access: Private
+ * @desc Fetch all lectures associated with a specific course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<BackendLecture[]>} List of lectures.
  */
 export async function fetchCourseLectures(courseId: string): Promise<BackendLecture[]> {
   const res = await apiClient.get(`/courses/${courseId}/lectures`);
@@ -134,10 +119,10 @@ export async function fetchCourseLectures(courseId: string): Promise<BackendLect
 }
 
 /**
- * @desc: Post a new announcement for a course
- * @input: courseId (string), message (string)
- * @return: Promise<BackendAnnouncement>
- * @access: Private (Instructor only)
+ * @desc Post a new announcement for a course.
+ * @input {string} courseId - The ID of the course.
+ * @input {string} message - The announcement message.
+ * @output {Promise<BackendAnnouncement>} The created announcement.
  */
 export async function postAnnouncement(
   courseId: string,
@@ -148,10 +133,9 @@ export async function postAnnouncement(
 }
 
 /**
- * @desc: Create a new course (JSON payload)
- * @input: data (object)
- * @return: Promise<BackendCourse>
- * @access: Private (Instructor only)
+ * @desc Create a new course.
+ * @input {Object} data - The course details (title, subtitle, description, category, level, price, thumbnail).
+ * @output {Promise<BackendCourse>} The created course.
  */
 export async function createCourse(data: {
   title: string;
@@ -167,10 +151,9 @@ export async function createCourse(data: {
 }
 
 /**
- * @desc: Fetch courses created by the currently authenticated instructor
- * @input: none
- * @return: Promise<BackendCourse[]>
- * @access: Private (Instructor only)
+ * @desc Fetch courses created by the currently authenticated instructor.
+ * @input None
+ * @output {Promise<BackendCourse[]>} List of courses created by the instructor.
  */
 export async function fetchMyCreatedCourses(): Promise<BackendCourse[]> {
   const res = await apiClient.get("/courses");
@@ -178,10 +161,9 @@ export async function fetchMyCreatedCourses(): Promise<BackendCourse[]> {
 }
 
 /**
- * @desc: Fetch courses purchased by the current user
- * @input: none
- * @return: Promise<BackendCourse[]>
- * @access: Private
+ * @desc Fetch courses purchased by the current user.
+ * @input None
+ * @output {Promise<BackendCourse[]>} List of purchased courses.
  */
 export async function fetchPurchasedCoursesNew(): Promise<BackendCourse[]> {
   const res = await apiClient.get("/courses/purchased");
@@ -193,10 +175,9 @@ export async function fetchPurchasedCoursesNew(): Promise<BackendCourse[]> {
 }
 
 /**
- * @desc: Fetch all announcements for a course
- * @input: courseId (string)
- * @return: Promise<BackendAnnouncement[]>
- * @access: Private
+ * @desc Fetch all announcements for a course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<BackendAnnouncement[]>} List of announcements.
  */
 export async function fetchCourseAnnouncements(courseId: string): Promise<BackendAnnouncement[]> {
   const res = await apiClient.get(`/courses/${courseId}/announcements`);
@@ -204,10 +185,9 @@ export async function fetchCourseAnnouncements(courseId: string): Promise<Backen
 }
 
 /**
- * @desc: Fetch announcements for all purchased courses
- * @input: none
- * @return: Promise<BackendAnnouncement[]>
- * @access: Private
+ * @desc Fetch announcements for all purchased courses.
+ * @input None
+ * @output {Promise<BackendAnnouncement[]>} List of announcements.
  */
 export async function fetchMyAnnouncements(): Promise<BackendAnnouncement[]> {
   const res = await apiClient.get("/courses/my-announcements");
@@ -215,10 +195,10 @@ export async function fetchMyAnnouncements(): Promise<BackendAnnouncement[]> {
 }
 
 /**
- * @desc: Update course details (PATCH /api/v1/courses/:courseId)
- * @input: courseId (string), data (object)
- * @return: Promise<BackendCourse>
- * @access: Private (Instructor only)
+ * @desc Update course details.
+ * @input {string} courseId - The ID of the course.
+ * @input {Object} data - The updated course details.
+ * @output {Promise<BackendCourse>} The updated course.
  */
 export async function apiUpdateCourseDetails(
   courseId: string,
@@ -238,10 +218,10 @@ export async function apiUpdateCourseDetails(
 }
 
 /**
- * @desc: Add lecture to course (JSON payload)
- * @input: courseId (string), data (object)
- * @return: Promise<BackendLecture>
- * @access: Private (Instructor only)
+ * @desc Add a new lecture to a course.
+ * @input {string} courseId - The ID of the course.
+ * @input {Object} data - The lecture details (title, description, videoUrl, publicId).
+ * @output {Promise<BackendLecture>} The added lecture.
  */
 export async function apiAddLecture(
   courseId: string,
@@ -257,19 +237,19 @@ export async function apiAddLecture(
 }
 
 /**
- * @desc: Delete lecture (DELETE /api/v1/lecture/:lectureId)
- * @input: lectureId (string)
- * @return: Promise<void>
- * @access: Private (Instructor only)
+ * @desc Delete a lecture.
+ * @input {string} lectureId - The ID of the lecture.
+ * @output {Promise<void>} Resolves when the lecture is deleted.
  */
 export async function apiDeleteLecture(lectureId: string): Promise<void> {
   await apiClient.delete(`/lecture/${lectureId}`);
 }
 
 /**
- * @desc: Rate a course (POST /api/v1/courses/:courseId/rate)
- * @input: courseId (string), rating (number)
- * @return: Promise<any>
+ * @desc Rate a course.
+ * @input {string} courseId - The ID of the course.
+ * @input {number} rating - The rating value.
+ * @output {Promise<any>} The response data.
  */
 export async function apiRateCourse(courseId: string, rating: number): Promise<any> {
   const res = await apiClient.post(`/courses/${courseId}/rate`, { rating });

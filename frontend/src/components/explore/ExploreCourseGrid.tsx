@@ -22,7 +22,7 @@ export function ExploreCourseGrid({
 }: ExploreCourseGridProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      {/* Result count */}
+
       <div className="flex items-center justify-between mb-6">
         <motion.div
           key={courses.length}
@@ -41,7 +41,7 @@ export function ExploreCourseGrid({
         </motion.div>
       </div>
 
-      {/* Grid */}
+
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -74,7 +74,7 @@ export function ExploreCourseGrid({
             ))}
           </div>
 
-          {/* Pagination Controls */}
+
           {courses.length > 12 && (
             <div className="flex justify-center items-center gap-2 mt-4">
               <Button

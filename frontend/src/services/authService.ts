@@ -1,8 +1,3 @@
-/**
- * authService.ts
- * Authentication flows — login, register, logout.
- * Delegates to userApi; state is tracked in userService cache.
- */
 
 import { apiSignin, apiSignup, apiSignout } from "../api/userApi";
 import { checkAuthStatus } from "./userService";
@@ -10,10 +5,11 @@ import { checkAuthStatus } from "./userService";
 export { checkAuthStatus };
 
 /**
- * @desc: Log in a user with email and password
- * @input: email (string), password (string)
- * @return: Promise<{ success: boolean; error?: string }>
- * @access: Public
+ * @desc Log in a user with email and password.
+ * @input {string} email - User email.
+ * @input {string} password - User password.
+ * @input {string} [role] - Optional role.
+ * @output {Promise<{ success: boolean; error?: string }>} Login result.
  */
 export async function login(
   email: string,
@@ -35,10 +31,12 @@ export async function login(
 }
 
 /**
- * @desc: Register a new user account
- * @input: name (string), email (string), password (string), role (string, optional)
- * @return: Promise<{ success: boolean; error?: string }>
- * @access: Public
+ * @desc Register a new user account.
+ * @input {string} name - User name.
+ * @input {string} email - User email.
+ * @input {string} password - User password.
+ * @input {string} [role] - Optional role.
+ * @output {Promise<{ success: boolean; error?: string }>} Registration result.
  */
 export async function register(
   name: string,
@@ -64,10 +62,9 @@ export async function register(
 }
 
 /**
- * @desc: Log out the current user and clear credentials
- * @input: none
- * @return: Promise<void>
- * @access: Private
+ * @desc Log out the current user and clear credentials.
+ * @input None
+ * @output {Promise<void>} Resolves on successful logout.
  */
 export async function logout(): Promise<void> {
   await apiSignout();

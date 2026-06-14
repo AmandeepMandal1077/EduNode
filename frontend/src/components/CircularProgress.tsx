@@ -1,5 +1,5 @@
 interface CircularProgressProps {
-  value: number; // 0-100
+  value: number;
   size?: number;
   strokeWidth?: number;
   className?: string;
@@ -20,7 +20,6 @@ export function CircularProgress({
   return (
     <div className={`relative inline-flex items-center justify-center ${className ?? ""}`}>
       <svg width={size} height={size} className="-rotate-90">
-        {/* Track */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -29,7 +28,6 @@ export function CircularProgress({
           stroke="#e0e7ff"
           strokeWidth={strokeWidth}
         />
-        {/* Progress */}
         <circle
           cx={size / 2}
           cy={size / 2}

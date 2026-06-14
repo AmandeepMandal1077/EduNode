@@ -1,10 +1,3 @@
-/**
- * courseService.ts
- * Business-logic adapter between pages and the courseApi layer.
- * Maps BackendCourse → Course (frontend types) so pages need zero changes.
- *
- * "localStorage" has been completely removed. All data is fetched live.
- */
 
 import type { Course, Lecture, Enrollment, LectureProgress } from "../types";
 import {
@@ -35,7 +28,7 @@ import {
   type CourseProgressResponse,
 } from "../api/progressApi";
 
-// ── Palette: assign a deterministic accent colour per course slug ─────────────
+
 const ACCENTS = [
   "#7c3aed", "#4338ca", "#0d9488", "#be185d", "#d97706",
   "#0284c7", "#a21caf", "#16a34a", "#475569", "#dc2626",
@@ -48,7 +41,7 @@ function accentForSlug(slug: string | undefined): string {
   return ACCENTS[Math.abs(hash) % ACCENTS.length];
 }
 
-// ── Level normalizer ──────────────────────────────────────────────────────────
+
 function normalizeLevel(
   raw: string
 ): "Beginner" | "Intermediate" | "Advanced" {
@@ -64,7 +57,7 @@ function toBackendLevel(lvl: string): string {
   return "beginner";
 }
 
-// ── Duration formatter (seconds → "Xh Ym") ───────────────────────────────────
+
 function fmtDuration(seconds: number | undefined): string {
   if (seconds == null || isNaN(seconds)) return "0m";
   const h = Math.floor(seconds / 3600);
@@ -72,7 +65,7 @@ function fmtDuration(seconds: number | undefined): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
-// ── Lecture mapper ────────────────────────────────────────────────────────────
+
 function mapLecture(bl: BackendLecture): Lecture {
   const dur = bl.duration ?? 0;
   const min = Math.floor(dur / 60)
@@ -92,7 +85,7 @@ function mapLecture(bl: BackendLecture): Lecture {
   };
 }
 
-// ── Course mapper ─────────────────────────────────────────────────────────────
+
 function mapCourse(bc: BackendCourse, lectures?: BackendLecture[]): Course {
   const instructorName =
     typeof bc.instructor === "string"
@@ -107,7 +100,7 @@ function mapCourse(bc: BackendCourse, lectures?: BackendLecture[]): Course {
       ? ""
       : bc.instructor?.avatar ?? "";
 
-  // Build a single "module" from the flat lecture list (backend has no modules)
+
   const mappedLectures: Lecture[] =
     lectures?.map(mapLecture) ??
     (Array.isArray(bc.lectures)
@@ -159,7 +152,7 @@ function mapCourse(bc: BackendCourse, lectures?: BackendLecture[]): Course {
   } as Course & { thumbnail: string };
 }
 
-// ── Enrollment builder from progress + purchase data ─────────────────────────
+
 function buildEnrollment(
   courseId: string,
   progress: CourseProgressResponse | null,
@@ -189,15 +182,12 @@ function buildEnrollment(
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Public API  (same function signatures pages already call)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
- * @desc: Fetch all published courses
- * @input: none
- * @return: Promise<Course[]>
- * @access: Public
+ * @desc Fetch all published courses.
+ * @input None
+ * @output {Promise<Course[]>} List of mapped courses.
  */
 export async function getCourses(): Promise<Course[]> {
   const bc = await fetchPublishedCourses();
@@ -205,10 +195,9 @@ export async function getCourses(): Promise<Course[]> {
 }
 
 /**
- * @desc: Fetch details and lectures for a specific course by ID
- * @input: id (string)
- * @return: Promise<Course | null>
- * @access: Private
+ * @desc Fetch details and lectures for a specific course by ID.
+ * @input {string} id - The course ID.
+ * @output {Promise<Course | null>} The mapped course details or null.
  */
 export async function getCourseById(id: string): Promise<Course | null> {
   try {
@@ -223,10 +212,9 @@ export async function getCourseById(id: string): Promise<Course | null> {
 }
 
 /**
- * @desc: Fetch courses marked as featured
- * @input: none
- * @return: Promise<Course[]>
- * @access: Public
+ * @desc Fetch courses marked as featured.
+ * @input None
+ * @output {Promise<Course[]>} List of featured courses.
  */
 export async function getFeaturedCourses(): Promise<Course[]> {
   const courses = await getCourses();
@@ -234,10 +222,9 @@ export async function getFeaturedCourses(): Promise<Course[]> {
 }
 
 /**
- * @desc: Fetch courses marked as bestsellers
- * @input: none
- * @return: Promise<Course[]>
- * @access: Public
+ * @desc Fetch courses marked as bestsellers.
+ * @input None
+ * @output {Promise<Course[]>} List of bestseller courses.
  */
 export async function getBestsellerCourses(): Promise<Course[]> {
   const courses = await getCourses();
@@ -245,10 +232,11 @@ export async function getBestsellerCourses(): Promise<Course[]> {
 }
 
 /**
- * @desc: Search published courses with query/category filters
- * @input: query (string), category (string, optional), priceFilter (string, optional)
- * @return: Promise<Course[]>
- * @access: Public
+ * @desc Search published courses with query/category filters.
+ * @input {string} query - Search query.
+ * @input {string} [category] - Optional category filter.
+ * @input {string} [priceFilter] - Optional price filter.
+ * @output {Promise<Course[]>} List of matching courses.
  */
 export async function searchCourses(
   query: string,
@@ -269,8 +257,8 @@ export async function searchCourses(
     );
   }
 
-  // Price filtering is client-side (backend doesn't support it yet)
-  // Backend prices are in INR (Rupees), thresholds adjusted accordingly
+
+
   if (priceFilter === "free") {
     courses = courses.filter((c) => c.price === 0);
   } else if (priceFilter === "paid") {
@@ -285,10 +273,9 @@ export async function searchCourses(
 }
 
 /**
- * @desc: Fetch all unique course categories
- * @input: none
- * @return: Promise<string[]>
- * @access: Public
+ * @desc Fetch all unique course categories.
+ * @input None
+ * @output {Promise<string[]>} List of category names.
  */
 export async function getCategories(): Promise<string[]> {
   try {
@@ -299,10 +286,9 @@ export async function getCategories(): Promise<string[]> {
 }
 
 /**
- * @desc: Fetch purchased (enrolled) courses with progress details
- * @input: none
- * @return: Promise<Array<{ course: Course, enrollment: Enrollment }>>
- * @access: Private
+ * @desc Fetch purchased (enrolled) courses with progress details.
+ * @input None
+ * @output {Promise<Array<{ course: Course, enrollment: Enrollment }>>} Enrolled courses data.
  */
 export async function getEnrolledCourses(): Promise<
   { course: Course; enrollment: Enrollment }[]
@@ -330,10 +316,12 @@ export async function getEnrolledCourses(): Promise<
 
 
 /**
- * @desc: Update progress and mark completion of a lecture
- * @input: courseId (string), lectureId (string), watchedSeconds (number), totalSeconds (number)
- * @return: Promise<void>
- * @access: Private
+ * @desc Update progress and mark completion of a lecture.
+ * @input {string} courseId - The ID of the course.
+ * @input {string} lectureId - The ID of the lecture.
+ * @input {number} watchedSeconds - Number of seconds watched.
+ * @input {number} totalSeconds - Total duration of the lecture.
+ * @output {Promise<void>} Resolves on success.
  */
 export async function updateLectureProgress(
   courseId: string,
@@ -348,15 +336,14 @@ export async function updateLectureProgress(
       lastWatchedPosition: watchedSeconds,
     });
   } catch {
-    // Silently fail so video playback is never disrupted by a network error
+
   }
 }
 
 /**
- * @desc: Fetch all announcements for a course
- * @input: courseId (string)
- * @return: Promise<BackendAnnouncement[]>
- * @access: Private
+ * @desc Fetch all announcements for a course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<BackendAnnouncement[]>} List of announcements.
  */
 export async function getCourseAnnouncements(courseId: string): Promise<BackendAnnouncement[]> {
   try {
@@ -367,10 +354,9 @@ export async function getCourseAnnouncements(courseId: string): Promise<BackendA
 }
 
 /**
- * @desc: Fetch all announcements for purchased courses
- * @input: none
- * @return: Promise<BackendAnnouncement[]>
- * @access: Private
+ * @desc Fetch all announcements for purchased courses.
+ * @input None
+ * @output {Promise<BackendAnnouncement[]>} List of personal announcements.
  */
 export async function getMyAnnouncements(): Promise<BackendAnnouncement[]> {
   try {
@@ -381,10 +367,9 @@ export async function getMyAnnouncements(): Promise<BackendAnnouncement[]> {
 }
 
 /**
- * @desc: Check if a course is purchased by the current user
- * @input: courseId (string)
- * @return: Promise<boolean>
- * @access: Private
+ * @desc Check if a course is purchased by the current user.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<boolean>} True if enrolled, false otherwise.
  */
 export async function isEnrolled(courseId: string): Promise<boolean> {
   try {
@@ -396,10 +381,9 @@ export async function isEnrolled(courseId: string): Promise<boolean> {
 }
 
 /**
- * @desc: Create a new course via JSON
- * @input: data (object)
- * @return: Promise<Course>
- * @access: Private (Instructor only)
+ * @desc Create a new course via JSON.
+ * @input {Object} data - The course details to create.
+ * @output {Promise<Course>} The created course.
  */
 export async function createCourse(
   data: {
@@ -426,10 +410,9 @@ export async function createCourse(
 }
 
 /**
- * @desc: Fetch courses created by currently authenticated instructor
- * @input: none
- * @return: Promise<Course[]>
- * @access: Private (Instructor only)
+ * @desc Fetch courses created by currently authenticated instructor.
+ * @input None
+ * @output {Promise<Course[]>} List of created courses.
  */
 export async function getMyCreatedCourses(): Promise<Course[]> {
   const bc = await apiFetchMyCreatedCourses();
@@ -437,10 +420,10 @@ export async function getMyCreatedCourses(): Promise<Course[]> {
 }
 
 /**
- * @desc: Update course details via JSON
- * @input: courseId (string), data (object)
- * @return: Promise<Course>
- * @access: Private (Instructor only)
+ * @desc Update course details via JSON.
+ * @input {string} courseId - The ID of the course.
+ * @input {Object} data - The updated course details.
+ * @output {Promise<Course>} The updated course.
  */
 export async function updateCourse(
   courseId: string,
@@ -470,10 +453,10 @@ export async function updateCourse(
 }
 
 /**
- * @desc: Add lecture to course
- * @input: courseId (string), data (object)
- * @return: Promise<Lecture>
- * @access: Private (Instructor only)
+ * @desc Add a lecture to a course.
+ * @input {string} courseId - The ID of the course.
+ * @input {Object} data - The lecture details.
+ * @output {Promise<Lecture>} The added lecture.
  */
 export async function addLecture(
   courseId: string,
@@ -495,19 +478,19 @@ export async function addLecture(
 }
 
 /**
- * @desc: Delete a lecture from course
- * @input: lectureId (string)
- * @return: Promise<void>
- * @access: Private (Instructor only)
+ * @desc Delete a lecture from a course.
+ * @input {string} lectureId - The ID of the lecture.
+ * @output {Promise<void>} Resolves on success.
  */
 export async function deleteLecture(lectureId: string): Promise<void> {
   await apiDeleteLecture(lectureId);
 }
 
 /**
- * @desc: Submit a rating for a course
- * @input: courseId (string), rating (number)
- * @return: Promise<any>
+ * @desc Submit a rating for a course.
+ * @input {string} courseId - The ID of the course.
+ * @input {number} rating - The submitted rating.
+ * @output {Promise<any>} Response object from the backend.
  */
 export async function rateCourse(courseId: string, rating: number): Promise<any> {
   return await apiRateCourse(courseId, rating);

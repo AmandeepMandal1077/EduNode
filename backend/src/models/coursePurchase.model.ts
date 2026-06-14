@@ -1,9 +1,6 @@
-import type { HydratedDocumentFromSchema } from "mongoose";
 import mongoose, {
-  type Document,
   type Types,
   type HydratedDocument,
-  type HydratedDocFromModel,
 } from "mongoose";
 
 export enum PaymentStatus {
@@ -119,14 +116,25 @@ coursePurchaseSchema.index({ user: 1, course: 1 });
 coursePurchaseSchema.index({ createdAt: -1 });
 coursePurchaseSchema.index({ status: 1 });
 
+/**
+ * @desc Checks if the course purchase is eligible for a refund.
+ * @input None
+ * @output {boolean} True if refundable, false otherwise.
+ */
 coursePurchaseSchema.methods.isRefundable = function (
   this: TCoursePurchaseDoc,
 ) {
   if (this.status !== "completed") return false;
 
-  return this.createdAt > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
+  return this.createdAt > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 };
 
+/**
+ * @desc Processes a refund for the course purchase, updating status and refund details.
+ * @input {number} amount - The amount to refund.
+ * @input {string} reason - The reason for the refund.
+ * @output {Promise<void>} Resolves when the refund is processed and saved.
+ */
 coursePurchaseSchema.methods.processRefund = async function (
   this: TCoursePurchaseDoc,
   amount: number,

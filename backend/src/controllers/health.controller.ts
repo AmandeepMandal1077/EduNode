@@ -3,6 +3,12 @@ import { connectionStatus } from "../database/db.js";
 
 import { type Request, type Response } from "express";
 
+/**
+ * @desc Retrieves the health status of the application including database and server metrics.
+ * @input {Request} _ - The Express request object.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the health status.
+ */
 const healthCheck = asyncHandler(async (_: Request, res: Response) => {
   const dbStatus = connectionStatus();
 
