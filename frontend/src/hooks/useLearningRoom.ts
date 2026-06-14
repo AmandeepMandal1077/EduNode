@@ -64,16 +64,21 @@ export function useLearningRoom() {
   const handleProgress = useCallback(
     async (watched: number) => {
       if (!courseId || !currentLecture) return;
-      dispatch(
-        updateLectureProgressThunk({
-          courseId,
-          lectureId: currentLecture.id,
-          watchedSeconds: watched,
-          totalSeconds: currentLecture.durationSeconds,
-        })
-      );
+      const isCompleted = watched >= currentLecture.durationSeconds * 0.95;
+      const alreadyCompleted = completedIds.has(currentLecture.id);
+
+      if (isCompleted && !alreadyCompleted) {
+        dispatch(
+          updateLectureProgressThunk({
+            courseId,
+            lectureId: currentLecture.id,
+            watchedSeconds: watched,
+            totalSeconds: currentLecture.durationSeconds,
+          })
+        );
+      }
     },
-    [dispatch, courseId, currentLecture]
+    [dispatch, courseId, currentLecture, completedIds]
   );
 
   const handleToggleCompletion = async (e: React.MouseEvent, targetLecId: string, durationSecs: number) => {

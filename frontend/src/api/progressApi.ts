@@ -83,13 +83,15 @@ export async function resetCourseProgress(courseId: string): Promise<void> {
 
 /**
  * @desc Sync current video playback position to Redis cache.
- * @input {Object} payload - Contains lectureId, courseId, and watchedSeconds.
+ * @input {Object} payload - Contains lectureId, courseId, currentPosition, previousPosition, lectureDuration.
  * @output {Promise<void>} Resolves on success.
  */
 export async function syncPlaybackPosition(payload: {
   lectureId: string;
   courseId: string;
-  watchedSeconds: number;
+  currentPosition: number;
+  previousPosition: number;
+  lectureDuration: number;
 }): Promise<void> {
   await apiClient.post("/playback/sync", payload);
 }
@@ -108,7 +110,7 @@ export async function fetchLastWatchPosition(
     const res = await apiClient.get("/playback/sync", {
       params: { lectureId, courseId },
     });
-    return res.data?.data?.lastWatchedPosition ?? 0;
+    return res.data?.data?.resumePosition?.lastWatchedPosition ?? 0;
   } catch {
     return 0;
   }

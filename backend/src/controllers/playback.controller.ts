@@ -19,7 +19,7 @@ export const lectureLastWatchPosition = asyncHandler(async (req: AuthenticatedRe
     const {
         lectureId,
         courseId,
-    } = req.body;
+    } = req.query as { lectureId: string, courseId: string };
 
     let resumePosition = await getLectureProgressFromCahce(userId, lectureId);
     if (!resumePosition) {

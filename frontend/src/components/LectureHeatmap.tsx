@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { fetchLectureHeatmap } from "@/api/progressApi";
 
 interface HeatmapData {
@@ -12,7 +12,6 @@ export function LectureHeatmap({ lectureId }: { lectureId: string }) {
   useEffect(() => {
     if (!lectureId) return;
     fetchLectureHeatmap(lectureId).then((data) => {
-
       const mappedData = data.map((d: any) => ({
         segmentIndex: d.segmentIndex ?? d.segmentIdx ?? 0,
         secondsWatched: d.secondsWatched ?? d.watchSeconds ?? 0,
@@ -21,41 +20,67 @@ export function LectureHeatmap({ lectureId }: { lectureId: string }) {
     });
   }, [lectureId]);
 
-  const normalizedData = Array.from({ length: 100 }, (_, i) => {
-    const found = heatmap.find((h) => h.segmentIndex === i);
-    return found ? found.secondsWatched : 0;
-  });
+  const normalizedData = useMemo(() => {
+    return Array.from({ length: 100 }, (_, i) => {
+      const found = heatmap.find((h) => h.segmentIndex === i);
+      return found ? found.secondsWatched : 0;
+    });
+  }, [heatmap]);
 
-  const maxWatched = Math.max(...normalizedData, 1);
+  const paths = useMemo(() => {
+    const maxWatched = Math.max(...normalizedData, 1);
+    
+    let d = `M 0,${100 - (normalizedData[0] / maxWatched) * 100} `;
+    
+    for (let i = 0; i < normalizedData.length - 1; i++) {
+      const x0 = i * 10;
+      const y0 = 100 - (normalizedData[i] / maxWatched) * 100;
+      const x1 = (i + 1) * 10;
+      const y1 = 100 - (normalizedData[i + 1] / maxWatched) * 100;
+      
+      const cp1x = x0 + 5;
+      const cp2x = x1 - 5;
+      
+      d += `C ${cp1x},${y0} ${cp2x},${y1} ${x1},${y1} `;
+    }
+    
+    const fillPath = `${d} L 990,100 L 0,100 Z`;
+    
+    return { strokePath: d, fillPath };
+  }, [normalizedData]);
+
+  if (heatmap.length === 0) {
+    return null; // Don't render anything if no heatmap data yet
+  }
 
   return (
-    <div className="flex items-end h-full w-full gap-[1px] pt-4 pointer-events-auto">
-      {normalizedData.map((seconds, i) => {
-        const heightPercent = (seconds / maxWatched) * 100;
-        
-        let color = "bg-slate-500/30";
-        if (seconds > 0) {
-            const ratio = seconds / maxWatched;
-            if (ratio < 0.3) color = "bg-indigo-300";
-            else if (ratio < 0.6) color = "bg-indigo-400";
-            else if (ratio < 0.8) color = "bg-indigo-500";
-            else color = "bg-indigo-600";
-        }
-
-        return (
-          <div
-            key={i}
-            className={`group relative flex-1 ${color} rounded-t-sm transition-all duration-300 hover:opacity-100 hover:bg-rose-400 cursor-pointer`}
-            style={{ height: `${Math.max(heightPercent, 10)}%` }}
-          >
-
-            <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-slate-800 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap z-50 transition-opacity">
-               Segment {i} • {Math.floor(seconds)}s
-               <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
-            </div>
-          </div>
-        );
-      })}
+    <div className="absolute bottom-0 left-0 right-0 h-full w-full pointer-events-none opacity-80 mix-blend-screen">
+      <svg
+        viewBox="0 0 990 100"
+        preserveAspectRatio="none"
+        className="w-full h-full drop-shadow-md"
+      >
+        <defs>
+          <linearGradient id="heatmap-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#818cf8" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <path
+          d={paths.fillPath}
+          fill="url(#heatmap-gradient)"
+          className="transition-all duration-700 ease-in-out"
+        />
+        <path
+          d={paths.strokePath}
+          fill="none"
+          stroke="#a5b4fc"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="transition-all duration-700 ease-in-out"
+        />
+      </svg>
     </div>
   );
 }

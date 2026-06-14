@@ -12,6 +12,8 @@ import {
 import {
   fetchCourseProgress,
   updateLectureProgress as apiUpdateLectureProgress,
+  syncPlaybackPosition,
+  markCourseCompleted,
 } from "../api/progressApi";
 
 interface CourseState {
@@ -100,15 +102,44 @@ export const updateLectureProgressThunk = createAsyncThunk(
   "course/updateLectureProgress",
   async (
     payload: { courseId: string; lectureId: string; watchedSeconds: number; totalSeconds: number },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     const { courseId, lectureId, watchedSeconds, totalSeconds } = payload;
     const isCompleted = watchedSeconds >= totalSeconds * 0.95;
     try {
+      // 1. Update the database progress
       await apiUpdateLectureProgress(courseId, lectureId, {
         isCompleted,
         lastWatchedPosition: watchedSeconds,
       });
+
+      // 2. If completed, also sync to Redis cache immediately
+      if (isCompleted) {
+        await syncPlaybackPosition({
+          courseId,
+          lectureId,
+          currentPosition: watchedSeconds,
+          previousPosition: watchedSeconds,
+          lectureDuration: totalSeconds,
+        });
+      }
+
+      // 3. Check if all lectures in the course are now completed
+      const state = getState() as { course: CourseState };
+      const allLectures = state.course.selectedCourse?.modules.flatMap((m) => m.lectures) ?? [];
+      const completedList = state.course.completedLectures[courseId] ?? [];
+      const completedSet = new Set(completedList);
+      if (isCompleted) {
+        completedSet.add(lectureId);
+      } else {
+        completedSet.delete(lectureId);
+      }
+
+      const isCourseCompleted = allLectures.length > 0 && allLectures.every((l) => completedSet.has(l.id));
+      if (isCourseCompleted) {
+        await markCourseCompleted(courseId);
+      }
+
       return { courseId, lectureId, isCompleted };
     } catch (err: unknown) {
       return rejectWithValue(err instanceof Error ? err.message : "Failed to update lecture progress");

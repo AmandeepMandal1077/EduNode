@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Play, Pause, Volume2, VolumeX, Maximize, SkipForward, SkipBack, Minimize } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useVideoTelemetry } from "@/hooks/useVideoTelemetry";
+import { LectureHeatmap } from "./LectureHeatmap";
 
 interface VideoPlayerProps {
   src?: string;
   title?: string;
   duration?: number;
+  courseId?: string;
+  lectureId?: string;
   onProgress?: (seconds: number) => void;
   initialProgress?: number;
   className?: string;
@@ -15,6 +19,8 @@ export function VideoPlayer({
   src,
   title,
   duration: durationProp = 1200,
+  courseId,
+  lectureId,
   onProgress,
   initialProgress = 0,
   className,
@@ -30,6 +36,13 @@ export function VideoPlayer({
   const [volume, setVolume] = useState(80);
   const [showControls, setShowControls] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useVideoTelemetry({
+    courseId,
+    lectureId,
+    duration,
+    videoRef,
+  });
 
 
   const handleLoadedMetadata = () => {
@@ -182,13 +195,6 @@ export function VideoPlayer({
 
 
       <div
-        id="heatmap-container"
-        className="heatmap-container absolute bottom-12 left-0 right-0 h-1.5 pointer-events-none"
-        aria-hidden="true"
-      />
-
-
-      <div
         className={cn(
           "absolute bottom-0 left-0 right-0 transition-opacity duration-300",
           showControls ? "opacity-100" : "opacity-0"
@@ -199,23 +205,27 @@ export function VideoPlayer({
         }}
       >
 
-        {title && (
-          <p className="text-white/70 text-sm font-medium truncate mb-1">{title}</p>
-        )}
 
 
-        <input
-          type="range"
-          className="video-progress mb-2"
-          min={0}
-          max={duration}
-          step={0.5}
-          value={progress}
-          onChange={(e) => handleSeek(Number(e.target.value))}
-          style={{
-            background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${pct}%, rgba(255,255,255,0.25) ${pct}%, rgba(255,255,255,0.25) 100%)`,
-          }}
-        />
+        <div className="relative w-full mb-2.5">
+          {lectureId && (
+            <div className="absolute left-[7px] right-[7px] bottom-full mb-1.5 h-5 pointer-events-none">
+              <LectureHeatmap lectureId={lectureId} />
+            </div>
+          )}
+          <input
+            type="range"
+            className="video-progress block w-full"
+            min={0}
+            max={duration}
+            step={0.5}
+            value={progress}
+            onChange={(e) => handleSeek(Number(e.target.value))}
+            style={{
+              background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${pct}%, rgba(255,255,255,0.25) ${pct}%, rgba(255,255,255,0.25) 100%)`,
+            }}
+          />
+        </div>
 
 
         <div className="flex items-center justify-between gap-3">

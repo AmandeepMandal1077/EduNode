@@ -1,7 +1,6 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { LectureHeatmap } from "@/components/LectureHeatmap";
 import type { Lecture } from "@/types";
 
 interface VideoSectionProps {
@@ -14,6 +13,7 @@ interface VideoSectionProps {
 
 export function VideoSection({
   currentLecture,
+  courseId,
   completedIds,
   handleProgress,
   handleToggleCompletion,
@@ -26,15 +26,14 @@ export function VideoSection({
         <VideoPlayer
           src={currentLecture.videoUrl}
           title={currentLecture.title}
+          courseId={courseId}
+          lectureId={currentLecture.id}
           duration={currentLecture.durationSeconds}
           onProgress={handleProgress}
           className="h-full w-full"
         />
       </div>
 
-      <div className="max-w-4xl mx-auto w-full h-8 -mt-5 mb-1 z-10 relative px-4">
-        <LectureHeatmap lectureId={currentLecture.id} />
-      </div>
 
       <div className="max-w-4xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 pb-6 flex-shrink-0">
         <div>
