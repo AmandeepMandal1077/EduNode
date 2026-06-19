@@ -3,6 +3,8 @@ import { fetchUploadSignature } from "../api/mediaApi";
 export interface UploadResult {
   secureUrl: string;
   publicId: string;
+  signature: string;
+  version: number;
 }
 
 /**
@@ -59,6 +61,8 @@ export async function openCloudinaryWidget(
           resolve({
             secureUrl: result.info.secure_url,
             publicId: result.info.public_id,
+            signature: result.info.signature,
+            version: result.info.version,
           });
         }
       }

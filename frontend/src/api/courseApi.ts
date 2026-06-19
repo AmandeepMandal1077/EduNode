@@ -230,6 +230,8 @@ export async function apiAddLecture(
     description: string;
     videoUrl: string;
     publicId: string;
+    signature: string;
+    version: number;
   }
 ): Promise<BackendLecture> {
   const res = await apiClient.post(`/courses/${courseId}/lectures`, data);

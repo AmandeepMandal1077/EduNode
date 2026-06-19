@@ -1,5 +1,12 @@
 import mongoose, { type HydratedDocument } from "mongoose";
 
+export enum EUploadStatus {
+  UPLOADING = "UPLOADING",
+  PROCESSING = "PROCESSING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+}
+
 export interface ILecture {
   title: string;
   slug: string;
@@ -10,6 +17,7 @@ export interface ILecture {
   isPreview?: boolean;
   publicId: string;
   order?: number;
+  uploadStatus: EUploadStatus;
 }
 
 export interface ILectureMethods { }
@@ -71,6 +79,11 @@ const lectureSchema = new mongoose.Schema<
     },
     order: {
       type: Number,
+    },
+    uploadStatus: {
+      type: String,
+      enum: EUploadStatus,
+      default: EUploadStatus.UPLOADING,
     },
   },
   {

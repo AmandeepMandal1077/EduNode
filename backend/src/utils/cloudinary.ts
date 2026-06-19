@@ -76,7 +76,6 @@ const verifyUploadSignature = (params: VerifyUploadParams): boolean => {
   return expectedSignature === signature;
 };
 
-
 /**
  * @desc Deletes media without knowing the resource type by trying image, video, and raw types.
  * @input {string} publicId - The public ID of the media to delete.

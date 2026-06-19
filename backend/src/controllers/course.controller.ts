@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/apiError.js";
 
 import { Course, CourseLevel } from "../models/course.model.js";
-import { Lecture } from "../models/lecture.model.js";
+import { EUploadStatus, Lecture } from "../models/lecture.model.js";
 import {
   getPublishedCoursesFromCache,
   savePublishedCoursesToCache,
@@ -14,6 +14,8 @@ import {
 } from "../cache/courses-cache.js";
 import { Announcement } from "../models/announcement.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
+import { addLectureUploadJob } from "../queue/lecture-upload.queue.js";
+import { verifyUploadSignature } from "../utils/cloudinary.js";
 
 /**
  * @desc Creates a new course under the authenticated instructor's account.
@@ -255,9 +257,15 @@ export const addLectureToCourse = asyncHandler(
       throw new ApiError("Invalid courseId", 400);
     }
 
-    const { title, description, order, videoUrl, publicId } = req.body;
+    const { title, description, order, videoUrl, publicId, signature, version } = req.body;
     if (!title || !description) {
       throw new ApiError("Lecture data is required", 400);
+    }
+
+    const isValid = verifyUploadSignature({ publicId, version, signature })
+
+    if (!isValid) {
+      throw new ApiError("Invalid upload signature", 400)
     }
     const slug = title.toLowerCase().replace(/ /g, "-");
     let lecture = await Lecture.findOne({
@@ -278,6 +286,7 @@ export const addLectureToCourse = asyncHandler(
         videoUrl,
         publicId,
         courseId: new mongoose.Types.ObjectId(courseId),
+        uploadStatus: EUploadStatus.PROCESSING,
       }], { session });
 
       lecture = createdLectures[0]!;
@@ -310,6 +319,13 @@ export const addLectureToCourse = asyncHandler(
       );
 
       await session.commitTransaction();
+
+      await addLectureUploadJob({
+        lectureUrl: videoUrl,
+        lectureId: lecture._id.toString(),
+        courseId: courseId.toString()
+      })
+
     } catch (error) {
       await session.abortTransaction();
       throw error;

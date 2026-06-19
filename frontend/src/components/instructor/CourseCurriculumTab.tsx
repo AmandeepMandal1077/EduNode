@@ -21,6 +21,8 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
   const [lectureForm, setLectureForm] = useState({ title: "", description: "" });
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [publicId, setPublicId] = useState<string>("");
+  const [signature, setSignature] = useState<string>("");
+  const [version, setVersion] = useState<number | null>(null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [addingLecture, setAddingLecture] = useState(false);
   const [lectureErrors, setLectureErrors] = useState<Record<string, string>>({});
@@ -53,10 +55,14 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
         description: lectureForm.description,
         videoUrl: videoUrl,
         publicId: publicId,
+        signature: signature,
+        version: version ?? 0,
       });
       setLectureForm({ title: "", description: "" });
       setVideoUrl("");
       setPublicId("");
+      setSignature("");
+      setVersion(null);
       await loadCourseData();
     } catch (err: unknown) {
       console.error(err);
@@ -175,6 +181,8 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
                   const result = await openCloudinaryWidget("video");
                   setVideoUrl(result.secureUrl);
                   setPublicId(result.publicId);
+                  setSignature(result.signature);
+                  setVersion(result.version);
                   if (lectureErrors.video) {
                     setLectureErrors((errs) => { const copy = { ...errs }; delete copy.video; return copy; });
                   }

@@ -6,6 +6,7 @@ import { Course, CourseLevel } from "../src/models/course.model.js";
 import mongoose from "mongoose";
 import path from "path";
 import connectdb from "../src/database/db.js";
+import { v2 as cloudinary } from "cloudinary";
 
 describe("Course Controller Integration Tests", () => {
   beforeAll(async () => {
@@ -326,25 +327,31 @@ describe("Course Controller Integration Tests", () => {
     });
 
     it("should add a lecture to the course", async () => {
-      // Controller: addLectureToCourse
-      // Uses: req.file?.path for videoUrl
+      const apiSecret = process.env.CLOUDINARY_API_SECRET || "dummy-secret";
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dummy-cloud",
+        api_key: process.env.CLOUDINARY_API_KEY || "dummy-key",
+        api_secret: apiSecret,
+      });
+
+      const publicId = "test-public-id";
+      const version = 123456;
+      const signature = cloudinary.utils.api_sign_request(
+        { public_id: publicId, version: version.toString() },
+        apiSecret,
+      );
 
       const response = await request(app)
         .post(`/api/v1/courses/c/${courseId}/lectures`)
         .set("Cookie", [instructorToken])
-        .field("title", "Lecture 1")
-        .field("description", "Intro to lecture")
-        .attach("video", Buffer.from("dummy-video-content"), "video.mp4");
-
-      // NOTE: If using mock fs/uploads, this might fail if path is invalid?
-      // But we are not testing actual file storage, just that controller accepts it.
-      // However, middleware 'upload' might try to save to disk/cloudinary.
-      // If 'utils/multer.js' uses Cloudinary, this test will fail w/o network/mock.
-      // If it uses diskStorage, it might work.
-      // Assuming test environment handles this or it fails and we diagnose.
-
-      // If it fails due to Cloudinary, we might need to mock multer middleware in setup.
-      // But let's try.
+        .send({
+          title: "Lecture 1",
+          description: "Intro to lecture",
+          videoUrl: "https://res.cloudinary.com/dummy-cloud/video/upload/v123456/test-public-id.mp4",
+          publicId,
+          version,
+          signature,
+        });
 
       if (response.status !== 201) {
         console.log("Add Lecture Failed:", response.body);
