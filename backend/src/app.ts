@@ -23,6 +23,7 @@ import emailRouter from "./routes/email.route.js";
 import playbackRouter from "./routes/playback.route.js";
 import courseProgressRouter from "./routes/courseProgress.route.js";
 import commentRouter from "./routes/comment.route.js";
+import ragRouter from "./routes/rag.route.js";
 
 
 import "./cron/syncHeatmaps.js"
@@ -82,7 +83,10 @@ app.use((req, res, next) => {
 
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: [
+    process.env.FRONTEND_URL!,
+    process.env.RAG_SERVER_URL!
+  ],
   methods: ["GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -100,6 +104,7 @@ app.use("/api/v1/sendEmail", emailRouter);
 app.use("/api/v1/playback", playbackRouter);
 app.use("/api/v1/progress", courseProgressRouter);
 app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/internal-rag", ragRouter);
 
 
 app.use((req: Request, res: Response, next: NextFunction) => {
