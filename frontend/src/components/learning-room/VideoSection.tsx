@@ -24,6 +24,7 @@ export function VideoSection({
     <>
       <div className="max-w-4xl mx-auto w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-black shadow-sm relative flex-shrink-0">
         <VideoPlayer
+          key={currentLecture.id}
           src={currentLecture.videoUrl}
           title={currentLecture.title}
           courseId={courseId}
@@ -32,6 +33,7 @@ export function VideoSection({
           onProgress={handleProgress}
           className="h-full w-full"
         />
+
       </div>
 
 
