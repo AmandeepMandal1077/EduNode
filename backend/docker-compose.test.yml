@@ -1,0 +1,39 @@
+services:
+  mongodb-test:
+    image: mongo:7
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27018:27017"
+    tmpfs:
+      - /data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ ping: 1 })" ]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  mongo-init-replica:
+    image: mongo:7
+    depends_on:
+      mongodb-test:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+      - |
+        mongosh --host mongodb-test:27017 --eval '
+          try {
+            rs.status();
+            print("Replica set already initialized");
+          } catch (e) {
+            rs.initiate({
+              _id: "rs0",
+              members: [
+                { _id: 0, host: "mongodb-test:27017" }
+              ]
+            });
+            print("Replica set initialized");
+          }
+        '

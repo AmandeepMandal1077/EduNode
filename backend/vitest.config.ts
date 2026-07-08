@@ -7,5 +7,6 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/setup.ts"],
     testTimeout: 30000,
+    fileParallelism: false, // Run test files sequentially to prevent database state collision
   },
 });

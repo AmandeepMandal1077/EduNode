@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "bun --watch run ./src/index.ts",
     "start": "bun run src/index.ts",
-    "test": "vitest --run"
+    "test": "vitest run",
+    "test:docker:up": "docker compose -f docker-compose.test.yml up -d",
+    "test:docker:down": "docker compose -f docker-compose.test.yml down -v"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
