@@ -54,7 +54,7 @@ export const chatWithLecture = asyncHandler(async (req: AuthenticatedRequest, re
         throw new ApiError("Invalid IDs", 400);
     }
 
-    const ragServerUrl = process.env.RAG_SERVER_URL || "http://host.docker.internal:8000";
+    const ragServerUrl = process.env.RAG_SERVER_URL || "http://rag-service:8000";
     const response = await fetch(`${ragServerUrl}/chat/${courseId}/${lectureId}`, {
         method: "POST",
         headers: {
