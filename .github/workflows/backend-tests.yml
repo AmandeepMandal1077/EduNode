@@ -3,12 +3,20 @@ name: Backend CI
 on:
   pull_request:
     branches: ["main"]
+    paths:
+      - "backend/**"
   push:
     branches: ["main"]
+    paths:
+      - "backend/**"
 
 jobs:
-  test:
+  test-backend:
     runs_on: ubuntu_latest
+
+    defaults:
+      run: 
+        working-directory: ./backend
 
     steps:
       name: Checkout repository
