@@ -13,6 +13,7 @@ import {
   getMyAnnouncements,
   rateCourse,
   getCourseCategories,
+  getProcessingLectures,
 } from "../controllers/course.controller.js";
 import {
   authenticateUserMiddleware,
@@ -75,6 +76,10 @@ router
     validator(SourceType.BODY, ratingSchema),
     rateCourse,
   );
+
+router
+  .route("/:courseId/lectures/processing")
+  .get(restrictToInstructor(), getProcessingLectures);
 
 router
   .route("/:courseId/lectures")

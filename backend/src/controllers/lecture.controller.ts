@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import type { AuthenticatedRequest } from "../types/user.js";
 import { ApiError } from "../utils/apiError.js";
-import { Lecture } from "../models/lecture.model.js";
+import { Lecture, EUploadStatus } from "../models/lecture.model.js";
 import { Course } from "../models/course.model.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import type { Response } from "express";
@@ -27,6 +27,14 @@ export const getLectureDetails = asyncHandler(
     if (!lecture) {
       throw new ApiError("Lecture not found", 404);
     }
+
+    const course = await Course.findById(lecture.courseId).select("instructor");
+    const isInstructor = course && course.instructor.toString() === req.userId;
+
+    if (!isInstructor && lecture.uploadStatus && lecture.uploadStatus !== EUploadStatus.COMPLETED) {
+      throw new ApiError("Lecture is not available yet", 400);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Lecture fetched successfully",

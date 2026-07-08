@@ -359,11 +359,45 @@ export const getCourseLectures = asyncHandler(
       new mongoose.Types.ObjectId(courseId),
     )
       .select("lectures")
-      .populate("lectures");
+      .populate({
+        path: "lectures",
+        match: {
+          $or: [
+            { uploadStatus: { $exists: false } },
+            { uploadStatus: EUploadStatus.COMPLETED },
+          ],
+        },
+      });
 
     return res.status(200).json({
       success: true,
       message: "Lectures fetched successfully",
+      data: { lectures },
+    });
+  },
+);
+
+/**
+ * @desc Fetches all lectures for a specific course that are currently processing.
+ * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @output {Promise<void>} Sends a JSON response with the course's processing lectures.
+ */
+export const getProcessingLectures = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { courseId } = req.params;
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid courseId", 400);
+    }
+
+    const lectures = await Lecture.find({
+      courseId: new mongoose.Types.ObjectId(courseId),
+      uploadStatus: EUploadStatus.PROCESSING,
+    }).select("title description uploadStatus createdAt");
+
+    return res.status(200).json({
+      success: true,
+      message: "Processing lectures fetched successfully",
       data: { lectures },
     });
   },
