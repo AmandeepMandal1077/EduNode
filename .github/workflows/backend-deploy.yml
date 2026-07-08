@@ -19,6 +19,7 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             set -e
+            export PATH="$HOME/.bun/bin:$PATH"
             cd ~/EduNode
             git pull origin main
             cd backend
