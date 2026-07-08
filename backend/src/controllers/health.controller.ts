@@ -27,6 +27,7 @@ const healthCheck = asyncHandler(async (_: Request, res: Response) => {
         status: "healthy",
         uptime: process.uptime(),
         memeoryUsage: process.memoryUsage(),
+        version: "1.0.1",
       },
     },
   };
