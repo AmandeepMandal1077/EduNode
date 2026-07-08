@@ -161,7 +161,6 @@ courseSchema.index(
   { title: "text", subtitle: "text", description: "text", category: "text" },
   { weights: { title: 10, subtitle: 5, category: 3, description: 1 }, name: "course_search_idx" }
 );
-courseSchema.index({ slug: 1 });
 courseSchema.index({ instructor: 1 });
 
 /**

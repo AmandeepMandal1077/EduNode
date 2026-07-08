@@ -103,12 +103,6 @@ export const handleCloudinaryWebhook = asyncHandler(
     }
 
 
-    console.log("Upload verified via webhook:", {
-      publicId: public_id,
-      url: secure_url,
-      type: resource_type,
-    });
-
     res.status(200).json({ received: true });
   },
 );

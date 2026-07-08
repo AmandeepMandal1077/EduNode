@@ -28,8 +28,8 @@ const lectureUploadWorker = new Worker(
             lecture_id: job.data.lectureId,
             course_id: job.data.courseId,
         }
-        console.log("Sending to server")
-        const ragServerUrl = process.env.RAG_SERVER_URL || "http://host.docker.internal:8000";
+        // const ragServerUrl = process.env.RAG_SERVER_URL || "http://host.docker.internal:8000";
+        const ragServerUrl = "http://rag-service:8000"
         const response = await fetch(`${ragServerUrl}/ingest`,
             {
                 method: "POST",
@@ -40,7 +40,6 @@ const lectureUploadWorker = new Worker(
             }
         )
 
-        console.log("received response");
 
         if (!response.ok) {
             throw new Error(
@@ -55,7 +54,6 @@ const lectureUploadWorker = new Worker(
 
 
 lectureUploadWorker.on("completed", (job) => {
-    console.log(`[LectureUploadQueue] Lecture uploaded — job ${job.id}`);
 });
 
 lectureUploadWorker.on("failed", (job, err) => {

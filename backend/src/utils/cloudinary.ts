@@ -91,7 +91,6 @@ const deleteMediaAuto = async (publicId: string): Promise<any> => {
         invalidate: true,
       });
       if (result.result === "ok") {
-        console.log(`Deleted ${type}: ${publicId}`);
         return result;
       }
     } catch {

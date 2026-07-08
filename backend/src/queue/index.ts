@@ -10,7 +10,6 @@ const queueRedis = new Redis(
 );
 
 queueRedis.on("connect", () => {
-  console.log("Queue Redis connected");
 });
 
 queueRedis.on("error", (err) => {

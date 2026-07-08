@@ -20,18 +20,10 @@ const cacheConnect = async () => {
 
 cacheConnect();
 
-cache.on("ready", () => {
-  console.log("Redis connected");
-});
-cache.on("connect", () => {
-  console.log("Redis connecting");
-});
-cache.on("end", () => {
-  console.log("Redis disconnected");
-});
-cache.on("reconnecting", () => {
-  console.log("Redis reconnecting");
-});
+cache.on("ready", () => {});
+cache.on("connect", () => {});
+cache.on("end", () => {});
+cache.on("reconnecting", () => {});
 cache.on("error", (err) => {
   console.error("Redis connection error:", err);
 });

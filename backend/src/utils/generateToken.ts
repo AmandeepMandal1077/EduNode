@@ -32,7 +32,6 @@ const generateToken = (res: Response, userId: string, message: string) => {
         },
       });
   } catch (error) {
-    console.log(error);
     throw new ApiError("Failed to generate token", 500);
   }
 };
