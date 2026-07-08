@@ -1,4 +1,4 @@
-<![CDATA[# EduNode — Backend API Server
+# EduNode — Backend API Server
 
 The Express.js API server powering EduNode. Handles authentication, course management, video lecture orchestration, Stripe payments, real-time playback telemetry, threaded Q&A comments, and AI-powered RAG chat — all running on the Bun runtime.
 
@@ -89,7 +89,8 @@ backend/
 │   │   ├── comment.model.ts
 │   │   ├── courseProgress.model.ts
 │   │   ├── coursePurchase.model.ts
-│   │   └── lectureHeatmap.model.ts
+│   │   ├── lectureHeatmap.model.ts
+│   │   └── chatMessage.model.ts   # RAG chat history schema
 │   │
 │   ├── middlewares/
 │   │   ├── auth.middleware.ts     # JWT cookie verification
@@ -115,6 +116,7 @@ backend/
 │   │   ├── courses-cache.ts      # Published courses cache
 │   │   ├── lecture-progress-cache.ts
 │   │   ├── lecture-heatmap-cache.ts
+│   │   ├── chat-messages-cache.ts # RAG chat history cache
 │   │   └── query.ts              # Generic query cache helper
 │   │
 │   ├── cron/                     # Scheduled background jobs
@@ -135,18 +137,10 @@ backend/
 │   └── types/
 │       └── user.ts               # AuthenticatedRequest type
 │
-└── tests/                        # Integration test suites
-    ├── setup.ts                  # MongoDB Memory Server bootstrap
-    ├── user.test.ts
-    ├── course.test.ts
-    ├── lecture.test.ts
-    ├── media.test.ts
-    ├── playback.test.ts
-    ├── courseProgress.test.ts
-    ├── coursePurchase.test.ts
-    ├── comment.test.ts
-    ├── email.test.ts
-    └── health.test.ts
+└── tests/                        # Test suites (unit & integration)
+    ├── setup.ts                  # Test configuration and mocks
+    ├── unit/                     # Unit test suites (auth, course, comment, etc.)
+    └── integration/              # Integration test suites
 ```
 
 ---
@@ -231,13 +225,27 @@ The API will be available at **http://localhost:3000**.
 
 ## 🧪 Testing
 
-Tests use **Vitest** with **Supertest** against an in-memory MongoDB instance (via `mongodb-memory-server`), so no running database is required for tests.
+The backend includes both **unit** (isolated controller tests with mocks) and **integration** (full API lifecycle) test suites. Detailed documentation can be found in [README_TESTS.md](file:///e:/Dev/LMS/backend/README_TESTS.md).
 
+### 1. Spin up the Test Databases (MongoDB replica set & Redis)
+```bash
+bun run test:docker:up
+```
+
+### 2. Run the Tests
 ```bash
 bun run test
 ```
 
-> **Note:** Tests require Redis to be reachable. If Redis is not running, tests will time out on the setup hook.
+To run in watch mode:
+```bash
+bun x vitest
+```
+
+### 3. Tear down the Test Databases
+```bash
+bun run test:docker:down
+```
 
 ---
 
@@ -296,6 +304,7 @@ Or use Docker Compose from the project root — see the [root README](../README.
 | Method | Endpoint                                  | Auth | Description                      |
 |--------|-------------------------------------------|------|----------------------------------|
 | POST   | `/api/v1/internal-rag/chat`               | ✓    | Ask AI about lecture content     |
+| GET    | `/api/v1/internal-rag/chat-history/:courseId/:lectureId` | ✓    | Get chat history for a lecture |
 | POST   | `/api/v1/internal-rag/vectordb-processed` | ✗    | Processing status callback (internal) |
 
 ---
@@ -303,4 +312,3 @@ Or use Docker Compose from the project root — see the [root README](../README.
 ## 📄 License
 
 This project is for educational purposes.
-]]>
