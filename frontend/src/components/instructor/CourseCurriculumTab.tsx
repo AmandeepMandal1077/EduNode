@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { addLecture, deleteLecture } from "@/services/courseService";
+import { addLecture, deleteLecture, getProcessingLectures } from "@/services/courseService";
 import { openCloudinaryWidget } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course, Lecture } from "@/types";
+import type { BackendProcessingLecture } from "@/api/courseApi";
 import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
+
+const POLL_INTERVAL_MS = 10_000;
 
 interface CourseCurriculumTabProps {
   courseId: string;
@@ -28,6 +31,30 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
   const [lectureErrors, setLectureErrors] = useState<Record<string, string>>({});
   const [lectureGeneralError, setLectureGeneralError] = useState("");
   const [deletingLectureId, setDeletingLectureId] = useState<string | null>(null);
+
+  const [processingLectures, setProcessingLectures] = useState<BackendProcessingLecture[]>([]);
+  const prevProcessingCountRef = useRef<number | null>(null);
+
+  const pollProcessingLectures = useCallback(async () => {
+    const lectures = await getProcessingLectures(courseId);
+    setProcessingLectures(lectures);
+
+    // If we previously had processing lectures and now some completed, refresh the main list
+    if (
+      prevProcessingCountRef.current !== null &&
+      prevProcessingCountRef.current > lectures.length
+    ) {
+      await loadCourseData();
+    }
+    prevProcessingCountRef.current = lectures.length;
+  }, [courseId, loadCourseData]);
+
+  // Initial fetch + polling
+  useEffect(() => {
+    pollProcessingLectures();
+    const interval = setInterval(pollProcessingLectures, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [pollProcessingLectures]);
 
   const handleAddLecture = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +91,8 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
       setSignature("");
       setVersion(null);
       await loadCourseData();
+      // Immediately refresh processing list so the new lecture shows up
+      await pollProcessingLectures();
     } catch (err: unknown) {
       console.error(err);
       setLectureGeneralError(getErrorMessage(err, "Failed to add lecture to course."));
@@ -90,6 +119,41 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex flex-col gap-8">
+      {/* Processing Lectures Section */}
+      {processingLectures.length > 0 && (
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+            Processing Videos
+          </h2>
+          <div className="flex flex-col gap-2.5">
+            {processingLectures.map((lect) => (
+              <div
+                key={lect._id}
+                className="flex items-center justify-between p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-amber-100">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-slate-800 truncate">{lect.title}</h4>
+                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{lect.description}</p>
+                  </div>
+                </div>
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full flex-shrink-0 ml-3">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600" />
+                  </span>
+                  Processing
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-lg font-bold text-slate-900 mb-4">Course Lectures</h2>
         {mappedLectures.length === 0 ? (

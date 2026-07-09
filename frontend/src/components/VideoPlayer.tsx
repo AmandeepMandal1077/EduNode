@@ -81,7 +81,7 @@ export function VideoPlayer({
     });
 
     player.ready(() => {
-      const progressControl = player.controlBar?.getChild("progressControl")?.el();
+      const progressControl = (player as any).controlBar?.getChild("progressControl")?.el();
       if (progressControl) {
         setHeatmapTarget(progressControl as HTMLElement);
 

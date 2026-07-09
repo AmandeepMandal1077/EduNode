@@ -163,7 +163,7 @@ export function LearningRoomPage() {
           </div>
         </div>
       )}
-      <AIChatFAB courseId={courseId!} />
+      <AIChatFAB courseId={courseId!} lectureId={currentLecture.id} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   fetchSearchCourses,
   fetchCourseDetails,
   fetchCourseLectures,
+  fetchProcessingLectures,
   fetchCourseAnnouncements,
   fetchMyAnnouncements,
   fetchCategories,
@@ -17,6 +18,7 @@ import {
   type BackendCourse,
   type BackendLecture,
   type BackendAnnouncement,
+  type BackendProcessingLecture,
 } from "../api/courseApi";
 import {
   fetchCoursePurchaseStatus,
@@ -488,6 +490,19 @@ export async function addLecture(
  */
 export async function deleteLecture(lectureId: string): Promise<void> {
   await apiDeleteLecture(lectureId);
+}
+
+/**
+ * @desc Fetch all processing lectures for a course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<BackendProcessingLecture[]>} List of processing lectures.
+ */
+export async function getProcessingLectures(courseId: string): Promise<BackendProcessingLecture[]> {
+  try {
+    return await fetchProcessingLectures(courseId);
+  } catch {
+    return [];
+  }
 }
 
 /**

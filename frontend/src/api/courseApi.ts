@@ -118,6 +118,24 @@ export async function fetchCourseLectures(courseId: string): Promise<BackendLect
   return [];
 }
 
+export interface BackendProcessingLecture {
+  _id: string;
+  title: string;
+  description: string;
+  uploadStatus: string;
+  createdAt: string;
+}
+
+/**
+ * @desc Fetch all lectures that are currently processing for a specific course.
+ * @input {string} courseId - The ID of the course.
+ * @output {Promise<BackendProcessingLecture[]>} List of processing lectures.
+ */
+export async function fetchProcessingLectures(courseId: string): Promise<BackendProcessingLecture[]> {
+  const res = await apiClient.get(`/courses/${courseId}/lectures/processing`);
+  return res.data?.data?.lectures ?? res.data?.lectures ?? [];
+}
+
 /**
  * @desc Post a new announcement for a course.
  * @input {string} courseId - The ID of the course.

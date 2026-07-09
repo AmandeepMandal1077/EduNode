@@ -6,6 +6,7 @@ import { GraduationCap } from "lucide-react";
 import { useLogin } from "@/hooks/useLogin";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
+import { DEMO_CREDENTIALS } from "@/constants/auth";
 
 export function LoginPage() {
   const {
@@ -21,6 +22,13 @@ export function LoginPage() {
   } = useLogin();
 
   const [forgotOpen, setForgotOpen] = useState(false);
+
+  const handleFillCredentials = (type: "student" | "instructor") => {
+    const creds = DEMO_CREDENTIALS[type];
+    setRole(type);
+    setEmail(creds.email);
+    setPassword(creds.password);
+  };
 
   return (
     <div
@@ -82,9 +90,30 @@ export function LoginPage() {
             <div className="flex-1 h-px bg-slate-100" />
           </div>
 
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 mb-6">
-            <p className="text-xs text-indigo-700 text-center">
-              <strong>Demo:</strong> Use any email and any password (min 6 chars)
+          <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 mb-6">
+            <p className="text-xs font-semibold text-indigo-900 mb-2.5 text-center">
+              💡 Quick Demo Login (Click to Autofill)
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => handleFillCredentials("student")}
+                className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-indigo-100/80 hover:border-indigo-300 hover:shadow-sm hover:bg-indigo-50/20 active:scale-[0.98] transition-all cursor-pointer text-indigo-700"
+              >
+                <span className="font-bold text-[10px] uppercase tracking-wider text-indigo-400">Student</span>
+                <span className="font-mono text-[9px] mt-0.5">{DEMO_CREDENTIALS.student.email}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFillCredentials("instructor")}
+                className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-indigo-100/80 hover:border-indigo-300 hover:shadow-sm hover:bg-indigo-50/20 active:scale-[0.98] transition-all cursor-pointer text-indigo-700"
+              >
+                <span className="font-bold text-[10px] uppercase tracking-wider text-indigo-400">Instructor</span>
+                <span className="font-mono text-[9px] mt-0.5">{DEMO_CREDENTIALS.instructor.email}</span>
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 text-center mt-2.5">
+              Password: <span className="font-mono font-semibold text-indigo-600 bg-indigo-100/50 px-1.5 py-0.5 rounded">{DEMO_CREDENTIALS.student.password}</span>
             </p>
           </div>
 

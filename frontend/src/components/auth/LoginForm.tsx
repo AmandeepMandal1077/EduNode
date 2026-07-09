@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DEMO_CREDENTIALS } from "@/constants/auth";
 
 interface LoginFormProps {
   email: string;
@@ -68,7 +69,7 @@ export function LoginForm({
           <Input
             id="login-email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={role === "instructor" ? DEMO_CREDENTIALS.instructor.email : DEMO_CREDENTIALS.student.email}
             value={email}
             maxLength={50}
             onChange={(e) => setEmail(e.target.value)}
@@ -97,7 +98,7 @@ export function LoginForm({
           <Input
             id="login-password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder={role === "instructor" ? DEMO_CREDENTIALS.instructor.password : DEMO_CREDENTIALS.student.password}
             value={password}
             maxLength={32}
             onChange={(e) => setPassword(e.target.value)}

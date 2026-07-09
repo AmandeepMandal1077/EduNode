@@ -35,6 +35,7 @@ export async function openCloudinaryWidget(
         resourceType: resourceType,
         multiple: false,
         maxFiles: 1,
+        maxFileSize: 500000000,
         theme: "minimal",
         styles: {
           palette: {

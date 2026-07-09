@@ -1,4 +1,4 @@
-<![CDATA[# EduNode — Frontend
+# EduNode — Frontend
 
 The React single-page application for EduNode. Provides the student and instructor experience — from landing page and course catalog to video playback with heatmap visualization, threaded Q&A, Stripe checkout, and AI-powered lecture chat.
 
@@ -221,4 +221,3 @@ Or use Docker Compose from the project root — see the [root README](../README.
 ## 📄 License
 
 This project is for educational purposes.
-]]>
