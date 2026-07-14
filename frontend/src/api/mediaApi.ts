@@ -1,20 +1,35 @@
 import apiClient from "./client";
 
-export interface SignatureResponse {
-  signature: string;
-  timestamp: number;
-  cloudName: string;
-  apiKey: string;
-  folder: string;
-  notificationUrl: string;
+export interface UploadSessionRequest {
+  type: "avatar" | "course-image" | "lecture-video";
+  entityId: string;
+  fileName: string;
+  contentType: string;
 }
 
-/**
- * @desc Fetch signed upload signature from backend for uploading to Cloudinary.
- * @input None
- * @output {Promise<SignatureResponse>} The signature data.
- */
-export async function fetchUploadSignature(): Promise<SignatureResponse> {
-  const res = await apiClient.post("/media/signature");
-  return res.data.data;
+export interface UploadSessionResponse {
+  uploadSessionId: string;
+  s3Key: string;
+  presignedUrl: string;
+  expiresAt: string;
 }
+
+export interface UploadStatusResponse {
+  status: "PENDING_UPLOAD" | "UPLOADED" | "PROCESSING" | "READY" | "FAILED" | "EXPIRED";
+  videoUrl?: string;
+  finalUrl?: string;
+}
+
+export const requestUploadSession = async (
+  data: UploadSessionRequest
+): Promise<UploadSessionResponse> => {
+  const response = await apiClient.post("/media/upload-session", data);
+  return response.data.data;
+};
+
+export const pollUploadStatus = async (
+  uploadSessionId: string
+): Promise<UploadStatusResponse> => {
+  const response = await apiClient.get(`/media/status/${uploadSessionId}`);
+  return response.data.data;
+};

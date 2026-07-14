@@ -16,10 +16,12 @@ class DbConnection {
     mongoose.connection.on("connected", () => {
       this.retryCount = 0;
       this.isConnected = true;
+      console.log("MONGODB CONNECTED");
     });
 
     mongoose.connection.on("disconnected", () => {
       this.isConnected = false;
+      console.log("MONGODB DISCONNECTED");
       if (!this._closing) {
         this.handleReconnection();
       }
@@ -27,6 +29,7 @@ class DbConnection {
 
     mongoose.connection.on("error", (err: Error) => {
       this.isConnected = false;
+      console.log("ERROR: ERROR OCCURRED CONNECTING MONGODB", err);
     });
 
     process.on("SIGTERM", this.handleAppTermination.bind(this));
@@ -35,6 +38,7 @@ class DbConnection {
 
   async connect() {
     if (mongoose.connection.readyState === 1) {
+      console.log("MONGODB ALREADY CONNECTED");
       return;
     }
     try {
@@ -53,17 +57,26 @@ class DbConnection {
       }
 
       await mongoose.connect(MONGO_URI, configOptions);
+      console.log("MONGODB CONNECTED SUCCESSFULLY");
     } catch (err) {
       await this.handleReconnection();
+
+      if (!this.isConnected) {
+        console.log("Error :", err);
+      }
     }
   }
 
   async handleReconnection() {
     if (this.retryCount >= DbConnection.MAX_RETRIES || this._closing) {
+      console.log("FAILED TO RECONNECT WITH MONGODB");
       return;
     }
 
     this.retryCount++;
+    console.log(
+      `Retrying connection... (${this.retryCount}/${DbConnection.MAX_RETRIES})`,
+    );
     await new Promise((resolve) =>
       setTimeout(resolve, DbConnection.RETRY_INTERVAL),
     );
@@ -76,8 +89,10 @@ class DbConnection {
     this._closing = true;
     try {
       await mongoose.connection.close();
+      console.log("MONGODB CONNECTION TERMINATED");
       process.exit(0);
     } catch (err) {
+      console.log("ERROR: TERMINATING CONNECTION");
       process.exit(1);
     }
   }

@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
-import { Loader2, Plus, Trash2, Clock } from "lucide-react";
+import { Loader2, Plus, Trash2, Clock, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { addLecture, deleteLecture, getProcessingLectures } from "@/services/courseService";
-import { openCloudinaryWidget } from "@/services/mediaService";
+import { uploadFileToS3 } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course, Lecture } from "@/types";
 import type { BackendProcessingLecture } from "@/api/courseApi";
@@ -22,11 +22,8 @@ interface CourseCurriculumTabProps {
 
 export function CourseCurriculumTab({ courseId, course, loadCourseData }: CourseCurriculumTabProps) {
   const [lectureForm, setLectureForm] = useState({ title: "", description: "" });
-  const [videoUrl, setVideoUrl] = useState<string>("");
-  const [publicId, setPublicId] = useState<string>("");
-  const [signature, setSignature] = useState<string>("");
-  const [version, setVersion] = useState<number | null>(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [addingLecture, setAddingLecture] = useState(false);
   const [lectureErrors, setLectureErrors] = useState<Record<string, string>>({});
   const [lectureGeneralError, setLectureGeneralError] = useState("");
@@ -68,7 +65,7 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
     if (!lectureForm.description.trim()) errs.description = "Lecture description is required.";
     else if (lectureForm.description.length > 100) errs.description = "Description cannot exceed 100 characters.";
 
-    if (!videoUrl) errs.video = "Video file is required.";
+    if (!selectedVideo) errs.video = "Video file is required.";
 
     if (Object.keys(errs).length > 0) {
       setLectureErrors(errs);
@@ -77,19 +74,20 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
 
     try {
       setAddingLecture(true);
-      await addLecture(courseId, {
+      setUploadProgress(0);
+      
+      const { presignedUrl } = await addLecture(courseId, {
         title: lectureForm.title,
         description: lectureForm.description,
-        videoUrl: videoUrl,
-        publicId: publicId,
-        signature: signature,
-        version: version ?? 0,
+        fileName: selectedVideo.name,
+        contentType: selectedVideo.type,
       });
+
+      await uploadFileToS3(presignedUrl, selectedVideo, (percent) => setUploadProgress(percent));
+
       setLectureForm({ title: "", description: "" });
-      setVideoUrl("");
-      setPublicId("");
-      setSignature("");
-      setVersion(null);
+      setSelectedVideo(null);
+      setUploadProgress(0);
       await loadCourseData();
       // Immediately refresh processing list so the new lecture shows up
       await pollProcessingLectures();
@@ -239,30 +237,63 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
               {lectureErrors.video && <span className="text-xs text-rose-600 font-semibold">{lectureErrors.video}</span>}
             </div>
             <div
-              onClick={async () => {
-                try {
-                  setUploadingVideo(true);
-                  const result = await openCloudinaryWidget("video");
-                  setVideoUrl(result.secureUrl);
-                  setPublicId(result.publicId);
-                  setSignature(result.signature);
-                  setVersion(result.version);
-                  if (lectureErrors.video) {
-                    setLectureErrors((errs) => { const copy = { ...errs }; delete copy.video; return copy; });
-                  }
-                } catch (err: unknown) {
-                  console.error(err);
-                } finally {
-                  setUploadingVideo(false);
+              onClick={() => {
+                if (!addingLecture && processingLectures.length === 0) {
+                  document.getElementById("lecture-video-upload")?.click();
                 }
               }}
-              className={`cursor-pointer w-full flex items-center h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors ${lectureErrors.video ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
+              className={`w-full flex items-center h-10 rounded-xl border border-slate-200 bg-white transition-colors ${
+                addingLecture || processingLectures.length > 0
+                  ? "cursor-not-allowed opacity-60"
+                  : "cursor-pointer hover:bg-slate-50"
+              }`}
             >
+              <input
+                id="lecture-video-upload"
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedVideo(file);
+                    setLectureErrors((errs) => { const copy = { ...errs }; delete copy.video; return copy; });
+                  }
+                  e.target.value = ""; // Reset input
+                }}
+              />
               <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg ml-3 mr-4 hover:bg-indigo-100 transition-colors">
                 Choose File
               </span>
-              <span className="text-xs text-slate-500 truncate">{videoUrl ? "video_uploaded.mp4" : "No file chosen"}</span>
+              <span className="text-xs text-slate-500 truncate">{selectedVideo ? selectedVideo.name : "No file chosen"}</span>
             </div>
+            {addingLecture && uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="w-full bg-slate-200 rounded-full h-2.5 mt-2 overflow-hidden">
+                <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+              </div>
+            )}
+            {selectedVideo && !addingLecture && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between bg-indigo-50 border border-indigo-100 p-2.5 rounded-xl mt-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <Video className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-indigo-400 font-medium uppercase tracking-wider mb-0.5">Ready to upload</p>
+                    <p className="text-xs text-indigo-700 font-semibold truncate pr-2">{selectedVideo.name}</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-indigo-400 hover:text-rose-600 hover:bg-rose-100 rounded-lg flex-shrink-0"
+                  onClick={() => setSelectedVideo(null)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            )}
           </div>
 
           {lectureGeneralError && (
@@ -271,8 +302,18 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
             </p>
           )}
 
-          <Button type="submit" disabled={addingLecture} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold mt-2">
-            {addingLecture ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Adding Lecture...</> : <><Plus className="w-4 h-4 mr-2" /> Add Lecture</>}
+          <Button
+            type="submit"
+            disabled={addingLecture || processingLectures.length > 0}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold mt-2"
+          >
+            {addingLecture ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Adding Lecture...</>
+            ) : processingLectures.length > 0 ? (
+              <><Plus className="w-4 h-4 mr-2" /> Video Processing... Please Wait</>
+            ) : (
+              <><Plus className="w-4 h-4 mr-2" /> Add Lecture</>
+            )}
           </Button>
           {addingLecture && <p className="text-xs text-amber-600 font-medium animate-pulse mt-1">Uploading video... Please do not refresh or close the page.</p>}
         </form>

@@ -29,6 +29,7 @@ const forgotPasswordWorker = new Worker(
 );
 
 forgotPasswordWorker.on("completed", (job) => {
+  console.log(`[ForgotPasswordQueue] Reset email sent — job ${job.id}`);
 });
 
 forgotPasswordWorker.on("failed", (job, err) => {

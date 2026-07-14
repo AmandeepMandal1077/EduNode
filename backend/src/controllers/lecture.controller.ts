@@ -28,10 +28,7 @@ export const getLectureDetails = asyncHandler(
       throw new ApiError("Lecture not found", 404);
     }
 
-    const course = await Course.findById(lecture.courseId).select("instructor");
-    const isInstructor = course && course.instructor.toString() === req.userId;
-
-    if (!isInstructor && lecture.uploadStatus && lecture.uploadStatus !== EUploadStatus.COMPLETED) {
+    if (lecture.uploadStatus && lecture.uploadStatus !== EUploadStatus.READY) {
       throw new ApiError("Lecture is not available yet", 400);
     }
 

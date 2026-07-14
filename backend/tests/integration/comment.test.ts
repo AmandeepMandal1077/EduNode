@@ -52,7 +52,8 @@ describe("Comment Controller Integration Tests", () => {
       description: "Desc",
       videoUrl: "https://example.com/v.mp4",
       courseId: course._id,
-      publicId: "comment-lecture-public-id",
+      s3Key: "comment/lecture/key.mp4",
+      uploadSessionId: "comment-upload-session-id",
     });
     lectureId = lecture._id.toString();
   });

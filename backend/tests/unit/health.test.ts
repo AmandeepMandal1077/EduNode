@@ -72,7 +72,7 @@ describe("Health Controller Unit Tests", () => {
 
     const responseData = res.json.mock.calls[0][0];
     expect(responseData.services.server.uptime).toBeTypeOf("number");
-    expect(responseData.services.server.memeoryUsage).toBeTypeOf("object");
+    expect(responseData.services.server.memoryUsage).toBeTypeOf("object");
 
     statusSpy.mockRestore();
   });

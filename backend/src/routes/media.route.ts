@@ -1,17 +1,10 @@
-import express from "express";
-import {
-  generateSignature,
-  verifySignature,
-  handleCloudinaryWebhook,
-} from "../controllers/media.controller.js";
+import { Router } from "express";
+import { createUploadSession, getUploadStatus } from "../controllers/media.controller.js";
 import { authenticateUserMiddleware } from "../middlewares/auth.middleware.js";
 
-const router = express.Router();
+const router = Router();
 
-router.use(authenticateUserMiddleware);
-
-router.route("/signature").post(generateSignature);
-
-router.route("/verify").post(verifySignature);
+router.post("/upload-session", authenticateUserMiddleware, createUploadSession);
+router.get("/status/:uploadSessionId", authenticateUserMiddleware, getUploadStatus);
 
 export default router;

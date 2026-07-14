@@ -13,26 +13,26 @@ interface CreateCourseFormProps {
     price: number | "";
   };
   loading: boolean;
-  thumbnailUrl: string;
+  thumbnailPreview: string;
   uploadingThumbnail: boolean;
   errors: Record<string, string>;
   generalError: string;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handlePriceChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleThumbnailUpload: () => void;
+  handleThumbnailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: (e: React.FormEvent) => void;
 }
 
 export function CreateCourseForm({
   form,
   loading,
-  thumbnailUrl,
+  thumbnailPreview,
   uploadingThumbnail,
   errors,
   generalError,
   handleChange,
   handlePriceChange,
-  handleThumbnailUpload,
+  handleThumbnailChange,
   handleSubmit,
 }: CreateCourseFormProps) {
   return (
@@ -163,21 +163,28 @@ export function CreateCourseForm({
           )}
         </div>
         <div
-          onClick={handleThumbnailUpload}
+          onClick={() => document.getElementById("thumbnail-upload")?.click()}
           className={`cursor-pointer w-full flex items-center h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors ${errors.thumbnail ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
         >
+          <input
+            id="thumbnail-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleThumbnailChange}
+          />
           <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg ml-3 mr-4 hover:bg-indigo-100 transition-colors">
             {uploadingThumbnail ? "Uploading..." : "Choose File"}
           </span>
           <span className="text-xs text-slate-500 truncate">
-            {thumbnailUrl ? "thumbnail_uploaded.jpg" : "No file chosen"}
+            {thumbnailPreview ? "Thumbnail selected" : "No file chosen"}
           </span>
         </div>
         <p className="text-[10px] text-slate-400">Supported types: PNG, JPG, or JPEG. Max file size: 5MB.</p>
         
-        {thumbnailUrl && (
+        {thumbnailPreview && (
           <div className="mt-2 relative w-full max-w-sm rounded-xl overflow-hidden border border-slate-200 aspect-video">
-            <img src={thumbnailUrl} alt="Thumbnail Preview" className="w-full h-full object-cover" />
+            <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-full h-full object-cover" />
           </div>
         )}
       </div>

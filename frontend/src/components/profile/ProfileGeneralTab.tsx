@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { updateUser } from "@/services/userService";
+import { requestAndUpload, waitForUploadReady } from "@/services/mediaService";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { User } from "@/types";
 
 interface ProfileGeneralTabProps {
@@ -20,6 +22,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
   const [saved, setSaved] = useState(false);
   const [nameError, setNameError] = useState("");
   const [generalError, setGeneralError] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -86,10 +89,50 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
           )}
         </div>
         <div>
-          <Button variant="outline" size="sm" className="border-slate-200 rounded-lg text-sm">
-            <Camera className="w-3.5 h-3.5 mr-1.5" />
-            Change photo
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-slate-200 rounded-lg text-sm"
+            onClick={() => {
+              if (!uploadingAvatar) {
+                document.getElementById("avatar-upload")?.click();
+              }
+            }}
+            disabled={uploadingAvatar}
+          >
+            {uploadingAvatar ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Camera className="w-3.5 h-3.5 mr-1.5" />}
+            {uploadingAvatar ? "Uploading..." : "Change photo"}
           </Button>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file || !user) return;
+              try {
+                setUploadingAvatar(true);
+                const { uploadSessionId } = await requestAndUpload(
+                  "avatar",
+                  user.id,
+                  file
+                );
+                const statusObj = await waitForUploadReady(uploadSessionId);
+                if (statusObj.status === "READY" || statusObj.status === "UPLOADED") {
+                  setUser({ ...user, avatarUrl: statusObj.finalUrl });
+                } else {
+                  setGeneralError(`Upload failed with status: ${statusObj.status}`);
+                }
+              } catch (err: unknown) {
+                console.error(err);
+                setGeneralError(getErrorMessage(err));
+              } finally {
+                setUploadingAvatar(false);
+                e.target.value = "";
+              }
+            }}
+          />
           <p className="text-xs text-slate-400 mt-1">PNG, JPG or GIF. Max 5MB.</p>
         </div>
       </div>

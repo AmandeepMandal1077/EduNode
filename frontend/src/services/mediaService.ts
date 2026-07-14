@@ -1,74 +1,69 @@
-import { fetchUploadSignature } from "../api/mediaApi";
+import { requestUploadSession, pollUploadStatus, type UploadSessionRequest } from "../api/mediaApi";
 
-export interface UploadResult {
-  secureUrl: string;
-  publicId: string;
-  signature: string;
-  version: number;
-}
-
-/**
- * @desc Opens the Cloudinary Upload Widget.
- * @input {string} [resourceType="image"] - The type of resource to upload ("image" or "video").
- * @output {Promise<UploadResult>} Resolves with the secure URL and public_id on success.
- */
-export async function openCloudinaryWidget(
-  resourceType: "image" | "video" = "image"
-): Promise<UploadResult> {
-
-  const signatureData = await fetchUploadSignature();
-
+export const uploadFileToS3 = (
+  presignedUrl: string,
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const cloudinary = (window as any).cloudinary;
-    if (!cloudinary) {
-      reject(new Error("Cloudinary SDK not loaded. Make sure the script is included in index.html."));
-      return;
-    }
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", presignedUrl, true);
+    xhr.setRequestHeader("Content-Type", file.type);
 
-    const widget = cloudinary.createUploadWidget(
-      {
-        cloudName: signatureData.cloudName,
-        apiKey: signatureData.apiKey,
-        uploadSignature: signatureData.signature,
-        uploadSignatureTimestamp: signatureData.timestamp,
-        folder: signatureData.folder,
-        resourceType: resourceType,
-        multiple: false,
-        maxFiles: 1,
-        maxFileSize: 500000000,
-        theme: "minimal",
-        styles: {
-          palette: {
-            window: "#FFFFFF",
-            windowBorder: "#E2E8F0",
-            tabIcon: "#4F46E5",
-            menuIcons: "#4F46E5",
-            textDark: "#0F172A",
-            textLight: "#FFFFFF",
-            link: "#4F46E5",
-            action: "#4F46E5",
-            inactiveTabIcon: "#64748B",
-            error: "#EF4444",
-            inProgress: "#4F46E5",
-            complete: "#10B981",
-            sourceBg: "#F8FAFC"
-          }
-        }
-      },
-      (error: any, result: any) => {
-        if (error) {
-          reject(error);
-        } else if (result && result.event === "success") {
-          resolve({
-            secureUrl: result.info.secure_url,
-            publicId: result.info.public_id,
-            signature: result.info.signature,
-            version: result.info.version,
-          });
-        }
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        onProgress(percent);
       }
-    );
+    };
 
-    widget.open();
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`Upload failed with status ${xhr.status}`));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error("Network error occurred during upload"));
+    };
+
+    xhr.send(file);
   });
-}
+};
+
+export const requestAndUpload = async (
+  type: UploadSessionRequest["type"],
+  entityId: string,
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<{ uploadSessionId: string, s3Key: string }> => {
+  const session = await requestUploadSession({
+    type,
+    entityId,
+    fileName: file.name,
+    contentType: file.type,
+  });
+
+  await uploadFileToS3(session.presignedUrl, file, onProgress);
+  return { uploadSessionId: session.uploadSessionId, s3Key: session.s3Key };
+};
+
+export const waitForUploadReady = async (
+  uploadSessionId: string,
+  maxWaitMs: number = 30000,
+  intervalMs: number = 2000
+) => {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < maxWaitMs) {
+    const statusObj = await pollUploadStatus(uploadSessionId);
+    if (["UPLOADED", "READY", "FAILED", "EXPIRED"].includes(statusObj.status)) {
+      return statusObj;
+    }
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+  
+  throw new Error("Timeout waiting for upload confirmation");
+};

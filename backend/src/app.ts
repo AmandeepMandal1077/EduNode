@@ -24,14 +24,15 @@ import playbackRouter from "./routes/playback.route.js";
 import courseProgressRouter from "./routes/courseProgress.route.js";
 import commentRouter from "./routes/comment.route.js";
 import ragRouter from "./routes/rag.route.js";
+import internalRouter from "./routes/internal.route.js";
 
 
 import "./cron/syncHeatmaps.js"
 import "./cron/syncProgress.js"
+import "./cron/expireUploads.js"
 
 import type { ApiError } from "./utils/apiError.js";
 import { handleStripeWebhook } from "./controllers/coursePurchase.controller.js";
-import { handleCloudinaryWebhook } from "./controllers/media.controller.js";
 
 
 dotenv.config();
@@ -62,15 +63,10 @@ app.post(
   express.raw({ type: "application/json" }),
   handleStripeWebhook,
 );
-app.post(
-  "/api/v1/media/webhook",
-  express.raw({ type: "application/json" }),
-  handleCloudinaryWebhook,
-);
 
-app.use(express.json({ limit: "20kb" }));
+app.use(express.json({ limit: "50mb" }));
 
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(cookieParser());
 
 
@@ -105,6 +101,7 @@ app.use("/api/v1/playback", playbackRouter);
 app.use("/api/v1/progress", courseProgressRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/internal-rag", ragRouter);
+app.use("/api/v1/internal", internalRouter);
 
 
 app.use((req: Request, res: Response, next: NextFunction) => {

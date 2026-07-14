@@ -3,8 +3,6 @@ services:
     build: ./frontend
     ports:
       - "5173:5173"
-    depends_on:
-      - backend
 
   backend:
     build: ./backend
@@ -15,6 +13,44 @@ services:
     depends_on:
       - redis
       - mongodb
+
+  rag-service:
+    build: ./rag-service
+    env_file:
+      - ./rag-service/.env
+    ports:
+      - "${PYTHON_PORT}:8000"
+    volumes:
+      - rag_videos:/app/videos
+      - rag_transcribe:/app/transcribe
+      - chroma_db:/app/chroma_db
+
+  localstack:
+    image: localstack/localstack:dev
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,sqs,lambda,iam
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+      - LAMBDA_DOCKER_NETWORK=lms-network
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "./lambda:/var/task/lambda"
+
+  media-worker:
+    build: ./worker
+    env_file:
+      - ./worker/.env
+    environment:
+      - BACKEND_URL=http://backend:3000
+      - AWS_ENDPOINT_URL=http://localstack:4566
+    depends_on:
+      - localstack
+      - backend
 
   mongodb:
     image: mongo:latest
@@ -32,6 +68,13 @@ services:
     volumes:
       - redis_data:/data
 
+networks:
+  lms-network:
+    name: lms-network
+
 volumes:
   mongo_data:
   redis_data:
+  rag_videos:
+  rag_transcribe:
+  chroma_db:
