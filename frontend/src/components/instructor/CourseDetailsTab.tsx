@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateCourse } from "@/services/courseService";
-import { openCloudinaryWidget } from "@/services/mediaService";
+import { requestAndUpload, waitForUploadReady } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course } from "@/types";
 
@@ -194,23 +194,47 @@ export function CourseDetailsTab({ courseId, course, setCourse }: CourseDetailsT
         <div className="flex flex-col gap-1.5">
           <Label className="text-sm font-medium text-slate-700">Change Thumbnail File</Label>
           <div
-            onClick={async () => {
-              try {
-                setUploadingThumbnail(true);
-                const result = await openCloudinaryWidget("image");
-                setThumbnailUrl(result.secureUrl);
-              } catch (err: unknown) {
-                console.error(err);
-              } finally {
-                setUploadingThumbnail(false);
+            onClick={() => {
+              if (!uploadingThumbnail) {
+                document.getElementById("thumbnail-upload")?.click();
               }
             }}
             className="cursor-pointer w-full flex items-center h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
           >
+            <input
+              id="thumbnail-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  setUploadingThumbnail(true);
+                  const { uploadSessionId } = await requestAndUpload(
+                    "course-image",
+                    courseId,
+                    file
+                  );
+                  const statusObj = await waitForUploadReady(uploadSessionId);
+                  if (statusObj.status === "READY" || statusObj.status === "UPLOADED") {
+                    setThumbnailUrl(statusObj.finalUrl || "");
+                  } else {
+                    setDetailsGeneralError(`Upload failed with status: ${statusObj.status}`);
+                  }
+                } catch (err: unknown) {
+                  console.error(err);
+                  setDetailsGeneralError(getErrorMessage(err));
+                } finally {
+                  setUploadingThumbnail(false);
+                  e.target.value = "";
+                }
+              }}
+            />
             <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg ml-3 mr-4 hover:bg-indigo-100 transition-colors">
-              Choose File
+              {uploadingThumbnail ? "Uploading..." : "Choose File"}
             </span>
-            <span className="text-xs text-slate-500 truncate">{thumbnailUrl ? "thumbnail_uploaded.jpg" : "No file chosen"}</span>
+            <span className="text-xs text-slate-500 truncate">{thumbnailUrl ? "Thumbnail uploaded" : "No file chosen"}</span>
           </div>
           {thumbnailUrl && (
             <div className="mt-2 relative w-full max-w-sm rounded-xl overflow-hidden border border-slate-200 aspect-video">

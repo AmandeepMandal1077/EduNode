@@ -8,13 +8,13 @@ export function CreateCoursePage() {
   const {
     form,
     loading,
-    thumbnailUrl,
+    thumbnailPreview,
     uploadingThumbnail,
     errors,
     generalError,
     handleChange,
     handlePriceChange,
-    handleThumbnailUpload,
+    handleThumbnailChange,
     handleSubmit,
     navigate,
   } = useCreateCourse();
@@ -50,13 +50,13 @@ export function CreateCoursePage() {
           <CreateCourseForm
             form={form}
             loading={loading}
-            thumbnailUrl={thumbnailUrl}
+            thumbnailPreview={thumbnailPreview}
             uploadingThumbnail={uploadingThumbnail}
             errors={errors}
             generalError={generalError}
             handleChange={handleChange}
             handlePriceChange={handlePriceChange}
-            handleThumbnailUpload={handleThumbnailUpload}
+            handleThumbnailChange={handleThumbnailChange}
             handleSubmit={handleSubmit}
           />
         </motion.div>

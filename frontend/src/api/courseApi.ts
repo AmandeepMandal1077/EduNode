@@ -235,25 +235,26 @@ export async function apiUpdateCourseDetails(
   return res.data?.data?.course ?? res.data?.course;
 }
 
+export interface AddLectureRequest {
+  title: string;
+  description: string;
+  fileName: string;
+  contentType: string;
+  order?: number;
+}
+
 /**
  * @desc Add a new lecture to a course.
  * @input {string} courseId - The ID of the course.
- * @input {Object} data - The lecture details (title, description, videoUrl, publicId).
+ * @input {Object} data - The lecture details (title, description, fileName, contentType).
  * @output {Promise<BackendLecture>} The added lecture.
  */
 export async function apiAddLecture(
   courseId: string,
-  data: {
-    title: string;
-    description: string;
-    videoUrl: string;
-    publicId: string;
-    signature: string;
-    version: number;
-  }
-): Promise<BackendLecture> {
+  data: AddLectureRequest
+): Promise<any> {
   const res = await apiClient.post(`/courses/${courseId}/lectures`, data);
-  return res.data?.data?.lecture ?? res.data?.lecture;
+  return res.data?.data;
 }
 
 /**

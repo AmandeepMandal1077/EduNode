@@ -19,6 +19,7 @@ export type TEmailOptions = {
  */
 function getTransporter() {
   if (!transporter) {
+    const IS_PROD = process.env.NODE_ENV === "production";
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -29,8 +30,8 @@ function getTransporter() {
       },
       pool: true,
       maxConnections: 5,
-      debug: true,
-      logger: true,
+      debug: !IS_PROD,
+      logger: !IS_PROD,
     });
   }
 }

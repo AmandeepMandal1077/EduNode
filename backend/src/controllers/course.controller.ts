@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/apiError.js";
 
 import { Course, CourseLevel } from "../models/course.model.js";
-import { EUploadStatus, Lecture } from "../models/lecture.model.js";
+import { Lecture, EUploadStatus } from "../models/lecture.model.js";
 import {
   getPublishedCoursesFromCache,
   savePublishedCoursesToCache,
@@ -14,8 +14,8 @@ import {
 } from "../cache/courses-cache.js";
 import { Announcement } from "../models/announcement.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
-import { addLectureUploadJob } from "../queue/lecture-upload.queue.js";
-import { verifyUploadSignature } from "../utils/cloudinary.js";
+import { generatePresignedPutUrl } from "../utils/s3.js";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * @desc Creates a new course under the authenticated instructor's account.
@@ -257,37 +257,53 @@ export const addLectureToCourse = asyncHandler(
       throw new ApiError("Invalid courseId", 400);
     }
 
-    const { title, description, order, videoUrl, publicId, signature, version } = req.body;
-    if (!title || !description) {
-      throw new ApiError("Lecture data is required", 400);
+    const course = await Course.findById(courseId);
+    if (!course || course.instructor.toString() !== userId) {
+      throw new ApiError("Course not found or unauthorized", 404);
     }
 
-    const isValid = verifyUploadSignature({ publicId, version, signature })
+    const {
+        title,
+        description,
+        fileName,
+        contentType,
+        order
+    } = req.body;
 
-    if (!isValid) {
-      throw new ApiError("Invalid upload signature", 400)
+    if (!title || !description || !fileName || !contentType) {
+        throw new ApiError("Missing required fields", 400);
     }
-    const slug = title.toLowerCase().replace(/ /g, "-");
-    let lecture = await Lecture.findOne({
-      courseId: new mongoose.Types.ObjectId(courseId),
-      slug,
-    });
-    if (lecture) {
-      throw new ApiError("Lecture with this title already exists", 400);
+
+    const uploadSessionId = uuidv4();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    // Prepare S3 Key
+    const tempLectureId = new mongoose.Types.ObjectId();
+    const s3Key = `root/courses/${courseId}/lectures/${tempLectureId}/${Date.now()}_${fileName}`;
+
+    let presignedUrl = "";
+    try {
+        presignedUrl = await generatePresignedPutUrl(s3Key, contentType, 900);
+    } catch (error) {
+        throw new ApiError("Failed to generate presigned upload URL", 500);
     }
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
+    let lecture;
     try {
-      const createdLectures = await Lecture.create([{
-        title,
-        description,
-        videoUrl,
-        publicId,
-        courseId: new mongoose.Types.ObjectId(courseId),
-        uploadStatus: EUploadStatus.PROCESSING,
-      }], { session });
+        const createdLectures = await Lecture.create([{
+            _id: tempLectureId,
+            title,
+            description,
+            courseId: course._id,
+            s3Key,
+            uploadSessionId,
+            presignedUrlExpiresAt: expiresAt,
+            uploadStatus: EUploadStatus.PENDING_UPLOAD,
+            order: order ?? course.lectures.length + 1
+        }], { session });
 
       lecture = createdLectures[0]!;
 
@@ -301,7 +317,6 @@ export const addLectureToCourse = asyncHandler(
 
       await Course.findOneAndUpdate(
         {
-          instructor: new mongoose.Types.ObjectId(userId),
           _id: new mongoose.Types.ObjectId(courseId),
         },
         {
@@ -320,12 +335,6 @@ export const addLectureToCourse = asyncHandler(
 
       await session.commitTransaction();
 
-      await addLectureUploadJob({
-        lectureUrl: videoUrl,
-        lectureId: lecture._id.toString(),
-        courseId: courseId.toString()
-      })
-
     } catch (error) {
       await session.abortTransaction();
       throw error;
@@ -334,9 +343,15 @@ export const addLectureToCourse = asyncHandler(
     }
 
     return res.status(201).json({
-      success: true,
-      message: "Lecture added successfully",
-      data: { lecture },
+        success: true,
+        message: "Lecture upload session created successfully",
+        data: {
+            lecture: lecture,
+            presignedUrl,
+            uploadSessionId,
+            s3Key,
+            expiresAt
+        }
     });
   },
 );
@@ -364,7 +379,7 @@ export const getCourseLectures = asyncHandler(
         match: {
           $or: [
             { uploadStatus: { $exists: false } },
-            { uploadStatus: EUploadStatus.COMPLETED },
+            { uploadStatus: EUploadStatus.READY },
           ],
         },
       });
@@ -392,7 +407,7 @@ export const getProcessingLectures = asyncHandler(
 
     const lectures = await Lecture.find({
       courseId: new mongoose.Types.ObjectId(courseId),
-      uploadStatus: EUploadStatus.PROCESSING,
+      uploadStatus: { $in: [EUploadStatus.UPLOADED, EUploadStatus.PROCESSING] },
     }).select("title description uploadStatus createdAt");
 
     return res.status(200).json({

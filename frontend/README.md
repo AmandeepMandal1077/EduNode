@@ -4,7 +4,7 @@ The React single-page application for EduNode. Provides the student and instruct
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - **Landing Page** — Animated hero, feature highlights, testimonials, and stats powered by Framer Motion
 - **Course Catalog** — Search, filter, and explore published courses with rich course cards
@@ -13,7 +13,7 @@ The React single-page application for EduNode. Provides the student and instruct
 - **Video Heatmaps** — Per-lecture visual engagement heatmap rendered from aggregated telemetry
 - **Threaded Q&A** — Nested comment trees with like/dislike on each lecture
 - **AI Chat FAB** — Floating action button for AI-powered Q&A about the current lecture
-- **Instructor Dashboard** — Create courses, manage curriculum, upload videos via Cloudinary widget, publish courses
+- **Instructor Dashboard** — Create courses, manage curriculum, upload videos via S3 presigned URLs, publish courses
 - **Profile Management** — Edit account details, change password, security settings
 - **Auth Flow** — Login, register, forgot/reset password with form validation
 - **Stripe Checkout** — Success and cancel pages with purchase verification
@@ -22,7 +22,7 @@ The React single-page application for EduNode. Provides the student and instruct
 
 ---
 
-## 💻 Tech Stack
+## Tech Stack
 
 | Component      | Technology                                                    |
 |----------------|---------------------------------------------------------------|
@@ -37,16 +37,17 @@ The React single-page application for EduNode. Provides the student and instruct
 | **HTTP**       | [Axios](https://axios-http.com/) with auth interceptors      |
 | **Icons**      | [Lucide React](https://lucide.dev/)                          |
 | **Font**       | [Geist](https://vercel.com/font) via Fontsource              |
-| **Media**      | Cloudinary Upload Widget (client-side)                       |
+| **Media**      | S3 Presigned Uploads (client-side)                           |
 
 ---
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```
 frontend/
+├── docker-compose.frontend.yml   # Frontend Docker Compose configuration
 ├── Dockerfile                    # Container image definition
-├── index.html                    # HTML entrypoint (loads Cloudinary widget)
+├── index.html                    # HTML entrypoint
 ├── package.json                  # Dependencies & scripts
 ├── vite.config.ts                # Vite configuration
 ├── components.json               # shadcn/ui configuration
@@ -57,6 +58,8 @@ frontend/
     ├── App.tsx                   # Router setup & AuthGuard
     ├── App.css                   # Global app styles
     ├── index.css                 # Tailwind directives & CSS variables
+    │
+    ├── assets/                   # Static assets like images and icons
     │
     ├── pages/                    # Route-level page components
     │   ├── LandingPage.tsx
@@ -102,13 +105,14 @@ frontend/
     │   ├── commentApi.ts         # Comment CRUD endpoints
     │   ├── purchaseApi.ts        # Payment & purchase endpoints
     │   ├── progressApi.ts        # Progress & heatmap endpoints
+    │   ├── ragApi.ts             # RAG AI lecture chat endpoints
     │   └── mediaApi.ts           # Upload signature endpoint
     │
     ├── services/                 # Business logic between hooks & API
     │   ├── authService.ts        # Login, register, logout logic
     │   ├── courseService.ts       # Course data transformations
     │   ├── commentService.ts     # Comment tree management
-    │   ├── mediaService.ts       # Cloudinary widget integration
+    │   ├── mediaService.ts       # S3 upload logic
     │   ├── userService.ts        # Profile update logic
     │   └── debounceService.ts    # Debounce utility
     │
@@ -133,23 +137,27 @@ frontend/
     ├── store/                    # Redux Toolkit state
     │   ├── index.ts              # Store configuration
     │   ├── authSlice.ts          # Auth state (user, tokens, init)
+    │   ├── chatSlice.ts          # Chat state for AI Q&A
     │   └── courseSlice.ts        # Course catalog state
     │
+    ├── constants/                # App-wide constants (e.g. auth routes)
+    ├── lib/                      # Third-party configuration and utility libraries (e.g. cn helper)
     ├── types/                    # Shared TypeScript interfaces
     └── utils/                    # Helper utilities
+```
 ```
 
 ---
 
-## 🛠️ Prerequisites
+## Prerequisites
 
 - **[Bun](https://bun.sh/)** (v1.0+) or **[Node.js](https://nodejs.org/)** (v18+)
 - The **backend server** running (see [backend README](../backend/README.md))
-- A **Cloudinary** account (the upload widget script is loaded in `index.html`)
+
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Install dependencies
 ```bash
@@ -172,7 +180,7 @@ The app will be available at **http://localhost:5173**.
 
 ---
 
-## 📦 Available Scripts
+## Available Scripts
 
 | Script           | Command             | Description                        |
 |------------------|---------------------|------------------------------------|
@@ -183,7 +191,7 @@ The app will be available at **http://localhost:5173**.
 
 ---
 
-## 🗺️ Application Routes
+## Application Routes
 
 | Path                                      | Auth | Component                    | Description               |
 |-------------------------------------------|------|------------------------------|---------------------------|
@@ -205,7 +213,7 @@ The app will be available at **http://localhost:5173**.
 
 ---
 
-## 🐳 Docker
+## Docker
 
 Build and run the frontend as a container:
 
@@ -214,10 +222,16 @@ docker build -t edunode-frontend .
 docker run -p 5173:5173 edunode-frontend
 ```
 
-Or use Docker Compose from the project root — see the [root README](../README.md).
+Alternatively, you can run it using Docker Compose:
+
+```bash
+docker compose -f docker-compose.frontend.yml up
+```
+
+Or run all services (including backend and database) from the workspace root (see the [workspace README](../README.md)).
 
 ---
 
-## 📄 License
+## License
 
 This project is for educational purposes.

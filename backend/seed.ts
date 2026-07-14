@@ -83,9 +83,9 @@
  *   Password: Seeded@123
  * 
  * Test Videos URLs:
- * https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204928/YTDown_YouTube_30-Minute-Timer_Media_LNYm40RmRzs_006_144p_abgtx2.mp4
- * https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204830/YTDown_YouTube_10-Minute-Timer_Media_lMVv3qz-rHs_006_144p_sfyo5y.mp4
- * https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204580/1_Hour_Timer_-_Online_Alarm_Kur_144p_h264_jalyuk.mp4
+ * http://localhost:4566/edunode-local/test-video-1.mp4
+ * http://localhost:4566/edunode-local/test-video-2.mp4
+ * http://localhost:4566/edunode-local/test-video-3.mp4
  * 
  */
 
@@ -211,8 +211,38 @@ async function seed() {
     updatedAt: now,
   });
 
-  const instrResult = await db.collection("users").insertMany(Array.from({ length: CFG.NUM_INSTRUCTORS }, () => makeUser(Role.INSTRUCTOR)));
-  const studResult = await db.collection("users").insertMany(Array.from({ length: CFG.NUM_STUDENTS }, () => makeUser(Role.STUDENT)));
+  const instrResult = await db.collection("users").insertMany([
+    {
+      name: "Demo Instructor",
+      email: "instructor@edunode.dev",
+      password: SHARED_HASH,
+      role: Role.INSTRUCTOR,
+      avatar: `https://api.dicebear.com/8.x/avataaars/svg?seed=demo-instructor`,
+      bio: "This is the demo instructor account.",
+      enrolledCourses: [],
+      createdCourses: [],
+      lastActive: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+    ...Array.from({ length: CFG.NUM_INSTRUCTORS - 1 }, () => makeUser(Role.INSTRUCTOR))
+  ]);
+  const studResult = await db.collection("users").insertMany([
+    {
+      name: "Demo Student",
+      email: "student@edunode.dev",
+      password: SHARED_HASH,
+      role: Role.STUDENT,
+      avatar: `https://api.dicebear.com/8.x/avataaars/svg?seed=demo-student`,
+      bio: "This is the demo student account.",
+      enrolledCourses: [],
+      createdCourses: [],
+      lastActive: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+    ...Array.from({ length: CFG.NUM_STUDENTS - 1 }, () => makeUser(Role.STUDENT))
+  ]);
 
   const instructorIds = Object.values(instrResult.insertedIds) as Types.ObjectId[];
   const studentIds = Object.values(studResult.insertedIds) as Types.ObjectId[];
@@ -289,9 +319,9 @@ async function seed() {
       totalDuration += dur;
 
       const TEST_VIDEOS = [
-        "https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204928/YTDown_YouTube_30-Minute-Timer_Media_LNYm40RmRzs_006_144p_abgtx2.mp4",
-        "https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204830/YTDown_YouTube_10-Minute-Timer_Media_lMVv3qz-rHs_006_144p_sfyo5y.mp4",
-        "https://res.cloudinary.com/dbrfg6ioz/video/upload/v1781204580/1_Hour_Timer_-_Online_Alarm_Kur_144p_h264_jalyuk.mp4",
+        "http://localhost:4566/edunode-local/test-video-1.mp4",
+        "http://localhost:4566/edunode-local/test-video-2.mp4",
+        "http://localhost:4566/edunode-local/test-video-3.mp4",
       ];
 
       batch.push({
@@ -299,7 +329,9 @@ async function seed() {
         courseId,
         description: faker.lorem.sentences(2).slice(0, 98),
         videoUrl: TEST_VIDEOS[i % TEST_VIDEOS.length],
-        publicId: `edunode/${courseId}/lec-${i + 1}`,
+        s3Key: `lectures/courses/${courseId.toString()}/${slug}.mp4`,
+        uploadSessionId: new mongoose.Types.ObjectId().toString(),
+        uploadStatus: "READY",
         duration: dur,
         isPreview: i < 2,
         order: i + 1,

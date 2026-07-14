@@ -19,6 +19,7 @@ import {
   type BackendLecture,
   type BackendAnnouncement,
   type BackendProcessingLecture,
+  type AddLectureRequest,
 } from "../api/courseApi";
 import {
   fetchCoursePurchaseStatus,
@@ -462,25 +463,14 @@ export async function updateCourse(
  */
 export async function addLecture(
   courseId: string,
-  data: {
-    title: string;
-    description: string;
-    videoUrl: string;
-    publicId: string;
-    signature: string;
-    version: number;
-  }
-): Promise<Lecture> {
-  const bl = await apiAddLecture(courseId, {
-    title: data.title,
-    description: data.description,
-    videoUrl: data.videoUrl,
-    publicId: data.publicId,
-    signature: data.signature,
-    version: data.version,
-  });
-
-  return mapLecture(bl);
+  data: AddLectureRequest
+): Promise<{ lecture: Lecture, uploadSessionId: string, presignedUrl: string, s3Key: string }> {
+  const response = await apiAddLecture(courseId, data);
+  // The API returns { lecture, presignedUrl, uploadSessionId, s3Key }
+  return {
+    ...response,
+    lecture: mapLecture(response.lecture)
+  };
 }
 
 /**

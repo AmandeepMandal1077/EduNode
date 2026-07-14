@@ -1,10 +1,12 @@
 import mongoose, { type HydratedDocument } from "mongoose";
 
 export enum EUploadStatus {
-  UPLOADING = "UPLOADING",
+  PENDING_UPLOAD = "PENDING_UPLOAD",
+  UPLOADED = "UPLOADED",
   PROCESSING = "PROCESSING",
-  COMPLETED = "COMPLETED",
+  READY = "READY",
   FAILED = "FAILED",
+  EXPIRED = "EXPIRED",
 }
 
 export interface ILecture {
@@ -15,7 +17,9 @@ export interface ILecture {
   videoUrl: string;
   duration?: number;
   isPreview?: boolean;
-  publicId: string;
+  s3Key: string;
+  uploadSessionId: string;
+  presignedUrlExpiresAt?: Date;
   order?: number;
   uploadStatus: EUploadStatus;
 }
@@ -63,7 +67,7 @@ const lectureSchema = new mongoose.Schema<
     },
     videoUrl: {
       type: String,
-      required: [true, "video is required"],
+      default: "",
     },
     duration: {
       type: Number,
@@ -73,9 +77,17 @@ const lectureSchema = new mongoose.Schema<
       type: Boolean,
       default: true,
     },
-    publicId: {
+    s3Key: {
       type: String,
-      required: [true, "public id is required for management"],
+      required: [true, "S3 key is required"],
+    },
+    uploadSessionId: {
+      type: String,
+      required: [true, "Upload session ID is required"],
+      unique: true,
+    },
+    presignedUrlExpiresAt: {
+      type: Date,
     },
     order: {
       type: Number,
@@ -83,7 +95,7 @@ const lectureSchema = new mongoose.Schema<
     uploadStatus: {
       type: String,
       enum: EUploadStatus,
-      default: EUploadStatus.UPLOADING,
+      default: EUploadStatus.PENDING_UPLOAD,
     },
   },
   {
@@ -114,7 +126,7 @@ lectureSchema.pre("validate", function (this: TLectureDoc) {
  */
 lectureSchema.pre("save", function (this: TLectureDoc) {
   if (this.duration) {
-    this.duration = Math.round(this.duration * 100) / 100;
+    this.duration = Math.round(this.duration);
   }
   return;
 });

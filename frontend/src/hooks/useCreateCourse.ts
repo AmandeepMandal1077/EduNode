@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCourse } from "@/services/courseService";
-import { openCloudinaryWidget } from "@/services/mediaService";
+import { requestAndUpload } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
 export function useCreateCourse() {
@@ -22,7 +22,8 @@ export function useCreateCourse() {
     level: "beginner",
     price: 0,
   });
-  const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -87,7 +88,7 @@ export function useCreateCourse() {
       errs.price = "Price must be non-negative.";
     }
 
-    if (!thumbnailUrl) {
+    if (!thumbnailFile) {
       errs.thumbnail = "Thumbnail is required.";
     }
 
@@ -95,11 +96,11 @@ export function useCreateCourse() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleThumbnailUpload = async () => {
-    try {
-      setUploadingThumbnail(true);
-      const result = await openCloudinaryWidget("image");
-      setThumbnailUrl(result.secureUrl);
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setThumbnailFile(file);
+      setThumbnailPreview(URL.createObjectURL(file));
       if (errors.thumbnail) {
         setErrors((errs) => {
           const copy = { ...errs };
@@ -107,10 +108,6 @@ export function useCreateCourse() {
           return copy;
         });
       }
-    } catch (err: unknown) {
-      setGeneralError(getErrorMessage(err, "Failed to upload image"));
-    } finally {
-      setUploadingThumbnail(false);
     }
   };
 
@@ -122,33 +119,43 @@ export function useCreateCourse() {
 
     try {
       setLoading(true);
-      await createCourse({
+      setUploadingThumbnail(true);
+      const course = await createCourse({
         title: form.title,
         subtitle: form.subtitle,
         description: form.description,
         category: form.category,
         level: form.level,
         price: Number(form.price),
-        thumbnail: thumbnailUrl,
+        thumbnail: "https://via.placeholder.com/800x450?text=Uploading...",
       });
+      
+      if (thumbnailFile) {
+        // We do not await waitForUploadReady so the user isn't blocked on the UI
+        // The Lambda will confirm upload and update the course document
+        await requestAndUpload("course-image", course.id, thumbnailFile);
+      }
+      
       navigate("/instructor/courses");
     } catch (err: unknown) {
       setGeneralError(getErrorMessage(err, "Failed to create course. Please try again."));
     } finally {
       setLoading(false);
+      setUploadingThumbnail(false);
     }
   };
 
   return {
     form,
     loading,
-    thumbnailUrl,
+    thumbnailFile,
+    thumbnailPreview,
     uploadingThumbnail,
     errors,
     generalError,
     handleChange,
     handlePriceChange,
-    handleThumbnailUpload,
+    handleThumbnailChange,
     handleSubmit,
     navigate,
   };

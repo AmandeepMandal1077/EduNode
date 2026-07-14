@@ -11,7 +11,6 @@ import {
   updateUserProfile,
 } from "../controllers/user.controller.js";
 
-import upload from "../utils/multer.js";
 import { authenticateUserMiddleware } from "../middlewares/auth.middleware.js";
 import { SourceType, validator } from "../middlewares/validator.middleware.js";
 import {
@@ -38,7 +37,6 @@ router.get("/profile", authenticateUserMiddleware, getCurrentUserProfile);
 router.patch(
   "/profile",
   authenticateUserMiddleware,
-  upload.single("avatar"),
   updateUserProfile,
 );
 

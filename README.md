@@ -1,4 +1,4 @@
-<![CDATA[# 🎓 EduNode — Learning Management System
+# 🎓 EduNode — Learning Management System
 
 EduNode is a production-grade, full-stack Learning Management System designed for online education at scale. Instructors can create, manage, and publish video courses with rich metadata. Students can explore the catalog, enroll via Stripe checkout, stream lectures with resume-from-position playback, visualize engagement through per-lecture heatmaps, and participate in threaded Q&A discussions — all backed by a secure, queue-driven architecture with AI-powered RAG (Retrieval-Augmented Generation) chat.
 
@@ -7,16 +7,16 @@ EduNode is a production-grade, full-stack Learning Management System designed fo
 ## ✨ Key Features
 
 - **Course Management** — Instructors create courses with thumbnails, pricing, curriculum, and announcements; publish when ready.
-- **Secure Video Uploads** — Client-side Cloudinary uploads verified with server-side signature validation; upload status tracking (Uploading → Processing → Completed).
+- **Secure Video Uploads** — Presigned S3 URLs for direct client uploads with server-side validation; upload status tracking via LocalStack S3 event notifications.
 - **Stripe Payments** — Full checkout flow with webhook-driven purchase confirmation, success/cancel pages, and purchase history.
 - **Video Playback with Resume** — Lecture playback remembers the last watched position via Redis-cached progress sync.
 - **Lecture Heatmaps** — Per-segment watch-time telemetry aggregated by a cron job into visual heatmap data.
 - **Threaded Q&A** — Nested comment trees on each lecture with like/dislike support and soft-delete.
 - **AI RAG Chat** — Ask questions about a lecture and receive AI-generated answers powered by a Python RAG microservice.
-- **Background Job Processing** — BullMQ queues handle email delivery, announcement broadcasts, password resets, and lecture ingestion into the vector database.
+- **Background Job Processing** — AWS SQS (LocalStack) handles video transcoding (HLS) and RAG ingestion via a dedicated Python worker. BullMQ handles emails and password resets.
 - **Auth & Security** — JWT tokens in HTTP-only cookies, rate limiting, Helmet headers, HPP, and Mongo injection sanitization.
 - **Caching Layer** — Redis caching for published courses, lecture progress, and heatmap segments with periodic DB sync via cron.
-- **Docker Compose** — One-command orchestration of frontend, backend, MongoDB (replica set), and Redis.
+- **Docker Compose** — One-command orchestration of frontend, backend, MongoDB (replica set), Redis, LocalStack, and Python Workers.
 
 ---
 
@@ -30,13 +30,13 @@ EduNode is a production-grade, full-stack Learning Management System designed fo
 | **Backend**   | Express 5, TypeScript, Bun runtime                                  |
 | **Database**  | MongoDB (Mongoose ODM) with replica set for transactions             |
 | **Caching**   | Redis (IORedis) — progress, heatmaps, course catalog cache          |
-| **Queue**     | BullMQ — emails, announcements, password resets, lecture ingestion   |
+| **Queue**     | AWS SQS (via LocalStack) for media tasks. BullMQ for general tasks. |
 | **Payments**  | Stripe (checkout sessions + webhooks)                                |
-| **Media**     | Cloudinary (upload widget + signed uploads)                          |
-| **AI / RAG**  | Python microservice (external) for lecture content Q&A               |
+| **Media**     | S3 Presigned Uploads + FFmpeg HLS Transcoding                        |
+| **AI / RAG**  | Python microservice + Vector DB for lecture content Q&A              |
 | **Validation**| Zod schemas                                                          |
 | **Testing**   | Vitest + Supertest + MongoDB Memory Server                           |
-| **DevOps**    | Docker, Docker Compose                                               |
+| **DevOps**    | Docker, Docker Compose, LocalStack (S3, SQS, Lambda)                 |
 
 ---
 
@@ -60,7 +60,7 @@ EduNode/
 │   │   ├── queue/              # BullMQ queues & workers
 │   │   ├── cache/              # Redis caching layer
 │   │   ├── cron/               # Scheduled jobs (heatmaps, progress sync)
-│   │   ├── utils/              # Cloudinary, email, JWT helpers
+│   │   ├── utils/              # S3, email, JWT helpers
 │   │   └── types/              # TypeScript type definitions
 │   ├── tests/                  # Vitest integration tests
 │   └── seed.ts                 # Database seeder script
@@ -86,89 +86,60 @@ EduNode/
 
 Make sure the following are installed on your machine:
 
-- **[Bun](https://bun.sh/)** (v1.0+) — JavaScript runtime & package manager
-- **[Docker](https://www.docker.com/)** & **Docker Compose** — for containerized setup
-- **[MongoDB](https://www.mongodb.com/)** (v6+) — if running locally without Docker (must support replica sets)
-- **[Redis](https://redis.io/)** (v7+) — if running locally without Docker
-- A **[Stripe](https://stripe.com/)** account (test keys)
-- A **[Cloudinary](https://cloudinary.com/)** account
+- **[Docker](https://www.docker.com/)** & **Docker Compose** — Required to run the full stack (LocalStack, MongoDB, Redis, API, and Worker).
+- A **[Stripe](https://stripe.com/)** account (test keys).
+- **[Bun](https://bun.sh/)** — Useful if you wish to run scripts locally outside of Docker.
 
 ---
 
 ## 🚀 Getting Started
 
-### Option A: Docker Compose (Recommended)
+The easiest way to run EduNode locally is using Docker Compose, which automatically provisions LocalStack (S3, SQS, Lambda) for media processing, a MongoDB replica set, and Redis.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/EduNode.git
-   cd EduNode
-   ```
+### 1. Configure Environment Variables
+```bash
+# Root .env
+cp .env.example .env
 
-2. **Configure environment variables**
-   ```bash
-   # Root .env (already has sensible defaults)
-   cp .env.example .env  # or edit .env directly
+# Backend .env
+cp backend/.env.example backend/.env
 
-   # Backend .env
-   # Edit backend/.env with your Stripe, Cloudinary, and SMTP credentials
-   ```
+# Worker .env
+cp worker/.env.example worker/.env
+```
+> **Double Check:** Make sure `INTERNAL_API_SECRET` in both `backend/.env` and `worker/.env` match perfectly. You must also configure your Stripe Test Keys in the backend `.env`.
 
-3. **Start all services**
-   ```bash
-   docker compose up --build
-   ```
+### 2. Start the Stack
+```bash
+docker compose up --build
+```
+This will boot up the frontend, backend, RAG service, python worker, LocalStack, MongoDB, and Redis.
+> **Note:** LocalStack runs an initialization script on boot (`localstack/init-aws.sh`) that provisions the S3 bucket, SQS queue, and your Lambda trigger. Wait for `LocalStack AWS resources initialized successfully!` in the logs before uploading media.
 
-4. **Initialize MongoDB replica set** (first-time only)
-   ```bash
-   docker exec -it edunode-mongodb-1 mongosh --eval "rs.initiate()"
-   ```
+### 3. Initialize Database (First-time only)
+In a new terminal window, initialize the MongoDB replica set and seed the database with mock data:
+```bash
+docker exec -it edunode-mongodb-1 mongosh --eval "rs.initiate()"
+docker exec -it edunode-backend-1 bun run seed.ts
+```
+> All seeded user accounts share the password: `Seeded@123`. Query the `users` collection in the `LMS` database for email addresses.
 
-5. **Seed the database** (optional)
-   ```bash
-   docker exec -it edunode-backend-1 bun run seed.ts
-   ```
-
-6. **Open the app**
-   - Frontend: [http://localhost:5173](http://localhost:5173)
-   - Backend API: [http://localhost:3000](http://localhost:3000)
+### 4. Access the App
+- **Frontend:** [http://localhost:5173](http://localhost:5173)
+- **Backend API:** [http://localhost:3000](http://localhost:3000)
 
 ---
 
-### Option B: Local Development (without Docker)
+## 🐛 Troubleshooting & Error Tracking
 
-1. **Start MongoDB with replica set support**
-   ```bash
-   mongod --replSet rs0 --bind_ip_all
-   # In another terminal, initiate the replica set:
-   mongosh --eval "rs.initiate()"
-   ```
+If something isn't working locally (e.g. video uploads failing), use these checks:
 
-2. **Start Redis**
-   ```bash
-   redis-server --requirepass pass
-   ```
-
-3. **Install dependencies & start the backend**
-   ```bash
-   cd backend
-   bun install
-   bun run dev          # Starts on http://localhost:3000
-   ```
-
-4. **Install dependencies & start the frontend**
-   ```bash
-   cd frontend
-   bun install
-   bun run dev          # Starts on http://localhost:5173
-   ```
-
-5. **Seed mock data** (optional)
-   ```bash
-   cd backend
-   bun run seed.ts
-   ```
-   > All seeded user accounts share the password: `Seeded@123`. Query the `users` collection in the `LMS` database for email addresses.
+1. **Docker Logs:** Track errors easily using docker logs.
+   - For backend errors: `docker compose logs backend -f`
+   - For FFmpeg/HLS errors: `docker compose logs media-worker -f`
+   - For S3/Lambda trigger errors: `docker compose logs localstack -f`
+2. **Double Check CORS & Connectivity:** Ensure `AWS_ENDPOINT_URL` is properly set so the services can talk to LocalStack internally.
+3. **Queue Health:** If a video is stuck in "Processing", ensure the Lambda function fired correctly in the LocalStack logs and placed the message into the SQS queue.
 
 ---
 
@@ -189,9 +160,7 @@ Make sure the following are installed on your machine:
 | `STRIPE_PUBLISHABLE_KEY`      | Stripe publishable API key                |
 | `STRIPE_SECRET_KEY`           | Stripe secret API key                     |
 | `STRIPE_WEBHOOK_SECRET`       | Stripe webhook signing secret             |
-| `CLOUDINARY_CLOUD_NAME`       | Cloudinary cloud name                     |
-| `CLOUDINARY_API_KEY`          | Cloudinary API key                        |
-| `CLOUDINARY_API_SECRET`       | Cloudinary API secret                     |
+
 | `REDIS_HOST_NAME`             | Redis hostname                            |
 | `REDIS_PORT`                  | Redis port                                |
 | `REDIS_PASSWORD`              | Redis password                            |
@@ -233,7 +202,7 @@ bun run test        # Runs Vitest integration tests against MongoDB Memory Serve
 | POST   | `/api/v1/payments/checkout`               | Create Stripe checkout session   |
 | POST   | `/api/v1/payments/webhook`                | Stripe webhook handler           |
 | GET    | `/api/v1/lecture/:lectureId`              | Get lecture details              |
-| POST   | `/api/v1/media/upload-signature`          | Generate Cloudinary upload sig   |
+| POST   | `/api/v1/media/upload-signature`          | Generate S3 upload presigned URL |
 | GET    | `/api/v1/playback/resume`                 | Get lecture resume position      |
 | POST   | `/api/v1/playback/sync`                   | Sync playback progress to cache  |
 | GET    | `/api/v1/progress/:courseId`              | Get course progress              |
@@ -246,4 +215,3 @@ bun run test        # Runs Vitest integration tests against MongoDB Memory Serve
 ## 📄 License
 
 This project is for educational purposes.
-]]>

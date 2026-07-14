@@ -1,314 +1,391 @@
-# EduNode — Backend API Server
+# EduNode — Backend API
 
-The Express.js API server powering EduNode. Handles authentication, course management, video lecture orchestration, Stripe payments, real-time playback telemetry, threaded Q&A comments, and AI-powered RAG chat — all running on the Bun runtime.
-
----
-
-## ✨ Key Features
-
-- **RESTful API** — Clean controller → route → model architecture with Express 5
-- **JWT Authentication** — HTTP-only cookie-based auth with role-aware middleware
-- **Course & Lecture CRUD** — Full lifecycle management with slug generation and ordering
-- **Secure Video Uploads** — Cloudinary widget uploads verified via server-side HMAC signature validation
-- **Upload Status Tracking** — Lectures move through `UPLOADING → PROCESSING → COMPLETED` states
-- **Stripe Integration** — Checkout session creation + webhook-driven purchase confirmation
-- **Playback Telemetry** — Redis-cached lecture progress with resume-from-position and per-segment heatmaps
-- **Cron Jobs** — Periodic sync of heatmap segments and lecture progress from Redis to MongoDB
-- **Background Queues** — BullMQ workers for email delivery, announcements, password resets, and RAG ingestion
-- **RAG Service Integration** — Routes that proxy to an external Python microservice for AI-powered lecture Q&A
-- **Input Validation** — Zod schemas on all request bodies via validation middleware
-- **Security Hardened** — Helmet, HPP, rate limiting, and MongoDB query sanitization
-- **Integration Tests** — Vitest + Supertest against MongoDB Memory Server
+> The production-grade REST API powering EduNode, a full-featured Learning Management System. Built for scale with async media processing, AI-powered lecture Q&A, Stripe payments, and a clean multi-role architecture.
 
 ---
 
-## 💻 Tech Stack
+## Key Features
 
-| Component       | Technology                                           |
-|-----------------|------------------------------------------------------|
-| **Runtime**     | [Bun](https://bun.sh/)                               |
-| **Framework**   | Express 5                                            |
-| **Language**    | TypeScript                                           |
-| **Database**    | MongoDB (Mongoose ODM) with replica set transactions |
-| **Caching**     | Redis via IORedis                                    |
-| **Queue**       | BullMQ (Redis-backed)                                |
-| **Payments**    | Stripe                                               |
-| **Media**       | Cloudinary                                           |
-| **Email**       | Nodemailer (SMTP — Mailtrap / Ethereal)              |
-| **Scheduling**  | node-cron                                            |
-| **Validation**  | Zod                                                  |
-| **Testing**     | Vitest, Supertest, MongoDB Memory Server             |
+- **Multi-Role Auth** — JWT-based authentication with `Student` and `Instructor` roles, cookie-managed sessions, and rate-limited auth endpoints.
+- **Course & Lecture Management** — Full CRUD for courses and lectures. Instructors can publish/unpublish courses, manage curricula, and control lecture ordering.
+- **Async Media Pipeline** — Presigned S3 PUT uploads trigger a Lambda → SQS → Python media worker flow that transcodes video and automatically updates lecture status.
+- **AI Lecture Q&A (RAG)** — After a lecture is processed, a Python RAG service transcribes the video and indexes it into a vector store (ChromaDB / Qdrant). Students can ask natural-language questions about any lecture.
+- **Stripe Payments** — Full purchase flow with webhook handling, enrollment gating, and real-time payment confirmation emails.
+- **Redis Caching** — Published courses are cached in Redis to reduce database pressure on high-traffic listing endpoints. Cache is invalidated on mutations.
+- **Background Cron Jobs** — Three cron jobs keep the system consistent: heatmap syncs, progress syncs, and expired presigned URL cleanup.
+- **Transactional Emails** — Handlebars-templated emails for password resets, purchase confirmations, and platform notifications via SMTP.
+- **Lecture Progress & Heatmaps** — Per-student playback tracking with watch-time heatmaps persisted in MongoDB and synced via cron.
+- **Security Hardened** — Helmet, HPP, `express-mongo-sanitize`, CORS allowlist, and request-level rate limiting on sensitive routes.
 
 ---
 
-## 📂 Folder Structure
+## Tech Stack
 
-```
-backend/
-├── Dockerfile                    # Container image definition
-├── .env                          # Environment variables (gitignored)
-├── package.json                  # Dependencies & scripts
-├── seed.ts                       # Database seeder (users, courses, lectures, etc.)
-├── vitest.config.ts              # Test runner configuration
-│
-├── src/
-│   ├── index.ts                  # Server entrypoint — boots DB & listens
-│   ├── app.ts                    # Express app — middleware, CORS, routes
-│   │
-│   ├── controllers/              # Request handlers (business logic)
-│   │   ├── course.controller.ts
-│   │   ├── user.controller.ts
-│   │   ├── lecture.controller.ts
-│   │   ├── media.controller.ts
-│   │   ├── playback.controller.ts
-│   │   ├── courseProgress.controller.ts
-│   │   ├── coursePurchase.controller.ts
-│   │   ├── comment.controller.ts
-│   │   ├── email.controller.ts
-│   │   ├── health.controller.ts
-│   │   └── rag.controller.ts
-│   │
-│   ├── routes/                   # Express routers
-│   │   ├── course.route.ts
-│   │   ├── user.route.ts
-│   │   ├── lecture.route.ts
-│   │   ├── media.route.ts
-│   │   ├── playback.route.ts
-│   │   ├── courseProgress.route.ts
-│   │   ├── purchaseCourse.route.ts
-│   │   ├── comment.route.ts
-│   │   ├── email.route.ts
-│   │   ├── health.routes.ts
-│   │   └── rag.route.ts
-│   │
-│   ├── models/                   # Mongoose schemas & interfaces
-│   │   ├── user.model.ts
-│   │   ├── course.model.ts
-│   │   ├── lecture.model.ts       # Includes EUploadStatus enum
-│   │   ├── announcement.model.ts
-│   │   ├── comment.model.ts
-│   │   ├── courseProgress.model.ts
-│   │   ├── coursePurchase.model.ts
-│   │   ├── lectureHeatmap.model.ts
-│   │   └── chatMessage.model.ts   # RAG chat history schema
-│   │
-│   ├── middlewares/
-│   │   ├── auth.middleware.ts     # JWT cookie verification
-│   │   └── validator.middleware.ts # Zod schema validation
-│   │
-│   ├── validator/                # Zod schemas per resource
-│   │   ├── user.zod.ts
-│   │   ├── course.zod.ts
-│   │   ├── lecture.zod.ts
-│   │   └── ...
-│   │
-│   ├── queue/                    # BullMQ queues & workers
-│   │   ├── index.ts              # Redis connection for queues
-│   │   ├── keys.ts               # Queue name constants
-│   │   ├── email.queue.ts
-│   │   ├── announcement.queue.ts
-│   │   ├── forgot-password.queue.ts
-│   │   └── lecture-upload.queue.ts # RAG ingestion dispatcher
-│   │
-│   ├── cache/                    # Redis caching utilities
-│   │   ├── index.ts              # Redis client
-│   │   ├── keys.ts               # Cache key prefixes
-│   │   ├── courses-cache.ts      # Published courses cache
-│   │   ├── lecture-progress-cache.ts
-│   │   ├── lecture-heatmap-cache.ts
-│   │   ├── chat-messages-cache.ts # RAG chat history cache
-│   │   └── query.ts              # Generic query cache helper
-│   │
-│   ├── cron/                     # Scheduled background jobs
-│   │   ├── syncHeatmaps.ts       # Flush heatmap data → MongoDB (every 5 min)
-│   │   └── syncProgress.ts       # Flush lecture progress → MongoDB
-│   │
-│   ├── database/
-│   │   └── db.ts                 # MongoDB connection with retry logic
-│   │
-│   ├── utils/
-│   │   ├── cloudinary.ts         # Upload signature generation & verification
-│   │   ├── email.ts              # Handlebars email templates & Nodemailer
-│   │   ├── generateToken.ts      # JWT creation & cookie setting
-│   │   ├── asynchandler.ts       # Async error wrapper
-│   │   ├── apiError.ts           # Custom API error class
-│   │   └── multer.ts             # File upload configuration
-│   │
-│   └── types/
-│       └── user.ts               # AuthenticatedRequest type
-│
-└── tests/                        # Test suites (unit & integration)
-    ├── setup.ts                  # Test configuration and mocks
-    ├── unit/                     # Unit test suites (auth, course, comment, etc.)
-    └── integration/              # Integration test suites
-```
+| Layer | Technology |
+|---|---|
+| **Runtime** | [Bun](https://bun.sh) |
+| **Framework** | [Express 5](https://expressjs.com) |
+| **Language** | TypeScript 5 |
+| **Database** | MongoDB via [Mongoose 9](https://mongoosejs.com) |
+| **Cache / Broker** | Redis + [BullMQ](https://docs.bullmq.io) + [ioredis](https://github.com/redis/ioredis) |
+| **Object Storage** | AWS S3 (or LocalStack for local dev) |
+| **Event Queue** | AWS SQS (LocalStack) |
+| **Serverless Trigger** | AWS Lambda — `s3-upload-trigger` |
+| **Payments** | [Stripe](https://stripe.com) |
+
+| **Email** | Nodemailer + Handlebars templates |
+| **Validation** | [Zod 4](https://zod.dev) |
+| **Security** | Helmet, HPP, express-mongo-sanitize, express-rate-limit |
+| **Testing** | [Vitest](https://vitest.dev) + Supertest + mongodb-memory-server |
+| **Containerisation** | Docker |
 
 ---
 
-## 🛠️ Prerequisites
+## Getting Started
 
-- **[Bun](https://bun.sh/)** (v1.0+)
-- **MongoDB** (v6+) with replica set enabled (required for transactions)
-- **Redis** (v7+)
-- **Stripe** test API keys
-- **Cloudinary** account credentials
-- **SMTP credentials** (Mailtrap, Ethereal, or your own provider)
+### Prerequisites
+
+| Tool | Minimum Version | Notes |
+|---|---|---|
+| [Bun](https://bun.sh) | `>= 1.1` | Primary runtime and package manager |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Latest | Required for full-stack Docker Compose setup |
+| [Node.js](https://nodejs.org) | `>= 18` | Required only to build the Lambda package |
+
+> **Tip:** The full stack (MongoDB, Redis, LocalStack, Lambda, media worker, RAG service) is orchestrated via Docker Compose from the repository root. Run the backend standalone only if you are connecting to external cloud services.
 
 ---
 
-## 🚀 Getting Started
+### 1. Clone the Repository
 
-### 1. Install dependencies
 ```bash
-cd backend
-bun install
+git clone https://github.com/<your-org>/edunode.git
+cd edunode
 ```
 
-### 2. Configure environment variables
-Create a `.env` file in the `backend/` directory:
+---
+
+### 2. Configure Environment Variables
+
+Copy the example file and fill in your values:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+**`backend/.env` — complete reference:**
 
 ```env
 PORT=3000
 NODE_ENV=development
 
-MONGO_URI=mongodb://localhost:27017/LMS?replicaSet=rs0
-JWT_SECRET=your-jwt-secret
+# MongoDB
+MONGO_URI=your_mongodb_connection_string
 
-RESETPASSWORDTOKENEXPIRY=3600000
+# Auth
+JWT_SECRET=your_jwt_secret_key
+RESETPASSWORDTOKENEXPIRY=3600000        # 60 min in milliseconds
 
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+# AWS / S3
+AWS_REGION=your_aws_region
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+S3_BUCKET_NAME=your_s3_bucket_name
+INTERNAL_API_SECRET=your_internal_api_secret
 
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
+# Local Development with LocalStack (uncomment to override)
+# AWS_ENDPOINT_URL=http://localhost:4566
+# S3_PUBLIC_BASE_URL=http://localhost:4566/your_s3_bucket_name
 
-REDIS_HOST_NAME=localhost
+# Stripe
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
+
+
+
+# Redis
+REDIS_HOST_NAME=redis
 REDIS_PORT=6379
-REDIS_PASSWORD=pass
+REDIS_PASSWORD=your_redis_password
 
-CACHE_CONTENT_EXPIRATION_DUR=600000
+# Cache
+CACHE_CONTENT_EXPIRATION_DUR=600000     # 10 min in milliseconds
 
+# Service URLs
 FRONTEND_URL=http://localhost:5173
 RAG_SERVER_URL=http://localhost:8000
 
-SMTP_HOST=sandbox.smtp.mailtrap.io
-SMTP_PORT=465
-SMTP_USER=your-smtp-user
-SMTP_PASS=your-smtp-pass
+# SMTP (Transactional Email)
+SMTP_HOST=your_smtp_host
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
 ```
 
-### 3. Start databases
+Also configure the root `.env` for Docker Compose:
+
 ```bash
-# MongoDB with replica set
-mongod --replSet rs0 --bind_ip_all
-mongosh --eval "rs.initiate()"
-
-# Redis
-redis-server --requirepass pass
+cp .env.example .env
 ```
 
-### 4. Seed the database (optional)
-```bash
-bun run seed.ts
+```env
+BACKEND_PORT=3000
+NODE_ENV=development
+REDIS_PASSWORD=your_redis_password
+LOCALSTACK_AUTH_TOKEN=your_localstack_auth_token   # https://app.localstack.cloud
+PYTHON_ENV=development
+PYTHON_PORT=8000
 ```
-> All seeded accounts use the password: `Seeded@123`
-
-### 5. Start the development server
-```bash
-bun run dev
-```
-The API will be available at **http://localhost:3000**.
 
 ---
 
-## 🧪 Testing
+### 3. Run the Full Stack (Recommended)
 
-The backend includes both **unit** (isolated controller tests with mocks) and **integration** (full API lifecycle) test suites. Detailed documentation can be found in [README_TESTS.md](file:///e:/Dev/LMS/backend/README_TESTS.md).
+From the **repository root**, start all services with a single command:
 
-### 1. Spin up the Test Databases (MongoDB replica set & Redis)
 ```bash
-bun run test:docker:up
+docker compose up --build
 ```
 
-### 2. Run the Tests
+This starts:
+
+| Service | Port | Description |
+|---|---|---|
+| `backend` | `3000` | Express API (this service) |
+| `frontend` | `5173` | Vite + React UI |
+| `mongodb` | (internal) | MongoDB replica set |
+| `redis` | (internal) | Cache + BullMQ message broker |
+| `localstack` | `4566` | Emulated S3, SQS, Lambda (LocalStack Pro) |
+| `media-worker` | — | Python video transcoder (FFmpeg + boto3) |
+| `rag-service` | `8000` | FastAPI RAG / AI Q&A service |
+
+> **First run only:** LocalStack will automatically create the S3 bucket (`edunode-local`), SQS queue (`edunode-media-queue`), and deploy the `s3-upload-trigger` Lambda via the `localstack/init-aws.sh` init script.
+
+---
+
+### 4. Run the Backend Standalone
+
+If you prefer to run only the backend against your own MongoDB/Redis:
+
 ```bash
+cd backend
+bun install
+bun run dev
+```
+
+The server starts with file-watch hot-reloading on the port defined in `PORT` (default: `3000`).
+
+---
+
+### 5. Seed the Database (Optional)
+
+```bash
+cd backend
+bun run seed.ts
+```
+
+Populates the database with sample instructors, students, courses, lectures, and purchases using `@faker-js/faker`.
+
+---
+
+## Project Architecture
+
+```
+backend/
+├── src/
+│   ├── app.ts                  # Express setup: middleware, routes, error handling
+│   ├── index.ts                # Server bootstrap and DB connection
+│   ├── cache/
+│   │   └── courses-cache.ts    # Redis get / set / invalidate for published courses
+│   ├── controllers/            # Route handlers — thin, delegate to models & utils
+│   │   ├── course.controller.ts
+│   │   ├── lecture.controller.ts
+│   │   ├── coursePurchase.controller.ts
+│   │   ├── courseProgress.controller.ts
+│   │   ├── comment.controller.ts
+│   │   └── ...
+│   ├── cron/
+│   │   ├── expireUploads.ts    # Cleans up stale presigned upload sessions
+│   │   ├── syncHeatmaps.ts     # Persists buffered heatmap events to MongoDB
+│   │   └── syncProgress.ts     # Persists buffered progress events to MongoDB
+│   ├── database/
+│   │   └── connect.ts          # Mongoose connection + replica set initialisation
+│   ├── middlewares/
+│   │   ├── auth.middleware.ts  # JWT verification and role guards
+│   │   └── ...
+│   ├── models/                 # Mongoose schemas and TypeScript interfaces
+│   │   ├── user.model.ts
+│   │   ├── course.model.ts
+│   │   ├── lecture.model.ts
+│   │   ├── coursePurchase.model.ts
+│   │   ├── courseProgress.model.ts
+│   │   ├── mediaUpload.model.ts
+│   │   ├── comment.model.ts
+│   │   ├── lectureHeatmap.model.ts
+│   │   └── announcement.model.ts
+│   ├── queue/                  # BullMQ job definitions (email dispatch, etc.)
+│   ├── routes/                 # Express routers — one file per resource
+│   │   ├── course.route.ts
+│   │   ├── lecture.route.ts
+│   │   ├── media.route.ts
+│   │   ├── purchaseCourse.route.ts
+│   │   ├── courseProgress.route.ts
+│   │   ├── playback.route.ts
+│   │   ├── comment.route.ts
+│   │   ├── rag.route.ts
+│   │   ├── internal.route.ts   # Service-to-service callbacks (not browser-facing)
+│   │   └── ...
+│   ├── types/                  # Shared TypeScript types and interfaces
+│   ├── utils/
+│   │   ├── s3.ts               # Presigned URL generation helpers
+│   │   ├── apiError.ts         # Typed HTTP error class
+│   │   └── asynchandler.ts     # Express async wrapper (eliminates try/catch boilerplate)
+│   └── validator/              # Zod schemas for request body validation
+├── tests/                      # Vitest + Supertest integration tests
+├── seed.ts                     # Database seeder script
+├── Dockerfile
+├── docker-compose.test.yml     # Isolated test environment (MongoDB + Redis)
+├── vitest.config.ts
+└── package.json
+```
+
+---
+
+## API Overview
+
+All routes are prefixed with `/api/v1`. `✓` means a valid JWT cookie is required.
+
+| Method | Route | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | — | Liveness health check |
+| `POST` | `/users/signup` | — | Register a new user |
+| `POST` | `/users/signin` | — | Sign in, sets JWT cookie |
+| `POST` | `/users/signout` | ✓ | Clear session cookie |
+| `POST` | `/users/forgot-password` | — | Send password reset email |
+| `POST` | `/users/reset-password` | — | Reset password via token |
+| `GET` | `/courses` | — | List all published courses (Redis-cached) |
+| `GET` | `/courses/:courseId` | — | Get single course detail |
+| `POST` | `/courses` | Instructor | Create a new course |
+| `PATCH` | `/courses/:courseId` | Instructor | Update course metadata |
+| `POST` | `/courses/:courseId/publish` | Instructor | Publish / unpublish a course |
+| `POST` | `/lecture` | Instructor | Add a lecture to a course |
+| `PATCH` | `/lecture/:lectureId` | Instructor | Update lecture metadata |
+| `DELETE` | `/lecture/:lectureId` | Instructor | Delete a lecture |
+| `GET` | `/media/presigned-url` | Instructor | Get presigned S3 URL for video upload |
+| `POST` | `/payments/checkout` | Student | Create Stripe checkout session |
+| `POST` | `/payments/webhook` | — | Stripe webhook handler |
+| `GET` | `/progress/:courseId` | Student | Get course completion progress |
+| `POST` | `/progress/:courseId/:lectureId` | Student | Mark a lecture as watched |
+| `POST` | `/playback/heatmap` | Student | Submit watch-time heatmap data |
+| `GET` | `/comment/:lectureId` | ✓ | Fetch comments on a lecture |
+| `POST` | `/comment/:lectureId` | Student | Post a comment on a lecture |
+| `POST` | `/internal-rag/vectordb-processed` | Internal | RAG service callback: ingestion complete |
+| `PATCH` | `/internal/media/status` | Internal | Media worker callback: transcode complete |
+
+> **Internal routes** (`/internal*`) are protected by the `x-internal-secret` request header and are not intended to be called from the browser.
+
+---
+
+## Testing
+
+The test suite uses **Vitest** and **Supertest** against an in-memory MongoDB instance — no live database required.
+
+```bash
+# Run all tests (standalone — uses mongodb-memory-server)
+cd backend
 bun run test
-```
 
-To run in watch mode:
-```bash
-bun x vitest
-```
-
-### 3. Tear down the Test Databases
-```bash
+# Start isolated test containers first (if tests need a live Redis instance)
+bun run test:docker:up
+bun run test
 bun run test:docker:down
 ```
 
+See [`README_TESTS.md`](./README_TESTS.md) for a full breakdown of test coverage and conventions.
+
 ---
 
-## 🐳 Docker
+## Environment Variable Reference
 
-Build and run the backend as a container:
+| Variable | Required | Description |
+|---|---|---|
+| `PORT` | Yes | Server port (default: `3000`) |
+| `NODE_ENV` | Yes | `development` or `production` |
+| `MONGO_URI` | Yes | MongoDB connection string |
+| `JWT_SECRET` | Yes | Secret key for signing JWTs |
+| `RESETPASSWORDTOKENEXPIRY` | Yes | Token expiry in ms (e.g. `3600000` = 60 min) |
+| `AWS_REGION` | Yes | AWS region (e.g. `ap-south-1`) |
+| `AWS_ACCESS_KEY_ID` | Yes | AWS / LocalStack access key |
+| `AWS_SECRET_ACCESS_KEY` | Yes | AWS / LocalStack secret |
+| `S3_BUCKET_NAME` | Yes | S3 bucket for media uploads |
+| `INTERNAL_API_SECRET` | Yes | Shared secret for internal service-to-service calls |
+| `AWS_ENDPOINT_URL` | Local only | LocalStack endpoint (e.g. `http://localhost:4566`) |
+| `S3_PUBLIC_BASE_URL` | Local only | Public URL base for LocalStack-served S3 objects |
+| `STRIPE_PUBLISHABLE_KEY` | Yes | Stripe publishable key |
+| `STRIPE_SECRET_KEY` | Yes | Stripe secret key |
+| `STRIPE_WEBHOOK_SECRET` | Yes | Stripe webhook signing secret |
+
+| `REDIS_HOST_NAME` | Yes | Redis host (`redis` in Docker, `localhost` standalone) |
+| `REDIS_PORT` | Yes | Redis port (default: `6379`) |
+| `REDIS_PASSWORD` | Yes | Redis password |
+| `CACHE_CONTENT_EXPIRATION_DUR` | Yes | Course cache TTL in ms (e.g. `600000` = 10 min) |
+| `FRONTEND_URL` | Yes | Allowed CORS origin for the frontend |
+| `RAG_SERVER_URL` | Yes | RAG service base URL (e.g. `http://localhost:8000`) |
+| `SMTP_HOST` | Yes | SMTP server host |
+| `SMTP_PORT` | Yes | SMTP server port (default: `587`) |
+| `SMTP_USER` | Yes | SMTP username / email address |
+| `SMTP_PASS` | Yes | SMTP password or app password |
+
+---
+
+## Usage Examples
+
+### Upload a Lecture Video
 
 ```bash
-docker build -t edunode-backend .
-docker run --env-file .env -p 3000:3000 edunode-backend
+# Step 1: Request a presigned S3 PUT URL from the backend
+curl -X GET \
+  "http://localhost:3000/api/v1/media/presigned-url?lectureId=<lectureId>&fileName=lecture.mp4" \
+  -H "Cookie: token=<your_jwt>"
+
+# Step 2: Upload the video file directly to S3 using the returned URL
+curl -X PUT "<presigned_url_from_step_1>" \
+  -H "Content-Type: video/mp4" \
+  --data-binary @./lecture.mp4
 ```
 
-Or use Docker Compose from the project root — see the [root README](../README.md).
+Once the upload completes, S3 fires the `s3-upload-trigger` Lambda → Lambda sends a message to the SQS queue → the Python media worker picks it up, transcodes the video with FFmpeg, uploads the processed output back to S3, and calls `PATCH /api/v1/internal/media/status` to mark the lecture as `PROCESSED`.
 
 ---
 
-## 📡 API Endpoints
+### Query a Lecture with AI (RAG)
 
-### Authentication
-| Method | Endpoint                    | Auth | Description                |
-|--------|-----------------------------|------|----------------------------|
-| POST   | `/api/v1/users/signup`      | ✗    | Register a new user        |
-| POST   | `/api/v1/users/signin`      | ✗    | Log in                     |
-| GET    | `/api/v1/users/signout`     | ✓    | Log out                    |
-| GET    | `/api/v1/users/me`          | ✓    | Get current user           |
-| PATCH  | `/api/v1/users/update`      | ✓    | Update profile             |
-| POST   | `/api/v1/users/forgot-password` | ✗ | Request password reset     |
-| POST   | `/api/v1/users/reset-password`  | ✗ | Reset password with token  |
+Once a lecture has been processed and its transcript indexed into the vector store:
 
-### Courses
-| Method | Endpoint                                  | Auth | Description                     |
-|--------|-------------------------------------------|------|---------------------------------|
-| GET    | `/api/v1/courses`                         | ✗    | List published courses          |
-| POST   | `/api/v1/courses`                         | ✓    | Create a course                 |
-| GET    | `/api/v1/courses/c/:courseId`             | ✗    | Get course details              |
-| PATCH  | `/api/v1/courses/c/:courseId`             | ✓    | Update course                   |
-| POST   | `/api/v1/courses/c/:courseId/lectures`    | ✓    | Add lecture (signature verified) |
-| GET    | `/api/v1/courses/c/:courseId/lectures`    | ✓    | Get course lectures             |
+```bash
+curl -X POST \
+  "http://localhost:3000/api/v1/internal-rag/chat/<courseId>/<lectureId>" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: token=<your_jwt>" \
+  -d '{ "query": "What is the difference between supervised and unsupervised learning?" }'
+```
 
-### Payments
-| Method | Endpoint                          | Auth | Description                   |
-|--------|-----------------------------------|------|-------------------------------|
-| POST   | `/api/v1/payments/checkout`       | ✓    | Create Stripe checkout        |
-| POST   | `/api/v1/payments/webhook`        | ✗    | Stripe webhook (raw body)     |
-| GET    | `/api/v1/payments/status/:courseId`| ✓    | Purchase status               |
-
-### Playback & Progress
-| Method | Endpoint                           | Auth | Description                  |
-|--------|------------------------------------|------|------------------------------|
-| GET    | `/api/v1/playback/resume`          | ✓    | Resume position              |
-| POST   | `/api/v1/playback/sync`            | ✓    | Sync progress to Redis cache |
-| GET    | `/api/v1/playback/heatmap/:lectureId`| ✓  | Lecture heatmap data         |
-| GET    | `/api/v1/progress/:courseId`       | ✓    | Course progress              |
-
-### RAG (AI Chat)
-| Method | Endpoint                                  | Auth | Description                      |
-|--------|-------------------------------------------|------|----------------------------------|
-| POST   | `/api/v1/internal-rag/chat`               | ✓    | Ask AI about lecture content     |
-| GET    | `/api/v1/internal-rag/chat-history/:courseId/:lectureId` | ✓    | Get chat history for a lecture |
-| POST   | `/api/v1/internal-rag/vectordb-processed` | ✗    | Processing status callback (internal) |
+The backend proxies the request to the RAG service, which performs a similarity search over the lecture transcript embeddings and returns a grounded, context-aware answer.
 
 ---
 
-## 📄 License
+### Purchase a Course
 
-This project is for educational purposes.
+```bash
+# Step 1: Create a Stripe checkout session
+curl -X POST \
+  "http://localhost:3000/api/v1/payments/checkout" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: token=<your_jwt>" \
+  -d '{ "courseId": "<courseId>" }'
+
+# The response includes a Stripe-hosted checkout URL.
+# After successful payment, Stripe calls the webhook at:
+#   POST /api/v1/payments/webhook
+# which enrolls the student in the course and dispatches a confirmation email.
+```

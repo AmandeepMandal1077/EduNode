@@ -69,7 +69,8 @@ describe("Playback & Heatmap Controller Unit-Style Tests", () => {
       description: "Desc",
       videoUrl: "https://example.com/v.mp4",
       courseId: course._id,
-      publicId: "playback-lecture-public-id",
+      s3Key: "playback/lecture/key.mp4",
+      uploadSessionId: "playback-upload-session-id",
     });
     lectureId = lecture._id.toString();
   });
