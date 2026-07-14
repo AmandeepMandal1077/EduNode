@@ -1,0 +1,26 @@
+services:
+  rag-service:
+    build: .
+    ports:
+      - "${PYTHON_PORT:-8000}:8000"
+    volumes:
+      - rag_videos:/app/videos
+      - rag_transcribe:/app/transcribe
+      - chroma_db:/app/chroma_db
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  rag_videos:
+  rag_transcribe:
+  chroma_db:
+  ollama_data:
