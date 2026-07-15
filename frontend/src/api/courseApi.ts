@@ -1,8 +1,4 @@
-
-
 import apiClient from "./client";
-
-
 
 export interface BackendLecture {
   _id: string;
@@ -32,12 +28,14 @@ export interface BackendCourse {
   level: "beginner" | "intermediate" | "advance";
   price: number;
   thumbnail: string;
-  instructor: {
-    _id: string;
-    name: string;
-    bio?: string;
-    avatar?: string;
-  } | string;
+  instructor:
+    | {
+        _id: string;
+        name: string;
+        bio?: string;
+        avatar?: string;
+      }
+    | string;
   enrolledStudents: BackendEnrolledStudent[];
   lectures: string[] | BackendLecture[];
   announcements: string[];
@@ -55,8 +53,6 @@ export interface BackendAnnouncement {
   message: string;
   sentAt: string;
 }
-
-
 
 /**
  * @desc Fetch all published courses.
@@ -86,7 +82,7 @@ export async function fetchCategories(): Promise<string[]> {
  */
 export async function fetchSearchCourses(
   query?: string,
-  category?: string
+  category?: string,
 ): Promise<BackendCourse[]> {
   const params: Record<string, string> = {};
   if (query) params.searchString = query;
@@ -100,7 +96,9 @@ export async function fetchSearchCourses(
  * @input {string} courseId - The ID of the course.
  * @output {Promise<BackendCourse>} The course details.
  */
-export async function fetchCourseDetails(courseId: string): Promise<BackendCourse> {
+export async function fetchCourseDetails(
+  courseId: string,
+): Promise<BackendCourse> {
   const res = await apiClient.get(`/courses/${courseId}`);
   return res.data?.data?.course ?? res.data?.course;
 }
@@ -110,7 +108,9 @@ export async function fetchCourseDetails(courseId: string): Promise<BackendCours
  * @input {string} courseId - The ID of the course.
  * @output {Promise<BackendLecture[]>} List of lectures.
  */
-export async function fetchCourseLectures(courseId: string): Promise<BackendLecture[]> {
+export async function fetchCourseLectures(
+  courseId: string,
+): Promise<BackendLecture[]> {
   const res = await apiClient.get(`/courses/${courseId}/lectures`);
   const data = res.data?.data?.lectures ?? res.data?.lectures;
   if (Array.isArray(data)) return data;
@@ -131,7 +131,9 @@ export interface BackendProcessingLecture {
  * @input {string} courseId - The ID of the course.
  * @output {Promise<BackendProcessingLecture[]>} List of processing lectures.
  */
-export async function fetchProcessingLectures(courseId: string): Promise<BackendProcessingLecture[]> {
+export async function fetchProcessingLectures(
+  courseId: string,
+): Promise<BackendProcessingLecture[]> {
   const res = await apiClient.get(`/courses/${courseId}/lectures/processing`);
   return res.data?.data?.lectures ?? res.data?.lectures ?? [];
 }
@@ -140,14 +142,16 @@ export async function fetchProcessingLectures(courseId: string): Promise<Backend
  * @desc Post a new announcement for a course.
  * @input {string} courseId - The ID of the course.
  * @input {string} message - The announcement message.
- * @output {Promise<BackendAnnouncement>} The created announcement.
+ * @output {Promise<BackendCourse>} The updated course.
  */
 export async function postAnnouncement(
   courseId: string,
-  message: string
-): Promise<BackendAnnouncement> {
-  const res = await apiClient.post(`/courses/${courseId}/announce`, { message });
-  return res.data?.data?.announcement ?? res.data?.announcement;
+  message: string,
+): Promise<BackendCourse> {
+  const res = await apiClient.post(`/courses/${courseId}/announce`, {
+    message,
+  });
+  return res.data?.data?.course ?? res.data?.course;
 }
 
 /**
@@ -197,7 +201,9 @@ export async function fetchPurchasedCoursesNew(): Promise<BackendCourse[]> {
  * @input {string} courseId - The ID of the course.
  * @output {Promise<BackendAnnouncement[]>} List of announcements.
  */
-export async function fetchCourseAnnouncements(courseId: string): Promise<BackendAnnouncement[]> {
+export async function fetchCourseAnnouncements(
+  courseId: string,
+): Promise<BackendAnnouncement[]> {
   const res = await apiClient.get(`/courses/${courseId}/announcements`);
   return res.data?.data?.announcements ?? res.data?.announcements ?? [];
 }
@@ -229,7 +235,7 @@ export async function apiUpdateCourseDetails(
     price?: number;
     thumbnail?: string;
     isPublished?: boolean;
-  }
+  },
 ): Promise<BackendCourse> {
   const res = await apiClient.patch(`/courses/${courseId}`, data);
   return res.data?.data?.course ?? res.data?.course;
@@ -251,7 +257,7 @@ export interface AddLectureRequest {
  */
 export async function apiAddLecture(
   courseId: string,
-  data: AddLectureRequest
+  data: AddLectureRequest,
 ): Promise<any> {
   const res = await apiClient.post(`/courses/${courseId}/lectures`, data);
   return res.data?.data;
@@ -272,7 +278,10 @@ export async function apiDeleteLecture(lectureId: string): Promise<void> {
  * @input {number} rating - The rating value.
  * @output {Promise<any>} The response data.
  */
-export async function apiRateCourse(courseId: string, rating: number): Promise<any> {
+export async function apiRateCourse(
+  courseId: string,
+  rating: number,
+): Promise<any> {
   const res = await apiClient.post(`/courses/${courseId}/rate`, { rating });
   return res.data;
 }

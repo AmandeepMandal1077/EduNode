@@ -28,7 +28,10 @@ export type TMediaUploadModel = mongoose.Model<
   IMediaUploadVirtuals
 >;
 
-export type TMediaUploadDoc = HydratedDocument<IMediaUpload, IMediaUploadMethods>;
+export type TMediaUploadDoc = HydratedDocument<
+  IMediaUpload,
+  IMediaUploadMethods
+>;
 
 const mediaUploadSchema = new mongoose.Schema<
   IMediaUpload,
@@ -76,14 +79,13 @@ const mediaUploadSchema = new mongoose.Schema<
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-mediaUploadSchema.index({ uploadSessionId: 1 });
 mediaUploadSchema.index({ entityType: 1, entityId: 1 });
 mediaUploadSchema.index({ status: 1, presignedUrlExpiresAt: 1 });
 
 export const MediaUpload = mongoose.model<IMediaUpload, TMediaUploadModel>(
   "MediaUpload",
-  mediaUploadSchema
+  mediaUploadSchema,
 );

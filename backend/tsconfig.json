@@ -36,5 +36,5 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "exclude": ["tests", "vitest.config.ts"]
+  "exclude": ["tests", "vitest.config.ts", "seed.ts"]
 }

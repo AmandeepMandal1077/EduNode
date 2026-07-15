@@ -26,11 +26,8 @@ export interface CoursePurchaseStatus {
 }
 
 export interface CheckoutSession {
-  sessionId: string;
   url: string;
 }
-
-
 
 /**
  * @desc Fetch all purchases completed by the logged-in user.
@@ -48,9 +45,11 @@ export async function fetchPurchasedCourses(): Promise<PurchaseRecord[]> {
  * @output {Promise<CoursePurchaseStatus>} The purchase status data.
  */
 export async function fetchCoursePurchaseStatus(
-  courseId: string
+  courseId: string,
 ): Promise<CoursePurchaseStatus> {
-  const res = await apiClient.get(`/payments/course/${courseId}/detail-with-status`);
+  const res = await apiClient.get(
+    `/payments/course/${courseId}/detail-with-status`,
+  );
   return res.data?.data ?? res.data;
 }
 
@@ -60,9 +59,11 @@ export async function fetchCoursePurchaseStatus(
  * @output {Promise<CheckoutSession>} The checkout session details.
  */
 export async function createCheckoutSession(
-  courseId: string
+  courseId: string,
 ): Promise<CheckoutSession> {
-  const res = await apiClient.post("/payments/create-checkout-session", { courseId });
+  const res = await apiClient.post("/payments/create-checkout-session", {
+    courseId,
+  });
   return res.data?.data ?? res.data;
 }
 
@@ -81,9 +82,11 @@ export async function enrollFreeCourse(courseId: string): Promise<void> {
  * @output {Promise<{ paid: boolean; purchase: PurchaseRecord }>} The verification result.
  */
 export async function verifyCheckoutSession(
-  sessionId: string
+  sessionId: string,
 ): Promise<{ paid: boolean; purchase: PurchaseRecord }> {
-  const res = await apiClient.post(`/payments/checkout/verify`, { session_id: sessionId });
+  const res = await apiClient.post(`/payments/checkout/verify`, {
+    session_id: sessionId,
+  });
   return res.data?.data ?? res.data;
 }
 

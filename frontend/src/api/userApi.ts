@@ -1,4 +1,3 @@
-
 import apiClient from "./client";
 
 export interface BackendUser {
@@ -15,19 +14,25 @@ export interface BackendUser {
   updatedAt: string;
 }
 
+export interface SignupResponse {
+  email: string;
+}
 
+export interface SigninResponse {
+  token: string;
+}
 
 /**
  * @desc Register a new user account on the server.
  * @input {Object} body - Contains name, email, password, and optional role.
- * @output {Promise<{ user: BackendUser }>} The created user data.
+ * @output {Promise<SignupResponse>} The created user data.
  */
 export async function apiSignup(body: {
   name: string;
   email: string;
   password: string;
   role?: string;
-}): Promise<{ user: BackendUser }> {
+}): Promise<SignupResponse> {
   const res = await apiClient.post("/users/signup", body);
   return res.data?.data ?? res.data;
 }
@@ -35,13 +40,13 @@ export async function apiSignup(body: {
 /**
  * @desc Authenticate a user with email and password.
  * @input {Object} body - Contains email, password, and optional role.
- * @output {Promise<{ user: BackendUser }>} The authenticated user data.
+ * @output {Promise<SigninResponse>} The authenticated user data.
  */
 export async function apiSignin(body: {
   email: string;
   password: string;
   role?: string;
-}): Promise<{ user: BackendUser }> {
+}): Promise<SigninResponse> {
   const res = await apiClient.post("/users/signin", body);
   return res.data?.data ?? res.data;
 }
@@ -54,8 +59,6 @@ export async function apiSignin(body: {
 export async function apiSignout(): Promise<void> {
   await apiClient.post("/users/signout");
 }
-
-
 
 /**
  * @desc Fetch the authenticated user's profile details.
@@ -73,7 +76,7 @@ export async function apiGetProfile(): Promise<BackendUser> {
  * @output {Promise<BackendUser>} The updated user profile.
  */
 export async function apiUpdateProfile(
-  body: { name?: string; bio?: string } | FormData
+  body: { name?: string; bio?: string } | FormData,
 ): Promise<BackendUser> {
   const isFormData = body instanceof FormData;
   const res = await apiClient.patch("/users/profile", body, {
@@ -81,8 +84,6 @@ export async function apiUpdateProfile(
   });
   return res.data?.data?.user ?? res.data?.user;
 }
-
-
 
 /**
  * @desc Change the authenticated user's password.
@@ -116,8 +117,6 @@ export async function apiResetPassword(body: {
 }): Promise<void> {
   await apiClient.post("/users/reset-password", body);
 }
-
-
 
 /**
  * @desc Delete the authenticated user's account permanently.

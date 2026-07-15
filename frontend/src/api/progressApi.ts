@@ -1,4 +1,3 @@
-
 import apiClient from "./client";
 
 export interface LectureProgressEntry {
@@ -10,9 +9,6 @@ export interface LectureProgressEntry {
 }
 
 export interface CourseProgressResponse {
-  _id: string;
-  user: string;
-  course: string;
   isCompleted: boolean;
   completionPercentage: number;
   lectureProgress: LectureProgressEntry[];
@@ -24,20 +20,21 @@ export interface HeatmapSegment {
   secondsWatched: number;
 }
 
-
-
 /**
  * @desc Fetch progress for a specific course by its ID.
  * @input {string} courseId - The ID of the course.
  * @output {Promise<CourseProgressResponse | null>} Course progress details or null.
  */
 export async function fetchCourseProgress(
-  courseId: string
+  courseId: string,
 ): Promise<CourseProgressResponse | null> {
   try {
     const res = await apiClient.get(`/progress/${courseId}`);
     const data = res.data?.data ?? res.data;
-    if (data && (data.lectureProgress || data.completionPercentage !== undefined)) {
+    if (
+      data &&
+      (data.lectureProgress || data.completionPercentage !== undefined)
+    ) {
       return data;
     }
     return data?.progress ?? null;
@@ -56,7 +53,7 @@ export async function fetchCourseProgress(
 export async function updateLectureProgress(
   courseId: string,
   lectureId: string,
-  payload: { isCompleted: boolean; lastWatchedPosition: number }
+  payload: { isCompleted: boolean; lastWatchedPosition: number },
 ): Promise<void> {
   await apiClient.patch(`/progress/${courseId}/lectures/${lectureId}`, payload);
 }
@@ -78,8 +75,6 @@ export async function markCourseCompleted(courseId: string): Promise<void> {
 export async function resetCourseProgress(courseId: string): Promise<void> {
   await apiClient.patch(`/progress/${courseId}/reset`);
 }
-
-
 
 /**
  * @desc Sync current video playback position to Redis cache.
@@ -104,7 +99,7 @@ export async function syncPlaybackPosition(payload: {
  */
 export async function fetchLastWatchPosition(
   lectureId: string,
-  courseId: string
+  courseId: string,
 ): Promise<number> {
   try {
     const res = await apiClient.get("/playback/sync", {
@@ -122,7 +117,7 @@ export async function fetchLastWatchPosition(
  * @output {Promise<HeatmapSegment[]>} List of heatmap segments.
  */
 export async function fetchLectureHeatmap(
-  lectureId: string
+  lectureId: string,
 ): Promise<HeatmapSegment[]> {
   try {
     const res = await apiClient.get(`/playback/heatmap/${lectureId}`);
