@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { verifyCheckoutSession, type PurchaseRecord } from "@/api/purchaseApi";
 import { getErrorMessage } from "@/utils/getErrorMessage";
+import debug from "@/utils/debug";
 
 export function useSuccess() {
   const [searchParams] = useSearchParams();
@@ -35,7 +36,7 @@ export function useSuccess() {
           throw new Error("Could not verify session.");
         }
       } catch (err: unknown) {
-        console.error("Verification error:", err);
+        debug("Verification error:", err);
         setError(getErrorMessage(err, "Unable to verify your payment status. Please contact support if your account was charged."));
       } finally {
         setLoading(false);

@@ -9,6 +9,7 @@ import { updateUser } from "@/services/userService";
 import { requestAndUpload, waitForUploadReady } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { User } from "@/types";
+import debug from "@/utils/debug";
 
 interface ProfileGeneralTabProps {
   user: User | null;
@@ -58,7 +59,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      console.error(err);
+      debug(err);
       setGeneralError("Failed to save changes. Please try again.");
     } finally {
       setSaving(false);
@@ -125,7 +126,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
                   setGeneralError(`Upload failed with status: ${statusObj.status}`);
                 }
               } catch (err: unknown) {
-                console.error(err);
+                debug(err);
                 setGeneralError(getErrorMessage(err));
               } finally {
                 setUploadingAvatar(false);

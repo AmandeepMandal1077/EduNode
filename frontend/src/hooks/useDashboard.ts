@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getEnrolledCourses, getMyAnnouncements } from "@/services/courseService";
 import { getCurrentUser } from "@/services/userService";
 import type { User, EnrolledCourse } from "@/types";
+import debug from "@/utils/debug";
 
 export interface DashboardAnnouncement {
   id: string;
@@ -39,7 +40,7 @@ export function useDashboard() {
         });
         setAnnouncements(mappedAnnouncements);
       } catch (err) {
-        console.error("Failed to fetch announcements:", err);
+        debug("Failed to fetch announcements:", err);
       }
 
       setLoading(false);

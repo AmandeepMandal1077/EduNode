@@ -6,6 +6,7 @@ import type { RootState } from "@/store";
 import type { Course } from "@/types";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { useNavigate } from "react-router-dom";
+import debug from "@/utils/debug";
 
 export function useCourseDetails(id: string | undefined) {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export function useCourseDetails(id: string | undefined) {
       const updated = await getCourseById(course.id);
       setCourse(updated);
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       setRatingError(getErrorMessage(err, "Failed to submit rating."));
     }
   };
@@ -80,7 +81,7 @@ export function useCourseDetails(id: string | undefined) {
         throw new Error("Failed to retrieve checkout session url.");
       }
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       alert(getErrorMessage(err, "Failed to initiate enrollment. Please try again."));
     } finally {
       setEnrolling(false);

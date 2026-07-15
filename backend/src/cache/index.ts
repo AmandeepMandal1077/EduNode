@@ -1,5 +1,6 @@
 import { createClient } from "redis";
 import dotenv from "dotenv";
+import debug from "../utils/debug.js";
 dotenv.config();
 
 const cache = createClient({
@@ -13,7 +14,7 @@ const cacheConnect = async () => {
   try {
     await cache.connect();
   } catch (error) {
-    console.error("Redis connection error:", error);
+    debug("Redis connection error:", error);
     throw error;
   }
 };
@@ -21,19 +22,19 @@ const cacheConnect = async () => {
 cacheConnect();
 
 cache.on("ready", () => {
-  console.log("Redis connected");
+  debug("Redis connected");
 });
 cache.on("connect", () => {
-  console.log("Redis connecting");
+  debug("Redis connecting");
 });
 cache.on("end", () => {
-  console.log("Redis disconnected");
+  debug("Redis disconnected");
 });
 cache.on("reconnecting", () => {
-  console.log("Redis reconnecting");
+  debug("Redis reconnecting");
 });
 cache.on("error", (err) => {
-  console.error("Redis connection error:", err);
+  debug("Redis connection error:", err);
 });
 
 export default cache;

@@ -1,5 +1,6 @@
 import { Redis } from "ioredis";
 import dotenv from "dotenv";
+import debug from "../utils/debug.js";
 dotenv.config();
 
 const queueRedis = new Redis(
@@ -10,10 +11,10 @@ const queueRedis = new Redis(
 );
 
 queueRedis.on("connect", () => {
-  console.log("Queue Redis connected");
+  debug("Queue Redis connected");
 });
 
 queueRedis.on("error", (err) => {
-  console.error("Queue Redis connection error:", err);
+  debug("Queue Redis connection error:", err);
 });
 export default queueRedis;

@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
+import debug from "../utils/debug.js";
 
 export const internalAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const secret = req.headers["x-internal-secret"];
 
   if (!process.env.INTERNAL_API_SECRET) {
-    console.error("INTERNAL_API_SECRET is not configured");
+    debug("INTERNAL_API_SECRET is not configured");
     res.status(500).json({ success: false, message: "Internal server error" });
     return;
   }

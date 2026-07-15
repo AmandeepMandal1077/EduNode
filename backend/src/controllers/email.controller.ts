@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { sendAnnouncementMailToUser } from "../utils/email.js";
+import debug from "../utils/debug.js";
 
 /**
  * @desc Sends an announcement email to a user.
@@ -17,7 +18,7 @@ export const sendEmailController = asyncHandler(
         message: "Email sent successfully",
       });
     } catch (error) {
-      console.error("Error sending email:", error);
+      debug("Error sending email:", error);
       res.status(500).json({
         success: false,
         message: "Failed to send email",

@@ -3,10 +3,7 @@ import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-# Silence all print() output in production
-if os.getenv("PYTHON_ENV") == "production":
-    import builtins
-    builtins.print = lambda *args, **kwargs: None
+from debug import debug
 
 import urllib
 import urllib.request
@@ -59,7 +56,7 @@ async def ingest_video(data: IngestData):
         if os.path.exists(path):
           os.remove(path)
       except Exception as e:
-        print(f"Error removing temporary file {path}: {e}")
+        debug(f"Error removing temporary file {path}: {e}")
 
   return {
     "message": "Ingestion completed successfully",

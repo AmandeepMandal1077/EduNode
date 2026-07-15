@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getMyCreatedCourses } from "@/services/courseService";
 import type { Course } from "@/types";
+import debug from "@/utils/debug";
 
 export function useInstructorCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -14,7 +15,7 @@ export function useInstructorCourses() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error(err);
+        debug(err);
         setError("Failed to load your created courses. Please refresh the page.");
         setLoading(false);
       });

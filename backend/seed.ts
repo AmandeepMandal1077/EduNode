@@ -1,3 +1,4 @@
+import debug from './src/utils/debug.js';
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
  * ║                    GENESIS PROMPT (AI-Generated File)                   ║
@@ -161,7 +162,7 @@ const makeCourseTitle = (cat: string) => {
 };
 
 // ─── Pre-compute bcrypt hash once (avoids 60 individual hashes) ───────────────
-console.log("Pre-computing password hash...");
+debug("Pre-computing password hash...");
 const SHARED_HASH = await bcrypt.hash("Seeded@123", 10);
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -169,17 +170,17 @@ const SHARED_HASH = await bcrypt.hash("Seeded@123", 10);
 // ══════════════════════════════════════════════════════════════════════════════
 async function seed() {
   const MONGO_URI = process.env.MONGO_URI;
-  if (!MONGO_URI) { console.error("ERROR: MONGO_URI missing in .env"); process.exit(1); }
+  if (!MONGO_URI) { debug("ERROR: MONGO_URI missing in .env"); process.exit(1); }
 
-  console.log("Connecting to MongoDB...");
+  debug("Connecting to MongoDB...");
   await mongoose.connect(MONGO_URI, { family: 4, serverSelectionTimeoutMS: 5000 });
-  console.log("Connected!\n");
+  debug("Connected!\n");
 
   const db = mongoose.connection.db!;
   const now = new Date();
 
   // ── Step 0: Wipe all target collections ─────────────────────────────────────
-  console.log("Clearing existing collections...");
+  debug("Clearing existing collections...");
   await Promise.all([
     db.collection("users").deleteMany({}),
     db.collection("courses").deleteMany({}),
@@ -190,12 +191,12 @@ async function seed() {
     db.collection("comments").deleteMany({}),
     db.collection("lectureheatmaps").deleteMany({}),
   ]);
-  console.log("Done.\n");
+  debug("Done.\n");
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 1 — Users
   // ════════════════════════════════════════════════════════════════════════════
-  console.log(`Seeding ${CFG.NUM_INSTRUCTORS} instructors + ${CFG.NUM_STUDENTS} students...`);
+  debug(`Seeding ${CFG.NUM_INSTRUCTORS} instructors + ${CFG.NUM_STUDENTS} students...`);
 
   const makeUser = (role: string) => ({
     name: faker.person.fullName().slice(0, 50),
@@ -247,12 +248,12 @@ async function seed() {
   const instructorIds = Object.values(instrResult.insertedIds) as Types.ObjectId[];
   const studentIds = Object.values(studResult.insertedIds) as Types.ObjectId[];
   const allUserIds = [...instructorIds, ...studentIds];
-  console.log(`  Created ${allUserIds.length} users.\n`);
+  debug(`  Created ${allUserIds.length} users.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 2 — Courses
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding courses...");
+  debug("Seeding courses...");
 
   const seenCourseSlugs = new Set<string>();
   const courseDocs: Array<Record<string, unknown>> = [];
@@ -292,12 +293,12 @@ async function seed() {
 
   const courseResult = await db.collection("courses").insertMany(courseDocs, { ordered: false });
   const courseIds = Object.values(courseResult.insertedIds) as Types.ObjectId[];
-  console.log(`  Created ${courseIds.length} courses.\n`);
+  debug(`  Created ${courseIds.length} courses.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 3 — Lectures
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding lectures...");
+  debug("Seeding lectures...");
 
   // lectureIndex: courseId (string) → [{_id, duration}]
   const lectureIndex = new Map<string, { _id: Types.ObjectId; duration: number }[]>();
@@ -355,12 +356,12 @@ async function seed() {
   }
 
   const totalLectures = [...lectureIndex.values()].reduce((s, a) => s + a.length, 0);
-  console.log(`  Created ${totalLectures} lectures.\n`);
+  debug(`  Created ${totalLectures} lectures.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 4 — Announcements  (raw insert; skips BullMQ post-save hook)
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding announcements...");
+  debug("Seeding announcements...");
 
   const annBatch: object[] = [];
   const annCounts: { courseId: Types.ObjectId; count: number }[] = [];
@@ -391,12 +392,12 @@ async function seed() {
     }
     annOffset += count;
   }
-  console.log(`  Created ${annIds.length} announcements.\n`);
+  debug(`  Created ${annIds.length} announcements.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 5 — Purchases & Enrollments
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding purchases and enrollments...");
+  debug("Seeding purchases and enrollments...");
 
   // enrollmentMap: studentId (string) → [courseId, ...]
   const enrollmentMap = new Map<string, Types.ObjectId[]>();
@@ -444,12 +445,12 @@ async function seed() {
   }
 
   await db.collection("coursepurchases").insertMany(purchaseBatch, { ordered: false });
-  console.log(`  Created ${purchaseBatch.length} purchase records.\n`);
+  debug(`  Created ${purchaseBatch.length} purchase records.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 6 — CourseProgress
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding course progress records...");
+  debug("Seeding course progress records...");
 
   const progressBatch: object[] = [];
 
@@ -490,12 +491,12 @@ async function seed() {
   if (progressBatch.length) {
     await db.collection("courseprogresses").insertMany(progressBatch, { ordered: false });
   }
-  console.log(`  Created ${progressBatch.length} progress records.\n`);
+  debug(`  Created ${progressBatch.length} progress records.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 7 — Comments + Replies
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding comments...");
+  debug("Seeding comments...");
 
   const allLecIds = [...lectureIndex.values()].flatMap((a) => a.map((l) => l._id));
   const commentBatch: object[] = [];
@@ -548,12 +549,12 @@ async function seed() {
   if (replyBatch.length) {
     await db.collection("comments").insertMany(replyBatch, { ordered: false });
   }
-  console.log(`  Created ${commentBatch.length} top-level comments + ${replyBatch.length} replies.\n`);
+  debug(`  Created ${commentBatch.length} top-level comments + ${replyBatch.length} replies.\n`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // STEP 8 — LectureHeatmaps
   // ════════════════════════════════════════════════════════════════════════════
-  console.log("Seeding heatmap data...");
+  debug("Seeding heatmap data...");
 
   const heatmapBatch: object[] = [];
   for (const lecId of allLecIds) {
@@ -572,28 +573,28 @@ async function seed() {
   if (heatmapBatch.length) {
     await db.collection("lectureheatmaps").insertMany(heatmapBatch, { ordered: false });
   }
-  console.log(`  Created ${heatmapBatch.length} heatmap segments.\n`);
+  debug(`  Created ${heatmapBatch.length} heatmap segments.\n`);
 
   // ─── Final Summary ────────────────────────────────────────────────────────
-  console.log("═══════════════════════════════════════════════════════════");
-  console.log("  SEEDING COMPLETE");
-  console.log("═══════════════════════════════════════════════════════════");
-  console.log(`  Users            : ${allUserIds.length}  (${instructorIds.length} instructors / ${studentIds.length} students)`);
-  console.log(`  Courses          : ${courseIds.length}`);
-  console.log(`  Lectures         : ${totalLectures}`);
-  console.log(`  Announcements    : ${annIds.length}`);
-  console.log(`  Purchases        : ${purchaseBatch.length}`);
-  console.log(`  Progress records : ${progressBatch.length}`);
-  console.log(`  Comments         : ${commentBatch.length + replyBatch.length}  (incl. ${replyBatch.length} replies)`);
-  console.log(`  Heatmap segments : ${heatmapBatch.length}`);
-  console.log("═══════════════════════════════════════════════════════════");
-  console.log("\n  All seeded users can log in with:  Password: Seeded@123\n");
+  debug("═══════════════════════════════════════════════════════════");
+  debug("  SEEDING COMPLETE");
+  debug("═══════════════════════════════════════════════════════════");
+  debug(`  Users            : ${allUserIds.length}  (${instructorIds.length} instructors / ${studentIds.length} students)`);
+  debug(`  Courses          : ${courseIds.length}`);
+  debug(`  Lectures         : ${totalLectures}`);
+  debug(`  Announcements    : ${annIds.length}`);
+  debug(`  Purchases        : ${purchaseBatch.length}`);
+  debug(`  Progress records : ${progressBatch.length}`);
+  debug(`  Comments         : ${commentBatch.length + replyBatch.length}  (incl. ${replyBatch.length} replies)`);
+  debug(`  Heatmap segments : ${heatmapBatch.length}`);
+  debug("═══════════════════════════════════════════════════════════");
+  debug("\n  All seeded users can log in with:  Password: Seeded@123\n");
 
   await mongoose.disconnect();
   process.exit(0);
 }
 
 seed().catch((err) => {
-  console.error("\nSeeding failed:", err?.message ?? err);
+  debug("\nSeeding failed:", err?.message ?? err);
   mongoose.disconnect().finally(() => process.exit(1));
 });

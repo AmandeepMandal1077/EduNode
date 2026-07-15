@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course, Lecture } from "@/types";
 import type { BackendProcessingLecture } from "@/api/courseApi";
 import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
+import debug from "@/utils/debug";
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -92,7 +93,7 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
       // Immediately refresh processing list so the new lecture shows up
       await pollProcessingLectures();
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       setLectureGeneralError(getErrorMessage(err, "Failed to add lecture to course."));
     } finally {
       setAddingLecture(false);
@@ -106,7 +107,7 @@ export function CourseCurriculumTab({ courseId, course, loadCourseData }: Course
       await deleteLecture(lectureId);
       await loadCourseData();
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       alert(getErrorMessage(err, "Failed to delete lecture."));
     } finally {
       setDeletingLectureId(null);

@@ -11,6 +11,7 @@ import morgan from "morgan";
 import hpp from "hpp";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import debug from "./utils/debug.js";
 
 
 import healthCheckRouter from "./routes/health.routes.js";
@@ -113,7 +114,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 
 app.use((err: ApiError, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
+  debug(err.stack);
 
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({

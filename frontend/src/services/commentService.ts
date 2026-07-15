@@ -8,6 +8,7 @@ import {
   type BackendComment,
 } from "../api/commentApi";
 import type { Comment } from "../types";
+import debug from "../utils/debug";
 
 function mapComment(bc: BackendComment): Comment {
   const userId = typeof bc.userId === "string" ? bc.userId : bc.userId?._id ?? "";
@@ -80,7 +81,7 @@ export async function getCommentsForLecture(lectureId: string): Promise<GetComme
       dislikedCommentIds,
     };
   } catch (error) {
-    console.error("Failed to fetch lecture comments", error);
+    debug("Failed to fetch lecture comments", error);
     return {
       comments: [],
       likedCommentIds: [],

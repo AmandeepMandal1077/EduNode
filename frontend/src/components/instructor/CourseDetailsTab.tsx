@@ -8,6 +8,7 @@ import { updateCourse } from "@/services/courseService";
 import { requestAndUpload, waitForUploadReady } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course } from "@/types";
+import debug from "@/utils/debug";
 
 interface CourseDetailsTabProps {
   courseId: string;
@@ -70,7 +71,7 @@ export function CourseDetailsTab({ courseId, course, setCourse }: CourseDetailsT
       setSavedDetails(true);
       setTimeout(() => setSavedDetails(false), 2500);
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       setDetailsGeneralError(getErrorMessage(err, "Failed to update course details."));
     } finally {
       setSavingDetails(false);
@@ -223,7 +224,7 @@ export function CourseDetailsTab({ courseId, course, setCourse }: CourseDetailsT
                     setDetailsGeneralError(`Upload failed with status: ${statusObj.status}`);
                   }
                 } catch (err: unknown) {
-                  console.error(err);
+                  debug(err);
                   setDetailsGeneralError(getErrorMessage(err));
                 } finally {
                   setUploadingThumbnail(false);

@@ -12,6 +12,7 @@ import Stripe from "stripe";
 import { User } from "../models/user.model.js";
 import { CourseProgress } from "../models/courseProgress.model.js";
 import { ApiError } from "../utils/apiError.js";
+import debug from "../utils/debug.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
@@ -178,7 +179,7 @@ export const handleStripeWebhook = asyncHandler(
         webhookSecret,
       );
     } catch (err: unknown) {
-      console.error("Invalid webhook signature:", err instanceof Error ? err.message : "Unknown error");
+      debug("Invalid webhook signature:", err instanceof Error ? err.message : "Unknown error");
       return res.status(400).send();
     }
 

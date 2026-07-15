@@ -4,6 +4,7 @@ import { CacheKeys } from "../cache/keys.js";
 import { getHeatmapSegmentFromCache, invalidateHeatmapSegmentFromCache } from "../cache/lecture-heatmap-cache.js";
 import { LectureHeatmap } from "../models/lectureHeatmap.model.js";
 import mongoose from "mongoose";
+import debug from "../utils/debug.js";
 
 cron.schedule("*/5 * * * *", async () => {
     try {
@@ -55,6 +56,6 @@ cron.schedule("*/5 * * * *", async () => {
         }
 
     } catch (err: unknown) {
-        console.error("Error in syncHeatmaps cron", err);
+        debug("Error in syncHeatmaps cron", err);
     }
 });

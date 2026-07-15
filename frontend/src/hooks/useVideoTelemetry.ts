@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { syncPlaybackPosition, fetchLastWatchPosition } from "@/api/progressApi";
+import debug from "@/utils/debug";
 
 interface TelemetryOptions {
   courseId?: string;
@@ -59,7 +60,7 @@ export function useVideoTelemetry({
           lectureDuration: duration,
         });
       } catch (err) {
-        console.error("Telemetry sync failed", err);
+        debug("Telemetry sync failed", err);
       } finally {
         previousPosition.current = currentPosition;
       }

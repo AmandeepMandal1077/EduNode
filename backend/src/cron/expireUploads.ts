@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { Lecture, EUploadStatus } from "../models/lecture.model.js";
 import { MediaUpload, EMediaUploadStatus } from "../models/mediaUpload.model.js";
 import { deleteS3Object } from "../utils/s3.js";
+import debug from "../utils/debug.js";
 
 // Run every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
@@ -22,7 +23,7 @@ cron.schedule("*/5 * * * *", async () => {
     }
 
     if (expiredLectures.length > 0) {
-      console.log(`Expired ${expiredLectures.length} pending lecture uploads`);
+      debug(`Expired ${expiredLectures.length} pending lecture uploads`);
     }
 
     // 2. Expire MediaUploads
@@ -38,9 +39,9 @@ cron.schedule("*/5 * * * *", async () => {
     }
 
     if (expiredMedia.length > 0) {
-      console.log(`Expired ${expiredMedia.length} pending media uploads`);
+      debug(`Expired ${expiredMedia.length} pending media uploads`);
     }
   } catch (error) {
-    console.error("Error in expireUploads cron job:", error);
+    debug("Error in expireUploads cron job:", error);
   }
 });

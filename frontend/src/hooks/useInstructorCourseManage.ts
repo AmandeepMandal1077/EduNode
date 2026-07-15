@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getCourseById, updateCourse } from "@/services/courseService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course } from "@/types";
+import debug from "@/utils/debug";
 
 export function useInstructorCourseManage() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -20,7 +21,7 @@ export function useInstructorCourseManage() {
         setCourse(data);
       }
     } catch (err) {
-      console.error(err);
+      debug(err);
     } finally {
       setLoading(false);
     }
@@ -38,7 +39,7 @@ export function useInstructorCourseManage() {
       });
       setCourse(updated);
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       alert(getErrorMessage(err, "Failed to update publication status."));
     }
   };

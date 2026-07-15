@@ -8,6 +8,7 @@ import { Course } from "../models/course.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { v4 as uuidv4 } from "uuid";
 import type { AuthenticatedRequest } from "../types/user.js";
+import debug from "../utils/debug.js";
 import mongoose from "mongoose";
 import { getPublicUrl } from "../utils/s3.js";
 
@@ -212,7 +213,7 @@ export const updateMediaStatus = asyncHandler(async (req: Request, res: Response
   }
 
   if (error) {
-    console.error(`Lecture processing error for ${uploadSessionId || s3Key}:`, error);
+    debug(`Lecture processing error for ${uploadSessionId || s3Key}:`, error);
   }
 
   res.status(200).json({

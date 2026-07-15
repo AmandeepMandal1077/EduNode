@@ -1,7 +1,6 @@
 fastapi
 uvicorn
 python-dotenv
-pydantic-settings
 httpx
 langchain
 langchain-community
@@ -11,12 +10,7 @@ langchain-qdrant
 langchain-text-splitters
 langsmith
 qdrant-client
-sentence-transformers
-torch
-numpy
 faster-whisper
-motor
 chromadb
-pandas
 deepeval
 pytest-asyncio

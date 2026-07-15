@@ -1,4 +1,5 @@
 import os
+from debug import debug
 
 from langchain_ollama import OllamaEmbeddings
 
@@ -19,7 +20,7 @@ if PYTHON_ENV == "development":
         collection_name="test",
         persist_directory="./chroma_db",
     )
-    print("Using ChromaDB (development)")
+    debug("Using ChromaDB (development)")
 else:
     from langchain_qdrant import QdrantVectorStore
 
@@ -29,4 +30,4 @@ else:
         url=os.environ["QDRANT_URL"],
         api_key=os.environ["QDRANT_API_KEY"],
     )
-    print("Using Qdrant (production)")
+    debug("Using Qdrant (production)")

@@ -5,6 +5,7 @@ from req_schemas import QueryRequest
 from vectorstore import vector_store
 from model import ollama_llm
 from langsmith import traceable
+from debug import debug
 
 @traceable(name="query_pipeline")
 async def query(course_id: str, lecture_id: str, data: QueryRequest):
@@ -22,10 +23,10 @@ async def query(course_id: str, lecture_id: str, data: QueryRequest):
     )
 
     def format_docs(docs):
-        print(f"Retrieved {len(docs)} documents for course_id={course_id}, lecture_id={lecture_id}.")
-        print("Context retrieved:")
+        debug(f"Retrieved {len(docs)} documents for course_id={course_id}, lecture_id={lecture_id}.")
+        debug("Context retrieved:")
         for i, doc in enumerate(docs):
-            print(f"Chunk {i+1}: {doc.page_content[:100]}...")
+            debug(f"Chunk {i+1}: {doc.page_content[:100]}...")
         return "\n\n".join(doc.page_content for doc in docs)
 
     prompt = ChatPromptTemplate.from_messages([

@@ -8,6 +8,7 @@ import { getCourseAnnouncements } from "@/services/courseService";
 import { postAnnouncement, type BackendAnnouncement } from "@/api/courseApi";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
+import debug from "@/utils/debug";
 
 interface CourseAnnouncementsTabProps {
   courseId: string;
@@ -20,7 +21,7 @@ export function CourseAnnouncementsTab({ courseId }: CourseAnnouncementsTabProps
   const [annError, setAnnError] = useState("");
 
   useEffect(() => {
-    getCourseAnnouncements(courseId).then(setAnnouncements).catch(console.error);
+    getCourseAnnouncements(courseId).then(setAnnouncements).catch(debug);
   }, [courseId]);
 
   const handlePostAnnouncement = async (e: React.FormEvent) => {
@@ -42,7 +43,7 @@ export function CourseAnnouncementsTab({ courseId }: CourseAnnouncementsTabProps
       const annData = await getCourseAnnouncements(courseId);
       setAnnouncements(annData);
     } catch (err: unknown) {
-      console.error(err);
+      debug(err);
       setAnnError(getErrorMessage(err, "Failed to publish announcement."));
     } finally {
       setPostingAnn(false);

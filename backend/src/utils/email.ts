@@ -1,5 +1,6 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import dotenv from "dotenv";
+import debug from "./debug.js";
 import type { TEmailQueueJobData } from "../queue/email.queue.js";
 dotenv.config();
 
@@ -46,7 +47,7 @@ export async function sendEmail(options: TEmailOptions) {
   try {
     await transporter.sendMail(options);
   } catch (error) {
-    console.error("Error sending email:", error);
+    debug("Error sending email:", error);
   }
 }
 

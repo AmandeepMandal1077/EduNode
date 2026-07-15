@@ -2,6 +2,7 @@ import cron from "node-cron";
 import cache from "../cache/index.js";
 import { CacheKeys } from "../cache/keys.js";
 import { CourseProgress, type ILectureProgress } from "../models/courseProgress.model.js";
+import debug from "../utils/debug.js";
 
 cron.schedule("*/5 * * * *", async () => {
     try {
@@ -48,6 +49,6 @@ cron.schedule("*/5 * * * *", async () => {
         }
 
     } catch (err: unknown) {
-        console.error("Error in syncProgress cron", err);
+        debug("Error in syncProgress cron", err);
     }
 });

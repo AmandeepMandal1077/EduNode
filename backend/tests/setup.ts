@@ -194,9 +194,6 @@ vi.mock("nodemailer", () => {
 
 // Database Connection & Clean up Lifecycle
 beforeAll(async () => {
-  vi.spyOn(console, "log").mockImplementation(() => {});
-  vi.spyOn(console, "error").mockImplementation(() => {});
-
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(process.env.MONGO_URI!);
   }

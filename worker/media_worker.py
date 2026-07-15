@@ -9,10 +9,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Silence all print() output in production
-if os.getenv("PYTHON_ENV") == "production":
-    import builtins
-    builtins.print = lambda *args, **kwargs: None
+from debug import debug
 
 AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
 S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
@@ -42,11 +39,11 @@ def update_backend_status(s3_key, status, video_url=None, duration=None, error=N
     try:
         response = requests.patch(f"{BACKEND_URL}/api/v1/internal/media/status", json=payload, headers=headers)
         response.raise_for_status()
-        print(f"Backend updated to {status} for {s3_key}")
+        debug(f"Backend updated to {status} for {s3_key}")
     except requests.exceptions.RequestException as e:
-        print(f"Failed to update backend status: {e}")
+        debug(f"Failed to update backend status: {e}")
         if hasattr(e, 'response') and e.response is not None:
-            print(f"Backend response: {e.response.text}")
+            debug(f"Backend response: {e.response.text}")
         raise
 
 def get_video_duration(filepath):
@@ -57,7 +54,7 @@ def get_video_duration(filepath):
         )
         return int(round(float(result.stdout.strip())))
     except Exception as e:
-        print(f"Error getting duration: {e}")
+        debug(f"Error getting duration: {e}")
         return 0
 
 def process_hls(input_path, output_dir):
@@ -105,12 +102,12 @@ def process_hls(input_path, output_dir):
     ]
 
     try:
-        print("Starting FFmpeg HLS conversion...\n")
+        debug("Starting FFmpeg HLS conversion...\n")
         subprocess.run(command, check=True, capture_output=True)
-        print("HLS generation successful")
+        debug("HLS generation successful")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"FFmpeg error: {e.stderr.decode('utf-8') if e.stderr else 'Unknown Error'}")
+        debug(f"FFmpeg error: {e.stderr.decode('utf-8') if e.stderr else 'Unknown Error'}")
         return False
 
 def upload_hls_to_s3(hls_dir, base_s3_key):
@@ -119,7 +116,7 @@ def upload_hls_to_s3(hls_dir, base_s3_key):
             local_path = os.path.join(root, file)
             s3_key = f"{base_s3_key}{file}"
             content_type = "application/x-mpegURL" if file.endswith(".m3u8") else "video/MP2T"
-            print(f"Uploading {file} to {s3_key}")
+            debug(f"Uploading {file} to {s3_key}")
             s3_client.upload_file(local_path, S3_BUCKET_NAME, s3_key, ExtraArgs={'ContentType': content_type})
 
 def trigger_rag_ingestion(s3_url, course_id, lecture_id):
@@ -135,10 +132,10 @@ def trigger_rag_ingestion(s3_url, course_id, lecture_id):
     try:
         response = requests.post(f"{RAG_SERVER_URL}/ingest", json=payload)
         response.raise_for_status()
-        print(f"RAG ingestion triggered successfully for lecture {lecture_id}")
+        debug(f"RAG ingestion triggered successfully for lecture {lecture_id}")
         return True
     except requests.exceptions.RequestException as e:
-        print(f"Failed to trigger RAG ingestion: {e}")
+        debug(f"Failed to trigger RAG ingestion: {e}")
         return False
 
 def process_message(message):
@@ -149,7 +146,7 @@ def process_message(message):
         lecture_id = body['lectureId']
         bucket = body['bucket']
         
-        print(f"Starting processing for {s3_key}")
+        debug(f"Starting processing for {s3_key}")
         update_backend_status(s3_key, "PROCESSING")
 
         # Download raw video
@@ -157,7 +154,7 @@ def process_message(message):
         os.makedirs(temp_dir, exist_ok=True)
         raw_video_path = os.path.join(temp_dir, "raw.mp4")
         
-        print(f"Downloading {s3_key} from {bucket}...")
+        debug(f"Downloading {s3_key} from {bucket}...")
         s3_client.download_file(bucket, s3_key, raw_video_path)
         
         duration = get_video_duration(raw_video_path)
@@ -184,16 +181,16 @@ def process_message(message):
         if not hls_success:
             raise Exception("HLS generation failed")
             
-        print("Uploading HLS segments to S3...")
+        debug("Uploading HLS segments to S3...")
         upload_hls_to_s3(hls_dir, hls_s3_base_key)
         
         full_hls_url = f"{S3_PUBLIC_BASE_URL}/{hls_s3_base_key}master.m3u8"
         
         update_backend_status(s3_key, "READY", video_url=full_hls_url, duration=duration)
-        print(f"Processing complete for {s3_key}")
+        debug(f"Processing complete for {s3_key}")
         
     except Exception as e:
-        print(f"Error processing message: {e}")
+        debug(f"Error processing message: {e}")
         try:
             body = json.loads(message['Body'])
             update_backend_status(body.get('s3Key'), "FAILED", error=str(e))
@@ -208,7 +205,7 @@ def process_message(message):
             pass
 
 def poll_queue():
-    print(f"Polling SQS queue: {SQS_QUEUE_URL}...")
+    debug(f"Polling SQS queue: {SQS_QUEUE_URL}...")
     while True:
         try:
             response = sqs_client.receive_message(
@@ -227,16 +224,16 @@ def poll_queue():
                             ReceiptHandle=message['ReceiptHandle']
                         )
                     except Exception as e:
-                        print(f"Message processing failed, returning to queue. Error: {e}")
+                        debug(f"Message processing failed, returning to queue. Error: {e}")
             else:
                 time.sleep(1)
         except Exception as e:
-            print(f"Error receiving messages: {e}")
+            debug(f"Error receiving messages: {e}")
             time.sleep(5)
 
 if __name__ == "__main__":
     if not all([AWS_REGION, S3_BUCKET_NAME, SQS_QUEUE_URL, INTERNAL_API_SECRET]):
-        print("Missing required environment variables. Please check .env")
+        debug("Missing required environment variables. Please check .env")
         exit(1)
     poll_queue()
 

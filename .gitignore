@@ -39,3 +39,15 @@ ai/context
 .vscode
 # uploads
 src/uploads/
+volume/
+
+# lambda build artifacts
+lambda/node_modules/
+lambda/s3-trigger.zip
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/

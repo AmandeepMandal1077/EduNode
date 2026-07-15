@@ -1,6 +1,7 @@
 import { S3Client, DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { ApiError } from "./apiError.js";
+import debug from "./debug.js";
 
 let s3Client: S3Client | null = null;
 
@@ -61,7 +62,7 @@ export const generatePresignedPutUrl = async (
     
     return presignedUrl;
   } catch (error: any) {
-    console.error("Error generating presigned URL:", error);
+    debug("Error generating presigned URL:", error);
     throw new ApiError("Failed to generate presigned URL", 500);
   }
 };
@@ -75,7 +76,7 @@ export const deleteS3Object = async (key: string): Promise<void> => {
     });
     await client.send(command);
   } catch (error: any) {
-    console.error(`Error deleting object with key ${key}:`, error);
+    debug(`Error deleting object with key ${key}:`, error);
   }
 };
 

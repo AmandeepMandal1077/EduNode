@@ -1,6 +1,7 @@
 import { Queue, Worker, Job } from "bullmq";
 import { QueueKeys } from "./keys.js";
 import queueRedis from "./index.js";
+import debug from "../utils/debug.js";
 import {
   sendPasswordResetEmail,
   type TPasswordResetEmailData,
@@ -29,9 +30,9 @@ const forgotPasswordWorker = new Worker(
 );
 
 forgotPasswordWorker.on("completed", (job) => {
-  console.log(`[ForgotPasswordQueue] Reset email sent — job ${job.id}`);
+  debug(`[ForgotPasswordQueue] Reset email sent — job ${job.id}`);
 });
 
 forgotPasswordWorker.on("failed", (job, err) => {
-  console.error(`[ForgotPasswordQueue] Job ${job?.id} failed:`, err.message);
+  debug(`[ForgotPasswordQueue] Job ${job?.id} failed:`, err.message);
 });
