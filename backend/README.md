@@ -21,23 +21,22 @@
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Runtime** | [Bun](https://bun.sh) |
-| **Framework** | [Express 5](https://expressjs.com) |
-| **Language** | TypeScript 5 |
-| **Database** | MongoDB via [Mongoose 9](https://mongoosejs.com) |
-| **Cache / Broker** | Redis + [BullMQ](https://docs.bullmq.io) + [ioredis](https://github.com/redis/ioredis) |
-| **Object Storage** | AWS S3 (or LocalStack for local dev) |
-| **Event Queue** | AWS SQS (LocalStack) |
-| **Serverless Trigger** | AWS Lambda — `s3-upload-trigger` |
-| **Payments** | [Stripe](https://stripe.com) |
-
-| **Email** | Nodemailer + Handlebars templates |
-| **Validation** | [Zod 4](https://zod.dev) |
-| **Security** | Helmet, HPP, express-mongo-sanitize, express-rate-limit |
-| **Testing** | [Vitest](https://vitest.dev) + Supertest + mongodb-memory-server |
-| **Containerisation** | Docker |
+| Layer                  | Technology                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| **Runtime**            | [Bun](https://bun.sh)                                                                  |
+| **Framework**          | [Express 5](https://expressjs.com)                                                     |
+| **Language**           | TypeScript 5                                                                           |
+| **Database**           | MongoDB via [Mongoose 9](https://mongoosejs.com)                                       |
+| **Cache / Broker**     | Redis + [BullMQ](https://docs.bullmq.io) + [ioredis](https://github.com/redis/ioredis) |
+| **Object Storage**     | AWS S3                                                                                 |
+| **Event Queue**        | AWS SQS                                                                                |
+| **Serverless Trigger** | AWS Lambda — `s3-upload-trigger`                                                       |
+| **Payments**           | [Stripe](https://stripe.com)                                                           |
+| **Email**              | Nodemailer + Handlebars templates                                                     |
+| **Validation**         | [Zod 4](https://zod.dev)                                                               |
+| **Security**           | Helmet, HPP, express-mongo-sanitize, express-rate-limit                                |
+| **Testing**            | [Vitest](https://vitest.dev) + Supertest                               |
+| **Containerisation**   | Docker                                                                                 |
 
 ---
 
@@ -45,13 +44,13 @@
 
 ### Prerequisites
 
-| Tool | Minimum Version | Notes |
-|---|---|---|
-| [Bun](https://bun.sh) | `>= 1.1` | Primary runtime and package manager |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Latest | Required for full-stack Docker Compose setup |
-| [Node.js](https://nodejs.org) | `>= 18` | Required only to build the Lambda package |
+| Tool                                                              | Minimum Version | Notes                                        |
+| ----------------------------------------------------------------- | --------------- | -------------------------------------------- |
+| [Bun](https://bun.sh)                                             | `>= 1.1`        | Primary runtime and package manager          |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Latest          | Required for full-stack Docker Compose setup |
+| [Node.js](https://nodejs.org)                                     | `>= 18`         | Required only to build the Lambda package    |
 
-> **Tip:** The full stack (MongoDB, Redis, LocalStack, Lambda, media worker, RAG service) is orchestrated via Docker Compose from the repository root. Run the backend standalone only if you are connecting to external cloud services.
+> **Tip:** The full stack (MongoDB, Redis, Lambda, media worker, RAG service) is orchestrated via Docker Compose from the repository root. Run the backend standalone only if you are connecting to external cloud services.
 
 ---
 
@@ -59,7 +58,7 @@
 
 ```bash
 git clone https://github.com/<your-org>/edunode.git
-cd edunode
+cd edunode/backend
 ```
 
 ---
@@ -69,10 +68,10 @@ cd edunode
 Copy the example file and fill in your values:
 
 ```bash
-cp backend/.env.example backend/.env
+cp .env.example .env
 ```
 
-**`backend/.env` — complete reference:**
+**`.env` — complete reference:**
 
 ```env
 PORT=3000
@@ -92,18 +91,97 @@ AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 S3_BUCKET_NAME=your_s3_bucket_name
 INTERNAL_API_SECRET=your_internal_api_secret
 
-# Local Development with LocalStack (uncomment to override)
-# AWS_ENDPOINT_URL=http://localhost:4566
-# S3_PUBLIC_BASE_URL=http://localhost:4566/your_s3_bucket_name
-
 # Stripe
 STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_SECRET_KEY=your_stripe_secret_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 
-
-
 # Redis
+REDIS_URL=redis://localhost:6379
+```
+
+---
+
+### 3. Installation & Running
+
+Install dependencies and start the development server:
+
+```bash
+bun install
+bun dev
+```
+
+The server will start on `http://localhost:3000`.
+
+---
+
+## Testing
+
+The backend uses **Vitest** for both unit and integration tests.
+
+### Running Tests
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode
+bun test --watch
+```
+
+### Testing with Docker (Integration)
+The backend includes a dedicated test environment with a clean MongoDB and Redis instance.
+
+```bash
+# Spin up test dependencies
+bun run test:docker:up
+
+# Run tests
+bun test
+
+# Tear down test dependencies
+bun run test:docker:down
+```
+
+---
+
+## Project Structure
+
+```text
+backend/
+├── src/
+│   ├── app.ts             # Express app configuration
+│   ├── index.ts           # Entry point & server initialization
+│   ├── controllers/       # Route handlers (business logic)
+│   ├── models/            # Mongoose schemas & models
+│   ├── routes/            # API endpoint definitions
+│   ├── middlewares/       # Auth, Validation, Error handling
+│   ├── validator/         # Zod schemas for request validation
+│   ├── cache/             # Redis caching logic
+│   ├── queue/             # BullMQ producers for async tasks
+│   ├── cron/              # Scheduled background jobs
+│   ├── utils/             # Helper functions (S3, Email, Tokens)
+│   └── types/             # TypeScript interfaces & type definitions
+├── tests/                 # Unit & Integration tests
+│   ├── unit/
+│   └── integration/
+├── .env                   # Environment variables (local)
+└── package.json           # Scripts & dependencies
+```
+
+---
+
+## API Endpoints (Overview)
+
+| Category       | Base Route        | Description                                      |
+| -------------- | ----------------- | ------------------------------------------------ |
+| **Auth**       | `/api/v1/user`    | Registration, Login, Password Reset             |
+| **Courses**    | `/api/v1/course`  | Course browsing, Management, Purchases          |
+| **Lectures**   | `/api/v1/lecture` | Lecture streaming, Progress, Heatmaps           |
+| **Payments**   | `/api/v1/purchase`| Stripe checkout & Webhook handling               |
+| **RAG / AI**   | `/api/v1/rag`     | AI-powered lecture Q&A                            |
+| **Internal**   | `/api/v1/internal`| System-to-system communication (Lambda/Worker)    |
+| **Health**     | `/api/v1/health`  | API health check & monitoring                     |
+
 REDIS_HOST_NAME=redis
 REDIS_PORT=6379
 REDIS_PASSWORD=your_redis_password
@@ -132,7 +210,6 @@ cp .env.example .env
 BACKEND_PORT=3000
 NODE_ENV=development
 REDIS_PASSWORD=your_redis_password
-LOCALSTACK_AUTH_TOKEN=your_localstack_auth_token   # https://app.localstack.cloud
 PYTHON_ENV=development
 PYTHON_PORT=8000
 ```
@@ -149,17 +226,14 @@ docker compose up --build
 
 This starts:
 
-| Service | Port | Description |
-|---|---|---|
-| `backend` | `3000` | Express API (this service) |
-| `frontend` | `5173` | Vite + React UI |
-| `mongodb` | (internal) | MongoDB replica set |
-| `redis` | (internal) | Cache + BullMQ message broker |
-| `localstack` | `4566` | Emulated S3, SQS, Lambda (LocalStack Pro) |
-| `media-worker` | — | Python video transcoder (FFmpeg + boto3) |
-| `rag-service` | `8000` | FastAPI RAG / AI Q&A service |
-
-> **First run only:** LocalStack will automatically create the S3 bucket (`edunode-local`), SQS queue (`edunode-media-queue`), and deploy the `s3-upload-trigger` Lambda via the `localstack/init-aws.sh` init script.
+| Service        | Port       | Description                              |
+| -------------- | ---------- | ---------------------------------------- |
+| `backend`      | `3000`     | Express API (this service)               |
+| `frontend`     | `5173`     | Vite + React UI                          |
+| `mongodb`      | (internal) | MongoDB replica set                      |
+| `redis`        | (internal) | Cache + BullMQ message broker            |
+| `media-worker` | —          | Python video transcoder (FFmpeg + boto3) |
+| `rag-service`  | `8000`     | FastAPI RAG / AI Q&A service             |
 
 ---
 
@@ -255,32 +329,31 @@ backend/
 
 All routes are prefixed with `/api/v1`. `✓` means a valid JWT cookie is required.
 
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| `GET` | `/health` | — | Liveness health check |
-| `POST` | `/users/signup` | — | Register a new user |
-| `POST` | `/users/signin` | — | Sign in, sets JWT cookie |
-| `POST` | `/users/signout` | ✓ | Clear session cookie |
-| `POST` | `/users/forgot-password` | — | Send password reset email |
-| `POST` | `/users/reset-password` | — | Reset password via token |
-| `GET` | `/courses` | — | List all published courses (Redis-cached) |
-| `GET` | `/courses/:courseId` | — | Get single course detail |
-| `POST` | `/courses` | Instructor | Create a new course |
-| `PATCH` | `/courses/:courseId` | Instructor | Update course metadata |
-| `POST` | `/courses/:courseId/publish` | Instructor | Publish / unpublish a course |
-| `POST` | `/lecture` | Instructor | Add a lecture to a course |
-| `PATCH` | `/lecture/:lectureId` | Instructor | Update lecture metadata |
-| `DELETE` | `/lecture/:lectureId` | Instructor | Delete a lecture |
-| `GET` | `/media/presigned-url` | Instructor | Get presigned S3 URL for video upload |
-| `POST` | `/payments/checkout` | Student | Create Stripe checkout session |
-| `POST` | `/payments/webhook` | — | Stripe webhook handler |
-| `GET` | `/progress/:courseId` | Student | Get course completion progress |
-| `POST` | `/progress/:courseId/:lectureId` | Student | Mark a lecture as watched |
-| `POST` | `/playback/heatmap` | Student | Submit watch-time heatmap data |
-| `GET` | `/comment/:lectureId` | ✓ | Fetch comments on a lecture |
-| `POST` | `/comment/:lectureId` | Student | Post a comment on a lecture |
-| `POST` | `/internal-rag/vectordb-processed` | Internal | RAG service callback: ingestion complete |
-| `PATCH` | `/internal/media/status` | Internal | Media worker callback: transcode complete |
+| Method   | Route                            | Auth       | Description                               |
+| -------- | -------------------------------- | ---------- | ----------------------------------------- |
+| `GET`    | `/health`                        | —          | Liveness health check                     |
+| `POST`   | `/users/signup`                  | —          | Register a new user                       |
+| `POST`   | `/users/signin`                  | —          | Sign in, sets JWT cookie                  |
+| `POST`   | `/users/signout`                 | ✓          | Clear session cookie                      |
+| `POST`   | `/users/forgot-password`         | —          | Send password reset email                 |
+| `POST`   | `/users/reset-password`          | —          | Reset password via token                  |
+| `GET`    | `/courses`                       | —          | List all published courses (Redis-cached) |
+| `GET`    | `/courses/:courseId`             | —          | Get single course detail                  |
+| `POST`   | `/courses`                       | Instructor | Create a new course                       |
+| `PATCH`  | `/courses/:courseId`             | Instructor | Update course metadata                    |
+| `POST`   | `/courses/:courseId/publish`     | Instructor | Publish / unpublish a course              |
+| `POST`   | `/lecture`                       | Instructor | Add a lecture to a course                 |
+| `PATCH`  | `/lecture/:lectureId`            | Instructor | Update lecture metadata                   |
+| `DELETE` | `/lecture/:lectureId`            | Instructor | Delete a lecture                          |
+| `GET`    | `/media/presigned-url`           | Instructor | Get presigned S3 URL for video upload     |
+| `POST`   | `/payments/checkout`             | Student    | Create Stripe checkout session            |
+| `POST`   | `/payments/webhook`              | —          | Stripe webhook handler                    |
+| `GET`    | `/progress/:courseId`            | Student    | Get course completion progress            |
+| `POST`   | `/progress/:courseId/:lectureId` | Student    | Mark a lecture as watched                 |
+| `POST`   | `/playback/heatmap`              | Student    | Submit watch-time heatmap data            |
+| `GET`    | `/comment/:lectureId`            | ✓          | Fetch comments on a lecture               |
+| `POST`   | `/comment/:lectureId`            | Student    | Post a comment on a lecture               |
+| `PATCH`  | `/internal/media/status`         | Internal   | Media worker callback: transcode complete |
 
 > **Internal routes** (`/internal*`) are protected by the `x-internal-secret` request header and are not intended to be called from the browser.
 
@@ -307,23 +380,21 @@ See [`README_TESTS.md`](./README_TESTS.md) for a full breakdown of test coverage
 
 ## Environment Variable Reference
 
-| Variable | Required | Description |
-|---|---|---|
-| `PORT` | Yes | Server port (default: `3000`) |
-| `NODE_ENV` | Yes | `development` or `production` |
-| `MONGO_URI` | Yes | MongoDB connection string |
-| `JWT_SECRET` | Yes | Secret key for signing JWTs |
-| `RESETPASSWORDTOKENEXPIRY` | Yes | Token expiry in ms (e.g. `3600000` = 60 min) |
-| `AWS_REGION` | Yes | AWS region (e.g. `ap-south-1`) |
-| `AWS_ACCESS_KEY_ID` | Yes | AWS / LocalStack access key |
-| `AWS_SECRET_ACCESS_KEY` | Yes | AWS / LocalStack secret |
-| `S3_BUCKET_NAME` | Yes | S3 bucket for media uploads |
-| `INTERNAL_API_SECRET` | Yes | Shared secret for internal service-to-service calls |
-| `AWS_ENDPOINT_URL` | Local only | LocalStack endpoint (e.g. `http://localhost:4566`) |
-| `S3_PUBLIC_BASE_URL` | Local only | Public URL base for LocalStack-served S3 objects |
-| `STRIPE_PUBLISHABLE_KEY` | Yes | Stripe publishable key |
-| `STRIPE_SECRET_KEY` | Yes | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | Yes | Stripe webhook signing secret |
+| Variable                   | Required | Description                                         |
+| -------------------------- | -------- | --------------------------------------------------- |
+| `PORT`                     | Yes      | Server port (default: `3000`)                       |
+| `NODE_ENV`                 | Yes      | `development` or `production`                       |
+| `MONGO_URI`                | Yes      | MongoDB connection string                           |
+| `JWT_SECRET`               | Yes      | Secret key for signing JWTs                         |
+| `RESETPASSWORDTOKENEXPIRY` | Yes      | Token expiry in ms (e.g. `3600000` = 60 min)        |
+| `AWS_REGION`               | Yes      | AWS region (e.g. `ap-south-1`)                      |
+| `AWS_ACCESS_KEY_ID`        | Yes      | AWS access key                                      |
+| `AWS_SECRET_ACCESS_KEY`    | Yes      | AWS secret key                                      |
+| `S3_BUCKET_NAME`           | Yes      | S3 bucket for media uploads                         |
+| `INTERNAL_API_SECRET`      | Yes      | Shared secret for internal service-to-service calls |
+| `STRIPE_PUBLISHABLE_KEY`   | Yes      | Stripe publishable key                              |
+| `STRIPE_SECRET_KEY`        | Yes      | Stripe secret key                                   |
+| `STRIPE_WEBHOOK_SECRET`    | Yes      | Stripe webhook signing secret                       |
 
 | `REDIS_HOST_NAME` | Yes | Redis host (`redis` in Docker, `localhost` standalone) |
 | `REDIS_PORT` | Yes | Redis port (default: `6379`) |
@@ -354,7 +425,7 @@ curl -X PUT "<presigned_url_from_step_1>" \
   --data-binary @./lecture.mp4
 ```
 
-Once the upload completes, S3 fires the `s3-upload-trigger` Lambda → Lambda sends a message to the SQS queue → the Python media worker picks it up, transcodes the video with FFmpeg, uploads the processed output back to S3, and calls `PATCH /api/v1/internal/media/status` to mark the lecture as `PROCESSED`.
+Once the upload completes, S3 fires the `s3-upload-trigger` Lambda → Lambda sends a message to the SQS queue → the Python media worker picks it up, transcodes the video with FFmpeg, uploads the processed output back to S3, and calls `PATCH /api/v1/internal/media/status` to mark the lecture as `READY`.
 
 ---
 

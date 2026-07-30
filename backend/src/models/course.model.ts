@@ -101,6 +101,7 @@ const courseSchema = new mongoose.Schema<
     enrolledStudents: {
       type: [
         {
+          _id: false,
           student: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

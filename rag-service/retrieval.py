@@ -1,11 +1,18 @@
-from typing import Any
-from langchain.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel
 from req_schemas import QueryRequest
 from vectorstore import vector_store
-from model import ollama_llm
+from model import gemini_llm
 from langsmith import traceable
 from debug import debug
+
+
+class RAGResponse(BaseModel):
+    answer: str
+
+
+structured_llm = gemini_llm.with_structured_output(RAGResponse)
+
 
 @traceable(name="query_pipeline")
 async def query(course_id: str, lecture_id: str, data: QueryRequest):
@@ -69,13 +76,12 @@ async def query(course_id: str, lecture_id: str, data: QueryRequest):
         question=data.question
     )
 
-    llm_result = await ollama_llm.ainvoke(messages)
-    response = llm_result.content if hasattr(llm_result, "content") else str(llm_result)
+    result: RAGResponse = await structured_llm.ainvoke(messages)
 
     if getattr(data, "include_context", False):
         return {
-            "response": response,
+            "response": result.answer,
             "context": context
         }
 
-    return response
+    return result.answer

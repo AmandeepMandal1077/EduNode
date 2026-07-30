@@ -1,4 +1,8 @@
-import { S3Client, DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  DeleteObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { ApiError } from "./apiError.js";
 import debug from "./debug.js";
@@ -7,23 +11,22 @@ let s3Client: S3Client | null = null;
 
 export const getS3Client = (): S3Client => {
   if (!s3Client) {
-    if (!process.env.AWS_REGION || !process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      throw new Error("AWS credentials or region are not set in environment variables");
+    if (
+      !process.env.AWS_REGION ||
+      !process.env.AWS_ACCESS_KEY_ID ||
+      !process.env.AWS_SECRET_ACCESS_KEY
+    ) {
+      throw new Error(
+        "AWS credentials or region are not set in environment variables",
+      );
     }
-    const s3Config: ConstructorParameters<typeof S3Client>[0] & { endpoint?: string; forcePathStyle?: boolean } = {
+    s3Client = new S3Client({
       region: process.env.AWS_REGION,
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
       },
-    };
-
-    if (process.env.AWS_ENDPOINT_URL) {
-      s3Config.endpoint = process.env.AWS_ENDPOINT_URL;
-      s3Config.forcePathStyle = true;
-    }
-
-    s3Client = new S3Client(s3Config);
+    });
   }
   return s3Client;
 };
@@ -37,13 +40,13 @@ export const getBucketName = (): string => {
 };
 
 export const getPublicBaseUrl = (): string => {
-  return process.env.S3_PUBLIC_BASE_URL || `https://${getBucketName()}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
+  return `https://${getBucketName()}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
 };
 
 export const generatePresignedPutUrl = async (
   key: string,
   contentType: string,
-  expiresInSeconds: number = 900 // 15 minutes
+  expiresInSeconds: number = 900, // 15 minutes
 ): Promise<string> => {
   try {
     const client = getS3Client();
@@ -53,13 +56,10 @@ export const generatePresignedPutUrl = async (
       ContentType: contentType,
     });
 
-    let presignedUrl = await getSignedUrl(client, command, { expiresIn: expiresInSeconds });
-    
-    // Convert internal docker hostname to localhost for browser access
-    if (process.env.AWS_ENDPOINT_URL && process.env.AWS_ENDPOINT_URL.includes("localstack")) {
-      presignedUrl = presignedUrl.replace("localstack", "localhost");
-    }
-    
+    const presignedUrl = await getSignedUrl(client, command, {
+      expiresIn: expiresInSeconds,
+    });
+
     return presignedUrl;
   } catch (error: any) {
     debug("Error generating presigned URL:", error);

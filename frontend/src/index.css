@@ -57,10 +57,10 @@
   --ring: oklch(0.51 0.24 264);
 
   --chart-1: oklch(0.51 0.24 264);
-  --chart-2: oklch(0.60 0.18 240);
+  --chart-2: oklch(0.6 0.18 240);
   --chart-3: oklch(0.65 0.15 200);
-  --chart-4: oklch(0.70 0.12 160);
-  --chart-5: oklch(0.75 0.10 120);
+  --chart-4: oklch(0.7 0.12 160);
+  --chart-5: oklch(0.75 0.1 120);
 
   --radius: 0.75rem;
 
@@ -75,8 +75,8 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist Variable', system-ui, sans-serif;
-  --font-heading: 'Geist Variable', system-ui, sans-serif;
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-heading: "Geist Variable", system-ui, sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
 
   --color-background: var(--background);
@@ -141,7 +141,12 @@
     display: flex;
     flex-direction: column;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
     font-weight: 600;
     letter-spacing: -0.02em;
@@ -160,11 +165,16 @@
     border: 1px solid var(--slate-200);
     border-radius: var(--radius-xl);
     padding: 1.5rem;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition:
+      box-shadow 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s ease;
   }
   .bento-card:hover {
     border-color: var(--indigo-200);
-    box-shadow: 0 8px 32px -4px rgba(99, 102, 241, 0.12), 0 2px 8px -2px rgba(99, 102, 241, 0.08);
+    box-shadow:
+      0 8px 32px -4px rgba(99, 102, 241, 0.12),
+      0 2px 8px -2px rgba(99, 102, 241, 0.08);
   }
   .bento-card-interactive {
     cursor: pointer;
@@ -172,7 +182,9 @@
   .bento-card-interactive:hover {
     transform: translateY(-2px);
     border-color: var(--indigo-300);
-    box-shadow: 0 16px 48px -8px rgba(99, 102, 241, 0.18), 0 4px 12px -4px rgba(99, 102, 241, 0.1);
+    box-shadow:
+      0 16px 48px -8px rgba(99, 102, 241, 0.18),
+      0 4px 12px -4px rgba(99, 102, 241, 0.1);
   }
 
   /* Gradient thumbnails */
@@ -233,7 +245,8 @@
 
 /* ===== FAB Breathing Animation ===== */
 @keyframes breathing {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
     transform: scale(1);
   }
@@ -246,5 +259,3 @@
 .fab-breathe {
   animation: breathing 2.8s ease-in-out infinite;
 }
-
-

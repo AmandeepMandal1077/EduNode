@@ -8,6 +8,7 @@ ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 embedding_model = os.environ.get("OLLAMA_EMBEDDING_MODEL")
 embeddings = OllamaEmbeddings(
     model=embedding_model,
+    base_url=ollama_base_url
 )
 
 PYTHON_ENV = os.environ.get("PYTHON_ENV", "development")

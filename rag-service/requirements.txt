@@ -14,3 +14,5 @@ faster-whisper
 chromadb
 deepeval
 pytest-asyncio
+boto3
+langchain-google-genai

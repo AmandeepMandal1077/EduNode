@@ -5,8 +5,7 @@ load_dotenv()
 
 from debug import debug
 
-import urllib
-import urllib.request
+import boto3
 from fastapi import FastAPI, requests
 from httpx import Request
 import httpx
@@ -14,6 +13,18 @@ import httpx
 from ingestion import ingest
 from retrieval import query
 from req_schemas import IngestData, QueryRequest
+
+AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+
+s3_client = boto3.client(
+    "s3",
+    region_name=AWS_REGION,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+)
 
 
 app = FastAPI()
@@ -34,21 +45,10 @@ async def ingest_video(data: IngestData):
   transcript_path = f"transcribe/test_{slug}.txt"
 
   try:
-    # Download video file asynchronously
-    await asyncio.to_thread(urllib.request.urlretrieve, data.resource_url, video_path)
-    
+    # Download video file from S3 asynchronously
+    await asyncio.to_thread(s3_client.download_file, S3_BUCKET_NAME, data.resource_url, video_path)
+
     await ingest(data)
-    
-    async with httpx.AsyncClient() as client:
-      backend_url = os.getenv("BACKEND_URL")
-      await client.post(
-        f"{backend_url}/api/v1/internal-rag/vectordb-processed",
-        json={
-          "course_id": data.course_id,
-          "lecture_id": data.lecture_id
-        },
-        timeout=None
-      )
   finally:
     # Clean up temporary video and transcription files to avoid disk leaks
     for path in (video_path, transcript_path):

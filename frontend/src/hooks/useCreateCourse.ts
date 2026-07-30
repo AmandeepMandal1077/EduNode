@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createCourse } from "@/services/courseService";
-import { requestAndUpload } from "@/services/mediaService";
+import { createCourse, updateCourse } from "@/services/courseService";
+import { requestAndUpload, waitForUploadReady } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 
 export function useCreateCourse() {
@@ -131,9 +131,11 @@ export function useCreateCourse() {
       });
       
       if (thumbnailFile) {
-        // We do not await waitForUploadReady so the user isn't blocked on the UI
-        // The Lambda will confirm upload and update the course document
-        await requestAndUpload("course-image", course.id, thumbnailFile);
+        const { uploadSessionId } = await requestAndUpload("course-image", course.id, thumbnailFile);
+        const result = await waitForUploadReady(uploadSessionId);
+        if (result.finalUrl) {
+          await updateCourse(course.id, { thumbnail: result.finalUrl });
+        }
       }
       
       navigate("/instructor/courses");

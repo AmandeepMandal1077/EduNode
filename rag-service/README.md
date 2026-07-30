@@ -26,7 +26,7 @@ This service exposes endpoints used by the main application backend and the back
 1. **Query**: The client asks a question about a lecture via the backend, which proxies the query to `/chat/{course_id}/{lecture_id}`.
 2. **Similarity Search**: Performs a semantic similarity search against the vector database, fetching the top 5 most relevant document chunks filtered specifically by the requested `course_id` and `lecture_id`.
 3. **Prompt Generation**: Construct a structured prompt using a LangChain `ChatPromptTemplate` that strictly enforces answering from the retrieved context without using prior/general knowledge.
-4. **LLM Generation**: Queries the local Ollama LLM (`gpt-oss:20b-cloud` model) to synthesize the teaching assistant answer and returns the text response to the backend.
+4. **LLM Generation**: Queries the Google Gemini API (`ChatGoogleGenerativeAI`, e.g. `gemini-3.5-flash`) to synthesize the teaching assistant answer and returns the text response to the backend.
 
 ---
 
@@ -50,7 +50,7 @@ rag-service/
 ├── ingestion.py            # Whisper transcription and chunking logic
 ├── retrieval.py            # Vector retriever and LLM prompt generation
 ├── vectorstore.py          # Vector database client selector (ChromaDB / Qdrant)
-├── model.py                # ChatOllama model configuration
+├── model.py                # ChatGoogleGenerativeAI (Gemini) model configuration
 ├── req_schemas.py          # Pydantic data schemas
 └── requirements.txt        # Python package dependencies
 ```
@@ -66,13 +66,17 @@ The service uses the following environment variables:
 | `PYTHON_PORT` | The port the FastAPI server listens on (defaults to `8000`) |
 | `PYTHON_ENV` | Environment identifier. Set to `development` to use local ChromaDB, otherwise Qdrant is used |
 | `BACKEND_URL` | Base URL of the backend API (for callback notifications) |
-| `OLLAMA_BASE_URL` | Base URL for the Ollama server (defaults to `http://localhost:11434`) |
+| `GEMINI_API_KEY` | (or `GOOGLE_API_KEY`) API Key for Google Gemini API |
+| `GEMINI_MODEL` | Gemini model name (defaults to `gemini-1.5-flash`) |
+| `OLLAMA_BASE_URL` | Base URL for the Ollama server for embeddings (defaults to `http://localhost:11434`) |
 | `OLLAMA_API_KEY` | Authentication key for Ollama endpoints |
+| `OLLAMA_EMBEDDING_MODEL` | Embedding model for Ollama (e.g. `nomic-embed-text:v1.5`) |
 | `QDRANT_URL` | URL of the Qdrant instance (used in production) |
 | `QDRANT_API_KEY` | API Key for Qdrant database (used in production) |
 | `LANGCHAIN_API_KEY` | (Optional) API key for LangSmith tracing |
 | `LANGCHAIN_PROJECT` | (Optional) LangSmith project identifier |
 | `LANGCHAIN_TRACING_V2` | (Optional) Flag to toggle LangSmith tracing (`true`/`false`) |
+
 
 ---
 

@@ -7,36 +7,36 @@ EduNode is a production-grade, full-stack Learning Management System designed fo
 ## ✨ Key Features
 
 - **Course Management** — Instructors create courses with thumbnails, pricing, curriculum, and announcements; publish when ready.
-- **Secure Video Uploads** — Presigned S3 URLs for direct client uploads with server-side validation; upload status tracking via LocalStack S3 event notifications.
+- **Secure Video Uploads** — Presigned S3 URLs for direct client uploads with server-side validation; upload status tracking via S3 event notifications.
 - **Stripe Payments** — Full checkout flow with webhook-driven purchase confirmation, success/cancel pages, and purchase history.
 - **Video Playback with Resume** — Lecture playback remembers the last watched position via Redis-cached progress sync.
 - **Lecture Heatmaps** — Per-segment watch-time telemetry aggregated by a cron job into visual heatmap data.
 - **Threaded Q&A** — Nested comment trees on each lecture with like/dislike support and soft-delete.
 - **AI RAG Chat** — Ask questions about a lecture and receive AI-generated answers powered by a Python RAG microservice.
-- **Background Job Processing** — AWS SQS (LocalStack) handles video transcoding (HLS) and RAG ingestion via a dedicated Python worker. BullMQ handles emails and password resets.
+- **Background Job Processing** — AWS SQS handles video transcoding (HLS) and RAG ingestion via a dedicated Python worker. BullMQ handles emails and password resets.
 - **Auth & Security** — JWT tokens in HTTP-only cookies, rate limiting, Helmet headers, HPP, and Mongo injection sanitization.
 - **Caching Layer** — Redis caching for published courses, lecture progress, and heatmap segments with periodic DB sync via cron.
-- **Docker Compose** — One-command orchestration of frontend, backend, MongoDB (replica set), Redis, LocalStack, and Python Workers.
+- **Docker Compose** — One-command orchestration of frontend, backend, MongoDB (replica set), Redis, and Python Workers.
 
 ---
 
 ## 💻 Tech Stack
 
-| Layer         | Technology                                                           |
-|---------------|----------------------------------------------------------------------|
-| **Frontend**  | React 19, Vite, TypeScript, TailwindCSS 4, Radix UI, shadcn/ui      |
-| **Animation** | Motion (Framer Motion), Lenis smooth scroll                          |
-| **State**     | Redux Toolkit, React Redux                                          |
-| **Backend**   | Express 5, TypeScript, Bun runtime                                  |
-| **Database**  | MongoDB (Mongoose ODM) with replica set for transactions             |
-| **Caching**   | Redis (IORedis) — progress, heatmaps, course catalog cache          |
-| **Queue**     | AWS SQS (via LocalStack) for media tasks. BullMQ for general tasks. |
-| **Payments**  | Stripe (checkout sessions + webhooks)                                |
-| **Media**     | S3 Presigned Uploads + FFmpeg HLS Transcoding                        |
-| **AI / RAG**  | Python microservice + Vector DB for lecture content Q&A              |
-| **Validation**| Zod schemas                                                          |
-| **Testing**   | Vitest + Supertest + MongoDB Memory Server                           |
-| **DevOps**    | Docker, Docker Compose, LocalStack (S3, SQS, Lambda)                 |
+| Layer          | Technology                                                     |
+| -------------- | -------------------------------------------------------------- |
+| **Frontend**   | React 19, Vite, TypeScript, TailwindCSS 4, Radix UI, shadcn/ui |
+| **Animation**  | Motion (Framer Motion), Lenis smooth scroll                    |
+| **State**      | Redux Toolkit, React Redux                                     |
+| **Backend**    | Express 5, TypeScript, Bun runtime                             |
+| **Database**   | MongoDB (Mongoose ODM) with replica set for transactions       |
+| **Caching**    | Redis (IORedis) — progress, heatmaps, course catalog cache     |
+| **Queue**      | AWS SQS for media tasks. BullMQ for general tasks.             |
+| **Payments**   | Stripe (checkout sessions + webhooks)                          |
+| **Media**      | S3 Presigned Uploads + FFmpeg HLS Transcoding                  |
+| **AI / RAG**   | Python microservice + Vector DB for lecture content Q&A        |
+| **Validation** | Zod schemas                                                    |
+| **Testing**    | Vitest + Supertest + MongoDB Memory Server                     |
+| **DevOps**     | Docker, Docker Compose                                         |
 
 ---
 
@@ -86,7 +86,7 @@ EduNode/
 
 Make sure the following are installed on your machine:
 
-- **[Docker](https://www.docker.com/)** & **Docker Compose** — Required to run the full stack (LocalStack, MongoDB, Redis, API, and Worker).
+- **[Docker](https://www.docker.com/)** & **Docker Compose** — Required to run the full stack (MongoDB, Redis, API, and Worker).
 - A **[Stripe](https://stripe.com/)** account (test keys).
 - **[Bun](https://bun.sh/)** — Useful if you wish to run scripts locally outside of Docker.
 
@@ -94,9 +94,10 @@ Make sure the following are installed on your machine:
 
 ## 🚀 Getting Started
 
-The easiest way to run EduNode locally is using Docker Compose, which automatically provisions LocalStack (S3, SQS, Lambda) for media processing, a MongoDB replica set, and Redis.
+The easiest way to run EduNode locally is using Docker Compose, which orchestrates a MongoDB replica set, Redis, and the application services.
 
 ### 1. Configure Environment Variables
+
 ```bash
 # Root .env
 cp .env.example .env
@@ -107,24 +108,30 @@ cp backend/.env.example backend/.env
 # Worker .env
 cp worker/.env.example worker/.env
 ```
+
 > **Double Check:** Make sure `INTERNAL_API_SECRET` in both `backend/.env` and `worker/.env` match perfectly. You must also configure your Stripe Test Keys in the backend `.env`.
 
 ### 2. Start the Stack
+
 ```bash
 docker compose up --build
 ```
-This will boot up the frontend, backend, RAG service, python worker, LocalStack, MongoDB, and Redis.
-> **Note:** LocalStack runs an initialization script on boot (`localstack/init-aws.sh`) that provisions the S3 bucket, SQS queue, and your Lambda trigger. Wait for `LocalStack AWS resources initialized successfully!` in the logs before uploading media.
+
+This will boot up the frontend, backend, RAG service, python worker, MongoDB, and Redis.
 
 ### 3. Initialize Database (First-time only)
+
 In a new terminal window, initialize the MongoDB replica set and seed the database with mock data:
+
 ```bash
 docker exec -it edunode-mongodb-1 mongosh --eval "rs.initiate()"
 docker exec -it edunode-backend-1 bun run seed.ts
 ```
+
 > All seeded user accounts share the password: `Seeded@123`. Query the `users` collection in the `LMS` database for email addresses.
 
 ### 4. Access the App
+
 - **Frontend:** [http://localhost:5173](http://localhost:5173)
 - **Backend API:** [http://localhost:3000](http://localhost:3000)
 
@@ -137,45 +144,46 @@ If something isn't working locally (e.g. video uploads failing), use these check
 1. **Docker Logs:** Track errors easily using docker logs.
    - For backend errors: `docker compose logs backend -f`
    - For FFmpeg/HLS errors: `docker compose logs media-worker -f`
-   - For S3/Lambda trigger errors: `docker compose logs localstack -f`
-2. **Double Check CORS & Connectivity:** Ensure `AWS_ENDPOINT_URL` is properly set so the services can talk to LocalStack internally.
-3. **Queue Health:** If a video is stuck in "Processing", ensure the Lambda function fired correctly in the LocalStack logs and placed the message into the SQS queue.
+2. **Queue Health:** If a video is stuck in "Processing", check the Lambda CloudWatch logs and ensure the SQS queue is receiving messages.
 
 ---
 
 ## 🔑 Environment Variables
 
 ### Root `.env`
-| Variable          | Description                     | Default       |
-|-------------------|---------------------------------|---------------|
-| `BACKEND_PORT`    | Port for the Express server     | `3000`        |
-| `NODE_ENV`        | Environment mode                | `development` |
-| `REDIS_PASSWORD`  | Redis server password           | `pass`        |
+
+| Variable         | Description                 | Default       |
+| ---------------- | --------------------------- | ------------- |
+| `BACKEND_PORT`   | Port for the Express server | `3000`        |
+| `NODE_ENV`       | Environment mode            | `development` |
+| `REDIS_PASSWORD` | Redis server password       | `pass`        |
 
 ### `backend/.env`
-| Variable                      | Description                               |
-|-------------------------------|-------------------------------------------|
-| `MONGO_URI`                   | MongoDB connection string                 |
-| `JWT_SECRET`                  | Secret key for JWT signing                |
-| `STRIPE_PUBLISHABLE_KEY`      | Stripe publishable API key                |
-| `STRIPE_SECRET_KEY`           | Stripe secret API key                     |
-| `STRIPE_WEBHOOK_SECRET`       | Stripe webhook signing secret             |
 
-| `REDIS_HOST_NAME`             | Redis hostname                            |
-| `REDIS_PORT`                  | Redis port                                |
-| `REDIS_PASSWORD`              | Redis password                            |
-| `CACHE_CONTENT_EXPIRATION_DUR`| Cache TTL in milliseconds                 |
-| `FRONTEND_URL`                | Frontend origin for CORS                  |
-| `RAG_SERVER_URL`              | Python RAG microservice base URL          |
-| `SMTP_HOST`                   | SMTP server hostname                      |
-| `SMTP_PORT`                   | SMTP server port                          |
-| `SMTP_USER`                   | SMTP username                             |
-| `SMTP_PASS`                   | SMTP password                             |
+| Variable                 | Description                   |
+| ------------------------ | ----------------------------- |
+| `MONGO_URI`              | MongoDB connection string     |
+| `JWT_SECRET`             | Secret key for JWT signing    |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable API key    |
+| `STRIPE_SECRET_KEY`      | Stripe secret API key         |
+| `STRIPE_WEBHOOK_SECRET`  | Stripe webhook signing secret |
+
+| `REDIS_HOST_NAME` | Redis hostname |
+| `REDIS_PORT` | Redis port |
+| `REDIS_PASSWORD` | Redis password |
+| `CACHE_CONTENT_EXPIRATION_DUR`| Cache TTL in milliseconds |
+| `FRONTEND_URL` | Frontend origin for CORS |
+| `RAG_SERVER_URL` | Python RAG microservice base URL |
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP server port |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASS` | SMTP password |
 
 ### `frontend/.env`
-| Variable            | Description                     | Default                          |
-|---------------------|---------------------------------|----------------------------------|
-| `VITE_BACKEND_URL`  | Backend API base URL            | `http://localhost:3000/api/v1`   |
+
+| Variable           | Description          | Default                        |
+| ------------------ | -------------------- | ------------------------------ |
+| `VITE_BACKEND_URL` | Backend API base URL | `http://localhost:3000/api/v1` |
 
 ---
 
@@ -190,25 +198,24 @@ bun run test        # Runs Vitest integration tests against MongoDB Memory Serve
 
 ## 📜 API Routes Overview
 
-| Method | Endpoint                                  | Description                      |
-|--------|-------------------------------------------|----------------------------------|
-| POST   | `/api/v1/users/signup`                    | Register a new user              |
-| POST   | `/api/v1/users/signin`                    | Authenticate a user              |
-| GET    | `/api/v1/users/me`                        | Get current user profile         |
-| GET    | `/api/v1/courses`                         | List published courses           |
-| POST   | `/api/v1/courses`                         | Create a course (instructor)     |
-| GET    | `/api/v1/courses/c/:courseId`             | Get course details               |
-| POST   | `/api/v1/courses/c/:courseId/lectures`    | Add lecture to course            |
-| POST   | `/api/v1/payments/checkout`               | Create Stripe checkout session   |
-| POST   | `/api/v1/payments/webhook`                | Stripe webhook handler           |
-| GET    | `/api/v1/lecture/:lectureId`              | Get lecture details              |
-| POST   | `/api/v1/media/upload-signature`          | Generate S3 upload presigned URL |
-| GET    | `/api/v1/playback/resume`                 | Get lecture resume position      |
-| POST   | `/api/v1/playback/sync`                   | Sync playback progress to cache  |
-| GET    | `/api/v1/progress/:courseId`              | Get course progress              |
-| POST   | `/api/v1/comment`                         | Post a comment on a lecture      |
-| POST   | `/api/v1/internal-rag/chat`               | AI chat with lecture content     |
-| POST   | `/api/v1/internal-rag/vectordb-processed` | RAG processing status callback   |
+| Method | Endpoint                               | Description                      |
+| ------ | -------------------------------------- | -------------------------------- |
+| POST   | `/api/v1/users/signup`                 | Register a new user              |
+| POST   | `/api/v1/users/signin`                 | Authenticate a user              |
+| GET    | `/api/v1/users/me`                     | Get current user profile         |
+| GET    | `/api/v1/courses`                      | List published courses           |
+| POST   | `/api/v1/courses`                      | Create a course (instructor)     |
+| GET    | `/api/v1/courses/c/:courseId`          | Get course details               |
+| POST   | `/api/v1/courses/c/:courseId/lectures` | Add lecture to course            |
+| POST   | `/api/v1/payments/checkout`            | Create Stripe checkout session   |
+| POST   | `/api/v1/payments/webhook`             | Stripe webhook handler           |
+| GET    | `/api/v1/lecture/:lectureId`           | Get lecture details              |
+| POST   | `/api/v1/media/upload-signature`       | Generate S3 upload presigned URL |
+| GET    | `/api/v1/playback/resume`              | Get lecture resume position      |
+| POST   | `/api/v1/playback/sync`                | Sync playback progress to cache  |
+| GET    | `/api/v1/progress/:courseId`           | Get course progress              |
+| POST   | `/api/v1/comment`                      | Post a comment on a lecture      |
+| POST   | `/api/v1/internal-rag/chat`            | AI chat with lecture content     |
 
 ---
 

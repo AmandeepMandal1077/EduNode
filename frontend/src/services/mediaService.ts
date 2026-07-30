@@ -1,35 +1,24 @@
+import axios from "axios";
 import { requestUploadSession, pollUploadStatus, type UploadSessionRequest } from "../api/mediaApi";
 
-export const uploadFileToS3 = (
+export const uploadFileToS3 = async (
   presignedUrl: string,
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", presignedUrl, true);
-    xhr.setRequestHeader("Content-Type", file.type);
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && onProgress) {
-        const percent = Math.round((event.loaded / event.total) * 100);
-        onProgress(percent);
+  await axios.put(presignedUrl, file, {
+    headers: {
+      "Content-Type": file.type,
+    },
+    onUploadProgress: (progressEvent) => {
+      if (onProgress) {
+        const total = progressEvent.total ?? file.size;
+        if (total > 0) {
+          const percent = Math.round((progressEvent.loaded / total) * 100);
+          onProgress(percent);
+        }
       }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        reject(new Error(`Upload failed with status ${xhr.status}`));
-      }
-    };
-
-    xhr.onerror = () => {
-      reject(new Error("Network error occurred during upload"));
-    };
-
-    xhr.send(file);
+    },
   });
 };
 

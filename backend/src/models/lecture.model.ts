@@ -24,8 +24,8 @@ export interface ILecture {
   uploadStatus: EUploadStatus;
 }
 
-export interface ILectureMethods { }
-export interface ILectureVirtuals { }
+export interface ILectureMethods {}
+export interface ILectureVirtuals {}
 
 export type TLectureModel = mongoose.Model<
   ILecture,

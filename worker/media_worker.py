@@ -17,11 +17,13 @@ SQS_QUEUE_URL = os.getenv("SQS_QUEUE_URL")
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:3000")
 INTERNAL_API_SECRET = os.getenv("INTERNAL_API_SECRET")
 RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8000")
-S3_PUBLIC_BASE_URL = os.getenv("S3_PUBLIC_BASE_URL", f"https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com")
-AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 
-s3_client = boto3.client('s3', region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
-sqs_client = boto3.client('sqs', region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+sqs_client = boto3.client('sqs', region_name=AWS_REGION)
+
+
+def get_s3_public_url(key: str) -> str:
+    return f"https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{key}"
 
 def update_backend_status(s3_key, status, video_url=None, duration=None, error=None):
     payload = {
@@ -67,37 +69,23 @@ def process_hls(input_path, output_dir):
         "-hide_banner",
         "-y",
         "-i", input_path,
-        
-        # 1. Video Scaling (Split input into two streams)
-        "-filter_complex", 
+        "-filter_complex",
         "[0:v]split=2[v1][v2];[v1]scale=w=256:h=144[v1out];[v2]scale=w=426:h=240[v2out]",
-        
-        # 2. Map Streams (CRITICAL FIX: Map audio twice)
-        "-map", "[v1out]", # 144p Video (v:0)
-        "-map", "0:a",     # Audio for 144p (a:0)
-        "-map", "[v2out]", # 240p Video (v:1)
-        "-map", "0:a",     # Audio for 240p (a:1)
-        
-        # 3. Video Codec and Bitrates
+        "-map", "[v1out]",
+        "-map", "0:a",
+        "-map", "[v2out]",
+        "-map", "0:a",
         "-c:v", "libx264",
-        "-b:v:0", "200k",  # 144p bitrate
-        "-b:v:1", "400k",  # 240p bitrate
-        
-        # 4. Audio Codec and Bitrate
+        "-b:v:0", "200k",
+        "-b:v:1", "400k",
         "-c:a", "aac",
-        "-b:a", "96k",     # Applies to all mapped audio streams
-        
-        # 5. HLS Configuration
+        "-b:a", "96k",
         "-f", "hls",
         "-hls_time", "6",
         "-hls_playlist_type", "vod",
         "-master_pl_name", "master.m3u8",
         "-hls_segment_filename", segment_filename,
-        
-        # 6. Group streams: Match video 0 with audio 0, and video 1 with audio 1
         "-var_stream_map", "v:0,a:0 v:1,a:1",
-        
-        # 7. Output template
         output_playlist
     ]
 
@@ -119,13 +107,9 @@ def upload_hls_to_s3(hls_dir, base_s3_key):
             debug(f"Uploading {file} to {s3_key}")
             s3_client.upload_file(local_path, S3_BUCKET_NAME, s3_key, ExtraArgs={'ContentType': content_type})
 
-def trigger_rag_ingestion(s3_url, course_id, lecture_id):
-    internal_s3_url = s3_url
-    if "localhost:4566" in s3_url:
-        internal_s3_url = s3_url.replace("localhost:4566", "localstack:4566")
-
+def trigger_rag_ingestion(s3_key, course_id, lecture_id):
     payload = {
-        "resource_url": internal_s3_url,
+        "resource_url": s3_key,
         "course_id": course_id,
         "lecture_id": lecture_id
     }
@@ -161,12 +145,11 @@ def process_message(message):
         
         hls_dir = os.path.join(temp_dir, "hls")
         hls_s3_base_key = f"root/courses/{course_id}/lectures/{lecture_id}/hls/"
-        s3_public_url = f"{S3_PUBLIC_BASE_URL}/{s3_key}"
 
         # Run HLS and RAG in parallel
         with ThreadPoolExecutor(max_workers=2) as executor:
             future_hls = executor.submit(process_hls, raw_video_path, hls_dir)
-            future_rag = executor.submit(trigger_rag_ingestion, s3_public_url, course_id, lecture_id)
+            future_rag = executor.submit(trigger_rag_ingestion, s3_key, course_id, lecture_id)
 
             while not (future_hls.done() and future_rag.done()):
                 sqs_client.change_message_visibility(
@@ -183,8 +166,11 @@ def process_message(message):
             
         debug("Uploading HLS segments to S3...")
         upload_hls_to_s3(hls_dir, hls_s3_base_key)
-        
-        full_hls_url = f"{S3_PUBLIC_BASE_URL}/{hls_s3_base_key}master.m3u8"
+
+        debug("Removing raw source video from S3...")
+        s3_client.delete_object(Bucket=S3_BUCKET_NAME, Key=s3_key)
+
+        full_hls_url = get_s3_public_url(f"{hls_s3_base_key}master.m3u8")
         
         update_backend_status(s3_key, "READY", video_url=full_hls_url, duration=duration)
         debug(f"Processing complete for {s3_key}")

@@ -13,6 +13,7 @@ The React single-page application for EduNode. Provides the student and instruct
 - **Video Heatmaps** — Per-lecture visual engagement heatmap rendered from aggregated telemetry
 - **Threaded Q&A** — Nested comment trees with like/dislike on each lecture
 - **AI Chat FAB** — Floating action button for AI-powered Q&A about the current lecture
+- **Video Player** — Uses **Vidstack** for HLS playback with automatic quality selection (replaces VideoJS)
 - **Instructor Dashboard** — Create courses, manage curriculum, upload videos via S3 presigned URLs, publish courses
 - **Profile Management** — Edit account details, change password, security settings
 - **Auth Flow** — Login, register, forgot/reset password with form validation
@@ -24,20 +25,21 @@ The React single-page application for EduNode. Provides the student and instruct
 
 ## Tech Stack
 
-| Component      | Technology                                                    |
-|----------------|---------------------------------------------------------------|
-| **Framework**  | [React 19](https://react.dev/) with TypeScript                |
-| **Build Tool** | [Vite 8](https://vite.dev/)                                   |
-| **Styling**    | [TailwindCSS 4](https://tailwindcss.com/) + custom CSS       |
-| **UI Library** | [Radix UI](https://radix-ui.com/) + [shadcn/ui](https://ui.shadcn.com/) |
-| **Animation**  | [Motion](https://motion.dev/) (Framer Motion)                |
-| **Scrolling**  | [Lenis](https://lenis.darkroom.engineering/) smooth scroll   |
-| **State**      | [Redux Toolkit](https://redux-toolkit.js.org/) + React Redux |
-| **Routing**    | [React Router v7](https://reactrouter.com/)                  |
-| **HTTP**       | [Axios](https://axios-http.com/) with auth interceptors      |
-| **Icons**      | [Lucide React](https://lucide.dev/)                          |
-| **Font**       | [Geist](https://vercel.com/font) via Fontsource              |
-| **Media**      | S3 Presigned Uploads (client-side)                           |
+| Component        | Technology                                                              |
+| ---------------- | ----------------------------------------------------------------------- |
+| **Framework**    | [React 19](https://react.dev/) with TypeScript                          |
+| **Build Tool**   | [Vite 8](https://vite.dev/)                                             |
+| **Styling**      | [TailwindCSS 4](https://tailwindcss.com/) + custom CSS                  |
+| **UI Library**   | [Radix UI](https://radix-ui.com/) + [shadcn/ui](https://ui.shadcn.com/) |
+| **Animation**    | [Motion](https://motion.dev/) (Framer Motion)                           |
+| **Scrolling**    | [Lenis](https://lenis.darkroom.engineering/) smooth scroll              |
+| **State**        | [Redux Toolkit](https://redux-toolkit.js.org/) + React Redux            |
+| **Routing**      | [React Router v7](https://reactrouter.com/)                             |
+| **HTTP**         | [Axios](https://axios-http.com/) with auth interceptors                 |
+| **Icons**        | [Lucide React](https://lucide.dev/)                                     |
+| **Font**         | [Geist](https://vercel.com/font) via Fontsource                         |
+| **Media**        | S3 Presigned Uploads (client-side)                                      |
+| **Video Player** | Vidstack (https://vidstack.io/)                                         |
 
 ---
 
@@ -112,7 +114,7 @@ frontend/
     │   ├── authService.ts        # Login, register, logout logic
     │   ├── courseService.ts       # Course data transformations
     │   ├── commentService.ts     # Comment tree management
-    │   ├── mediaService.ts       # S3 upload logic
+    │   ├── mediaService.ts       # Axios-based S3 upload logic
     │   ├── userService.ts        # Profile update logic
     │   └── debounceService.ts    # Debounce utility
     │
@@ -145,7 +147,8 @@ frontend/
     ├── types/                    # Shared TypeScript interfaces
     └── utils/                    # Helper utilities
 ```
-```
+
+````
 
 ---
 
@@ -163,9 +166,10 @@ frontend/
 ```bash
 cd frontend
 bun install
-```
+````
 
 ### 2. Configure environment variables
+
 Create a `.env` file in the `frontend/` directory:
 
 ```env
@@ -173,43 +177,45 @@ VITE_BACKEND_URL=http://localhost:3000/api/v1
 ```
 
 ### 3. Start the development server
+
 ```bash
 bun run dev
 ```
+
 The app will be available at **http://localhost:5173**.
 
 ---
 
 ## Available Scripts
 
-| Script           | Command             | Description                        |
-|------------------|---------------------|------------------------------------|
-| **dev**          | `bun run dev`       | Start Vite dev server with HMR     |
-| **build**        | `bun run build`     | Type-check + production build      |
-| **preview**      | `bun run preview`   | Preview the production build       |
-| **lint**         | `bun run lint`      | Run ESLint checks                  |
+| Script      | Command           | Description                    |
+| ----------- | ----------------- | ------------------------------ |
+| **dev**     | `bun run dev`     | Start Vite dev server with HMR |
+| **build**   | `bun run build`   | Type-check + production build  |
+| **preview** | `bun run preview` | Preview the production build   |
+| **lint**    | `bun run lint`    | Run ESLint checks              |
 
 ---
 
 ## Application Routes
 
-| Path                                      | Auth | Component                    | Description               |
-|-------------------------------------------|------|------------------------------|---------------------------|
-| `/`                                       | ✗    | LandingPage                  | Marketing landing page    |
-| `/login`                                  | ✗    | LoginPage                    | User login                |
-| `/register`                               | ✗    | RegisterPage                 | User registration         |
-| `/reset-password`                         | ✗    | ResetPasswordPage            | Password reset            |
-| `/explore`                                | ✗    | ExplorePage                  | Browse course catalog     |
-| `/course/:id`                             | ✗    | CourseDetailPage             | Course details & enroll   |
-| `/dashboard`                              | ✓    | DashboardPage                | Student dashboard         |
-| `/my-courses`                             | ✓    | MyCoursesPage                | Purchased courses         |
-| `/learn/:courseId/lecture/:lectureId`      | ✓    | LearningRoomPage             | Video player & Q&A        |
-| `/profile`                                | ✓    | ProfilePage                  | Account settings          |
-| `/instructor/courses`                     | ✓    | InstructorCoursesPage        | Instructor course list    |
-| `/instructor/courses/create`              | ✓    | CreateCoursePage             | Create new course         |
-| `/instructor/courses/:courseId/manage`     | ✓    | InstructorCourseManagePage   | Edit course & curriculum  |
-| `/success`                                | ✓    | SuccessPage                  | Post-payment success      |
-| `/cancel`                                 | ✓    | CancelPage                   | Payment cancelled         |
+| Path                                   | Auth | Component                  | Description              |
+| -------------------------------------- | ---- | -------------------------- | ------------------------ |
+| `/`                                    | ✗    | LandingPage                | Marketing landing page   |
+| `/login`                               | ✗    | LoginPage                  | User login               |
+| `/register`                            | ✗    | RegisterPage               | User registration        |
+| `/reset-password`                      | ✗    | ResetPasswordPage          | Password reset           |
+| `/explore`                             | ✗    | ExplorePage                | Browse course catalog    |
+| `/course/:id`                          | ✗    | CourseDetailPage           | Course details & enroll  |
+| `/dashboard`                           | ✓    | DashboardPage              | Student dashboard        |
+| `/my-courses`                          | ✓    | MyCoursesPage              | Purchased courses        |
+| `/learn/:courseId/lecture/:lectureId`  | ✓    | LearningRoomPage           | Video player & Q&A       |
+| `/profile`                             | ✓    | ProfilePage                | Account settings         |
+| `/instructor/courses`                  | ✓    | InstructorCoursesPage      | Instructor course list   |
+| `/instructor/courses/create`           | ✓    | CreateCoursePage           | Create new course        |
+| `/instructor/courses/:courseId/manage` | ✓    | InstructorCourseManagePage | Edit course & curriculum |
+| `/success`                             | ✓    | SuccessPage                | Post-payment success     |
+| `/cancel`                              | ✓    | CancelPage                 | Payment cancelled        |
 
 ---
 

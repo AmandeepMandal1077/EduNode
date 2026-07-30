@@ -52,17 +52,12 @@ INTERNAL_API_SECRET=your_secret
 RAG_SERVER_URL=http://localhost:8000
 ```
 
-For local testing with LocalStack, uncomment:
-```env
-AWS_ENDPOINT_URL=http://localstack:4566
-S3_PUBLIC_BASE_URL=http://localstack:4566/edunode-local
-```
-
 ---
 
 ## Running the Worker
 
 ### Using Docker Compose
+
 To run the worker service using Docker Compose:
 
 ```bash

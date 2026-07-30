@@ -27,24 +27,38 @@ function formatTimeAgo(dateStr: string): string {
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
 
-    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return date.toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
   } catch {
     return "";
   }
 }
 
-export function DashboardAnnouncements({ announcements, cardVariants, navigate }: DashboardAnnouncementsProps) {
+export function DashboardAnnouncements({
+  announcements,
+  cardVariants,
+  navigate,
+}: DashboardAnnouncementsProps) {
   return (
-    <motion.div variants={cardVariants} className="md:col-span-2 xl:col-span-4 bento-card flex flex-col gap-3">
+    <motion.div
+      variants={cardVariants}
+      className="md:col-span-2 xl:col-span-4 bento-card flex flex-col gap-3"
+    >
       <div className="flex items-center gap-2 mb-1">
         <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
           <Bell className="w-4 h-4 text-violet-600" />
         </div>
-        <span className="text-sm font-semibold text-slate-700">Announcements</span>
+        <span className="text-sm font-semibold text-slate-700">
+          Announcements
+        </span>
       </div>
       {announcements.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
-          <p className="text-slate-500 text-sm">No announcements from your courses yet.</p>
+          <p className="text-slate-500 text-sm">
+            No announcements from your courses yet.
+          </p>
         </div>
       ) : (
         <ScrollArea className="max-h-[280px]">
@@ -52,7 +66,11 @@ export function DashboardAnnouncements({ announcements, cardVariants, navigate }
             {announcements.map((ann) => (
               <div
                 key={ann.id}
-                onClick={() => navigate(`/learn/${ann.courseId}/lecture/${ann.lastLectureId}`)}
+                onClick={() =>
+                  navigate(
+                    `/learn/${ann.courseId}/lecture/${ann.lastLectureId}`,
+                  )
+                }
                 className="flex flex-col gap-1 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group"
               >
                 <div className="flex items-center justify-between">

@@ -19,7 +19,9 @@ const announcementQueue = new Queue(QueueKeys.ANNOUNCEMENT, {
 
 export const addAnnouncementJob = async (announcementId: string) => {
   const announcement = await Announcement.findById(announcementId);
-  const courseDetails = await Course.findById(announcement!.courseId)
+  if (!announcement) return;
+
+  const courseDetails = await Course.findById(announcement.courseId)
     .select("instructor enrolledStudents title")
     .populate({
       path: "instructor",
@@ -30,15 +32,19 @@ export const addAnnouncementJob = async (announcementId: string) => {
       select: "email name",
     });
 
-  const subscribedStudents = courseDetails!.enrolledStudents;
+  if (!courseDetails) return;
+
+  const subscribedStudents = courseDetails.enrolledStudents;
+  if (!subscribedStudents || subscribedStudents.length === 0) return;
+
   const data = subscribedStudents.map((student) => {
     const studentDetails = student.student as unknown as IUser;
     return {
       username: studentDetails.name,
       email: studentDetails.email,
-      courseName: courseDetails!.title,
-      message: announcement!.message,
-      instructor: (courseDetails!.instructor as unknown as IUser).name,
+      courseName: courseDetails.title,
+      message: announcement.message,
+      instructor: (courseDetails.instructor as unknown as IUser).name,
     };
   });
 
