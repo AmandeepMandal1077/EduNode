@@ -22,7 +22,7 @@ export function ExplorePage() {
   } = useExplore();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <ExploreFilters
         query={query}
         setQuery={setQuery}

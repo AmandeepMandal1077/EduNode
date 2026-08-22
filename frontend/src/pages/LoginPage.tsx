@@ -31,43 +31,27 @@ export function LoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12"
-      style={{
-        background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)",
-      }}
-    >
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute top-1/4 -left-32 w-72 h-72 rounded-full blur-3xl opacity-40"
-          style={{ background: "#c7d2fe" }}
-        />
-        <div
-          className="absolute bottom-1/4 -right-32 w-72 h-72 rounded-full blur-3xl opacity-30"
-          style={{ background: "#ddd6fe" }}
-        />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 hero-gradient bg-secondary-background">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative w-full max-w-md"
       >
-        <div className="glass rounded-3xl shadow-2xl p-8 sm:p-10">
+        <div className="bg-background border-4 border-border rounded-base shadow-shadow p-8 sm:p-10">
           <div className="flex items-center justify-center gap-2.5 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-              <GraduationCap className="w-5 h-5 text-white" />
+            <div className="w-11 h-11 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[3px_3px_0px_0px_#000]">
+              <GraduationCap className="w-6 h-6 text-main-foreground" />
             </div>
-            <span className="font-bold text-xl text-slate-800 tracking-tight">
-              Edu<span className="text-indigo-600">Node</span>
+            <span className="font-heading font-black text-2xl text-foreground tracking-tight">
+              Edu<span className="bg-main px-1.5 py-0.5 border-2 border-border rounded-base ml-1 text-main-foreground shadow-[2px_2px_0px_0px_#000]">Node</span>
             </span>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-slate-900 text-center mb-1">
-            Welcome back
+          <h1 className="text-2xl font-heading font-black text-foreground text-center mb-1">
+            Welcome Back
           </h1>
-          <p className="text-sm text-slate-500 text-center mb-8">
+          <p className="text-sm font-base text-foreground/70 text-center mb-8">
             Sign in to continue your learning journey
           </p>
 
@@ -85,41 +69,41 @@ export function LoginPage() {
           />
 
           <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-slate-100" />
-            <span className="text-xs text-slate-400">or</span>
-            <div className="flex-1 h-px bg-slate-100" />
+            <div className="flex-1 h-0.5 bg-border" />
+            <span className="text-xs font-heading font-bold text-foreground uppercase">or</span>
+            <div className="flex-1 h-0.5 bg-border" />
           </div>
 
-          <div className="bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 mb-6">
-            <p className="text-xs font-semibold text-indigo-900 mb-2.5 text-center">
+          <div className="bg-secondary-background border-2 border-border rounded-base p-4 mb-6 shadow-[2px_2px_0px_0px_#000]">
+            <p className="text-xs font-heading font-black text-foreground mb-2.5 text-center">
               💡 Quick Demo Login (Click to Autofill)
             </p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => handleFillCredentials("student")}
-                className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-indigo-100/80 hover:border-indigo-300 hover:shadow-sm hover:bg-indigo-50/20 active:scale-[0.98] transition-all cursor-pointer text-indigo-700"
+                className="flex flex-col items-center justify-center p-2 rounded-base bg-background border-2 border-border hover:bg-main hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer text-foreground shadow-[2px_2px_0px_0px_#000]"
               >
-                <span className="font-bold text-[10px] uppercase tracking-wider text-indigo-400">Student</span>
-                <span className="font-mono text-[9px] mt-0.5">{DEMO_CREDENTIALS.student.email}</span>
+                <span className="font-heading font-black text-[10px] uppercase tracking-wider">Student</span>
+                <span className="font-mono text-[9px] mt-0.5 truncate max-w-full">{DEMO_CREDENTIALS.student.email}</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleFillCredentials("instructor")}
-                className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-indigo-100/80 hover:border-indigo-300 hover:shadow-sm hover:bg-indigo-50/20 active:scale-[0.98] transition-all cursor-pointer text-indigo-700"
+                className="flex flex-col items-center justify-center p-2 rounded-base bg-background border-2 border-border hover:bg-main hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer text-foreground shadow-[2px_2px_0px_0px_#000]"
               >
-                <span className="font-bold text-[10px] uppercase tracking-wider text-indigo-400">Instructor</span>
-                <span className="font-mono text-[9px] mt-0.5">{DEMO_CREDENTIALS.instructor.email}</span>
+                <span className="font-heading font-black text-[10px] uppercase tracking-wider">Instructor</span>
+                <span className="font-mono text-[9px] mt-0.5 truncate max-w-full">{DEMO_CREDENTIALS.instructor.email}</span>
               </button>
             </div>
-            <p className="text-[10px] text-slate-500 text-center mt-2.5">
-              Password: <span className="font-mono font-semibold text-indigo-600 bg-indigo-100/50 px-1.5 py-0.5 rounded">{DEMO_CREDENTIALS.student.password}</span>
+            <p className="text-[10px] font-base text-foreground/80 text-center mt-2.5">
+              Password: <span className="font-mono font-bold bg-main px-1.5 py-0.5 rounded-base border border-border">{DEMO_CREDENTIALS.student.password}</span>
             </p>
           </div>
 
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm font-base text-foreground/80">
             Don't have an account?{" "}
-            <Link to="/register" className="text-indigo-600 font-semibold hover:underline">
+            <Link to="/register" className="font-heading font-black text-foreground underline decoration-2 hover:bg-main px-1 rounded-base transition-colors">
               Sign up free
             </Link>
           </p>
@@ -134,5 +118,3 @@ export function LoginPage() {
     </div>
   );
 }
-
-

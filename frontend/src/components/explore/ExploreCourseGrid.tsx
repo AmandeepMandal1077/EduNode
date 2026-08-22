@@ -22,7 +22,6 @@ export function ExploreCourseGrid({
 }: ExploreCourseGridProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-
       <div className="flex items-center justify-between mb-6">
         <motion.div
           key={courses.length}
@@ -30,65 +29,63 @@ export function ExploreCourseGrid({
           animate={{ opacity: 1 }}
           className="flex items-center gap-3"
         >
-          <h1 className="text-xl font-bold text-slate-800">
+          <h1 className="text-2xl font-heading font-black text-foreground">
             {loading ? "Searching..." : `${courses.length} course${courses.length !== 1 ? "s" : ""} found`}
           </h1>
           {hasFilters && !loading && (
-            <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100 text-xs">
-              Filtered
+            <Badge variant="default" className="text-xs font-heading font-black">
+              FILTERED
             </Badge>
           )}
         </motion.div>
       </div>
 
-
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="bento-card p-0 overflow-hidden animate-pulse"
+              className="bg-background border-2 border-border rounded-base p-0 overflow-hidden shadow-shadow animate-pulse"
             >
-              <div className="h-44 bg-slate-100" />
+              <div className="h-44 bg-secondary-background border-b-2 border-border" />
               <div className="p-4 flex flex-col gap-2">
-                <div className="h-3 bg-slate-100 rounded w-1/3" />
-                <div className="h-4 bg-slate-100 rounded w-3/4" />
-                <div className="h-3 bg-slate-100 rounded w-1/2" />
+                <div className="h-3 bg-secondary-background rounded-base w-1/3" />
+                <div className="h-4 bg-secondary-background rounded-base w-3/4" />
+                <div className="h-3 bg-secondary-background rounded-base w-1/2" />
               </div>
             </div>
           ))}
         </div>
       ) : courses.length === 0 ? (
-        <div className="text-center py-24">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-            <Search className="w-7 h-7 text-slate-400" />
+        <div className="text-center py-24 bg-secondary-background border-2 border-border rounded-base shadow-shadow max-w-lg mx-auto p-8">
+          <div className="w-16 h-16 rounded-base bg-main border-2 border-border flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_0px_#000]">
+            <Search className="w-8 h-8 text-main-foreground" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-700 mb-2">No courses found</h3>
-          <p className="text-slate-500 text-sm">Try different keywords or remove some filters.</p>
+          <h3 className="text-xl font-heading font-black text-foreground mb-2">No courses found</h3>
+          <p className="text-foreground/70 text-sm font-base">Try adjusting your search terms or clearing active filters.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {courses.slice((currentPage - 1) * 12, currentPage * 12).map((course, i) => (
               <CourseCard key={course.id} course={course} index={i} />
             ))}
           </div>
 
-
           {courses.length > 12 && (
-            <div className="flex justify-center items-center gap-2 mt-4">
+            <div className="flex justify-center items-center gap-2 mt-6">
               <Button
-                variant="outline"
+                variant="neutral"
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="rounded-xl border-slate-200 text-slate-600 font-medium h-9 px-3 cursor-pointer"
+                className="font-heading font-bold cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Prev
               </Button>
               
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 {Array.from({ length: Math.ceil(courses.length / 12) }).map((_, idx) => {
                   const pageNum = idx + 1;
                   const isActive = pageNum === currentPage;
@@ -96,10 +93,10 @@ export function ExploreCourseGrid({
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-semibold transition-all cursor-pointer ${
+                      className={`w-9 h-9 rounded-base flex items-center justify-center text-sm font-heading font-black transition-all cursor-pointer border-2 border-border ${
                         isActive
-                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent hover:border-slate-200"
+                          ? "bg-main text-main-foreground shadow-[2px_2px_0px_0px_#000]"
+                          : "bg-background text-foreground hover:bg-main/30 shadow-none"
                       }`}
                     >
                       {pageNum}
@@ -109,11 +106,11 @@ export function ExploreCourseGrid({
               </div>
 
               <Button
-                variant="outline"
+                variant="neutral"
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.min(Math.ceil(courses.length / 12), p + 1))}
                 disabled={currentPage === Math.ceil(courses.length / 12)}
-                className="rounded-xl border-slate-200 text-slate-600 font-medium h-9 px-3 cursor-pointer"
+                className="font-heading font-bold cursor-pointer"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />

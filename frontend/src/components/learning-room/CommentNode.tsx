@@ -35,7 +35,7 @@ export function CommentNode({
   formatTimeAgo,
 }: CommentNodeProps) {
   const isReplyDeleted = comment.content === "[Comment deleted]";
-  const avatarSize = depth === 0 ? "w-9 h-9 text-sm rounded-xl" : "w-7 h-7 text-xs rounded-lg";
+  const avatarSize = depth === 0 ? "w-9 h-9 text-sm" : "w-7 h-7 text-xs";
   const initials = comment.userName.slice(0, 2).toUpperCase();
 
   const isLiked = likedCommentIds.has(comment.id);
@@ -49,7 +49,7 @@ export function CommentNode({
       <div className="flex gap-3 items-start">
         <div
           className={cn(
-            "bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-semibold flex-shrink-0 select-none overflow-hidden",
+            "bg-main border-2 border-border rounded-base flex items-center justify-center text-main-foreground font-heading font-black flex-shrink-0 select-none overflow-hidden shadow-[1px_1px_0px_0px_#000]",
             avatarSize
           )}
         >
@@ -61,47 +61,47 @@ export function CommentNode({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span className={cn("font-semibold text-slate-800", depth === 0 ? "text-sm" : "text-xs")}>
+            <span className={cn("font-heading font-black text-foreground", depth === 0 ? "text-sm" : "text-xs")}>
               {comment.userName}
             </span>
-            <span className="text-[10px] text-slate-400">{formatTimeAgo(comment.createdAt)}</span>
+            <span className="text-[10px] font-mono text-foreground/60">{formatTimeAgo(comment.createdAt)}</span>
           </div>
           <p
             className={cn(
-              "text-slate-600 leading-relaxed whitespace-pre-wrap break-all",
+              "text-foreground/90 font-base leading-relaxed whitespace-pre-wrap break-all",
               depth === 0 ? "text-sm" : "text-xs",
-              isReplyDeleted && "text-slate-400 italic"
+              isReplyDeleted && "text-foreground/50 italic"
             )}
           >
             {comment.content}
           </p>
 
-          <div className="flex items-center gap-4 mt-2 flex-wrap">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <div className="flex items-center gap-1 border-2 border-border rounded-base p-0.5 bg-secondary-background">
               <button
                 type="button"
                 onClick={() => handleVote(comment.id, "up")}
                 className={cn(
-                  "transition-colors p-1 rounded hover:bg-slate-100 cursor-pointer",
-                  isLiked ? "text-indigo-600 font-bold" : "text-slate-400 hover:text-indigo-600"
+                  "transition-colors p-1 rounded-base hover:bg-main cursor-pointer",
+                  isLiked ? "bg-main text-main-foreground font-black" : "text-foreground"
                 )}
                 title="Like"
               >
-                <ThumbsUp className="w-3.5 h-3.5" />
+                <ThumbsUp className="w-3 h-3" />
               </button>
-              <span className="text-xs font-medium text-slate-500 font-mono w-4 text-center">
+              <span className="text-xs font-mono font-bold text-foreground px-1">
                 {comment.upvotes}
               </span>
               <button
                 type="button"
                 onClick={() => handleVote(comment.id, "down")}
                 className={cn(
-                  "transition-colors p-1 rounded hover:bg-slate-100 cursor-pointer",
-                  isDisliked ? "text-rose-600 font-bold" : "text-slate-400 hover:text-rose-600"
+                  "transition-colors p-1 rounded-base hover:bg-main cursor-pointer",
+                  isDisliked ? "bg-red-500 text-white font-black" : "text-foreground"
                 )}
                 title="Dislike"
               >
-                <ThumbsDown className="w-3.5 h-3.5" />
+                <ThumbsDown className="w-3 h-3" />
               </button>
             </div>
 
@@ -112,9 +112,9 @@ export function CommentNode({
                   setReplyingToId(replyingToId === comment.id ? null : comment.id);
                   setReplyText("");
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-1 hover:bg-slate-100 px-1.5 py-0.5 rounded cursor-pointer"
+                className="text-xs font-heading font-bold text-foreground hover:bg-main transition-colors flex items-center gap-1 border border-border px-2 py-1 rounded-base cursor-pointer shadow-[1px_1px_0px_0px_#000]"
               >
-                <CornerDownRight className="w-3.5 h-3.5" />
+                <CornerDownRight className="w-3 h-3" />
                 Reply
               </button>
             )}
@@ -123,10 +123,10 @@ export function CommentNode({
               <button
                 type="button"
                 onClick={() => handleDeleteComment(comment.id)}
-                className="text-xs font-semibold text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-all flex items-center gap-1 px-1.5 py-0.5 rounded ml-auto opacity-75 hover:opacity-100 cursor-pointer"
+                className="text-xs font-heading font-bold text-red-600 hover:bg-red-500 hover:text-white border border-border transition-all flex items-center gap-1 px-2 py-1 rounded-base ml-auto cursor-pointer"
                 title="Delete"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Trash2 className="w-3 h-3" />
                 Delete
               </button>
             )}
@@ -135,45 +135,50 @@ export function CommentNode({
       </div>
 
       {replyingToId === comment.id && (
-        <div className="pl-12 flex flex-col gap-2 mt-1">
+        <div className="pl-10 flex flex-col gap-2 mt-2">
           <textarea
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Write a reply..."
             rows={2}
             maxLength={500}
-            className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors resize-none"
+            className="w-full rounded-base border-2 border-border p-2.5 text-sm font-base bg-secondary-background focus:outline-hidden focus:ring-2 focus:ring-black transition-all resize-none text-foreground"
           />
-          <span className="text-[10px] text-slate-400 text-right block mt-0.5">
-            {replyText.length}/500
-          </span>
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              onClick={() => setReplyingToId(null)}
-              variant="ghost"
-              className="text-slate-500 hover:bg-slate-100 text-xs rounded-xl h-8 px-3 cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handleAddReply(comment.id)}
-              disabled={!replyText.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded-xl h-8 px-3 cursor-pointer"
-            >
-              Reply
-            </Button>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-mono text-foreground/60">
+              {replyText.length}/500
+            </span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => setReplyingToId(null)}
+                variant="neutral"
+                size="sm"
+                className="text-xs h-8 px-3 cursor-pointer font-heading font-bold"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleAddReply(comment.id)}
+                disabled={!replyText.trim()}
+                variant="default"
+                size="sm"
+                className="text-xs h-8 px-3 cursor-pointer font-heading font-black shadow-[1px_1px_0px_0px_#000]"
+              >
+                Reply
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
       {comment.replies && comment.replies.length > 0 && (
         <div
-          className="flex flex-col gap-1 border-l border-slate-100"
+          className="flex flex-col gap-2 border-l-2 border-border"
           style={{
-            paddingLeft: `${depth === 0 ? 32 : depth === 1 ? 20 : 12}px`,
-            marginLeft: `${depth === 0 ? 16 : depth === 1 ? 12 : 8}px`,
+            paddingLeft: `${depth === 0 ? 24 : depth === 1 ? 16 : 10}px`,
+            marginLeft: `${depth === 0 ? 14 : depth === 1 ? 10 : 6}px`,
           }}
         >
           {comment.replies.map((reply) => (

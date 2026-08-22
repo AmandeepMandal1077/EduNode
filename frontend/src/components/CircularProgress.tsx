@@ -25,7 +25,7 @@ export function CircularProgress({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#e0e7ff"
+          stroke="var(--secondary-background)"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -33,17 +33,16 @@ export function CircularProgress({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#6366f1"
+          stroke="var(--main)"
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           style={{ transition: "stroke-dashoffset 0.8s ease" }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-xl font-bold text-slate-800">{value}%</span>
-        {label && <span className="text-xs text-slate-500 mt-0.5">{label}</span>}
+        <span className="text-xl font-heading font-black text-foreground">{value}%</span>
+        {label && <span className="text-[10px] font-heading font-bold text-foreground/60 uppercase">{label}</span>}
       </div>
     </div>
   );

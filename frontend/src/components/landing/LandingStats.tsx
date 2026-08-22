@@ -12,21 +12,21 @@ const STATS = [
 export function LandingStats() {
   return (
     <AnimatedSection>
-      <section className="py-16 px-4 border-y border-slate-100 bg-white">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="py-14 px-4 border-b-4 border-border bg-background">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {STATS.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="text-center"
+              className="p-5 bg-secondary-background border-2 border-border rounded-base shadow-shadow text-center hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
             >
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-3">
-                <stat.icon className="w-5 h-5 text-indigo-600" />
+              <div className="w-12 h-12 rounded-base bg-main border-2 border-border flex items-center justify-center mx-auto mb-3 shadow-[2px_2px_0px_0px_#000]">
+                <stat.icon className="w-6 h-6 text-main-foreground" />
               </div>
-              <p className="text-3xl font-extrabold text-slate-900">{stat.value}</p>
-              <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+              <p className="text-3xl sm:text-4xl font-heading font-black text-foreground tracking-tight">{stat.value}</p>
+              <p className="text-xs sm:text-sm font-heading font-bold text-foreground/70 mt-1 uppercase tracking-wider">{stat.label}</p>
             </motion.div>
           ))}
         </div>

@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { getCourseAnnouncements } from "@/services/courseService";
 import { postAnnouncement, type BackendAnnouncement } from "@/api/courseApi";
 import { getErrorMessage } from "@/utils/getErrorMessage";
-import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
 import debug from "@/utils/debug";
 
 interface CourseAnnouncementsTabProps {
@@ -60,12 +59,12 @@ export function CourseAnnouncementsTab({
       transition={{ duration: 0.15 }}
       className="flex flex-col gap-6"
     >
-      <h2 className="text-lg font-bold text-slate-900 mb-2">Announcements</h2>
+      <h2 className="text-xl font-heading font-black text-foreground mb-2">Announcements</h2>
 
       <form onSubmit={handlePostAnnouncement} className="flex flex-col gap-3">
         <Label
           htmlFor="announcement"
-          className="text-sm font-medium text-slate-700"
+          className="text-sm font-heading font-bold text-foreground"
         >
           New Announcement Message
         </Label>
@@ -79,18 +78,20 @@ export function CourseAnnouncementsTab({
           }}
           placeholder="Write announcement message here to broadcast to all enrolled students..."
           rows={3}
-          className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
+          className="w-full rounded-base border-2 border-border px-3 py-2.5 text-sm font-base bg-secondary-background resize-none focus:outline-hidden focus:ring-2 focus:ring-black transition-all"
         />
-        <span className="text-[10px] text-slate-400 text-right block">
+        <span className="text-[10px] font-mono text-foreground/60 text-right block">
           {announcementMsg.length}/500
         </span>
         {annError && (
-          <p className="text-xs text-rose-600 font-semibold">{annError}</p>
+          <p className="text-xs text-red-600 font-heading font-bold">{annError}</p>
         )}
         <Button
           type="submit"
           disabled={postingAnn}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold ml-auto"
+          variant="default"
+          size="lg"
+          className="font-heading font-black shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none ml-auto cursor-pointer"
         >
           {postingAnn ? (
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -104,31 +105,31 @@ export function CourseAnnouncementsTab({
       <Separator />
 
       <div>
-        <h3 className="font-bold text-slate-800 mb-4">Broadcast History</h3>
+        <h3 className="font-heading font-black text-lg text-foreground mb-4">Broadcast History</h3>
         {announcements.length === 0 ? (
-          <div className="text-center py-8 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
-            <p className="text-slate-500 text-sm">
+          <div className="text-center py-8 bg-secondary-background border-2 border-border rounded-base shadow-shadow">
+            <p className="text-foreground/70 font-heading font-bold text-sm">
               No announcements broadcasted yet.
             </p>
           </div>
         ) : (
-          <ScrollArea className="h-[280px] sm:h-[320px] md:h-[420px] border border-slate-100 rounded-xl bg-slate-50/50">
-            <div className="flex flex-col gap-3 p-2">
+          <div className="h-[280px] sm:h-[320px] md:h-[420px] border-2 border-border rounded-base bg-secondary-background p-2 overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col gap-3">
               {announcements.map((ann) => (
                 <div
                   key={ann._id}
-                  className="p-4 bg-indigo-50/50 border border-indigo-100/50 rounded-xl flex flex-col gap-2"
+                  className="p-4 bg-background border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000] flex flex-col gap-2"
                 >
-                  <p className="text-sm text-slate-700 font-medium leading-relaxed whitespace-pre-wrap break-all">
+                  <p className="text-sm text-foreground font-base leading-relaxed whitespace-pre-wrap break-all">
                     {ann.message}
                   </p>
-                  <span className="text-[10px] text-slate-400 font-medium self-end">
+                  <span className="text-[10px] font-mono font-bold text-foreground/60 self-end">
                     {new Date(ann.sentAt).toLocaleString()}
                   </span>
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </div>
     </motion.div>

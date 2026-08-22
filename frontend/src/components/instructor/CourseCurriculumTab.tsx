@@ -14,7 +14,6 @@ import { uploadFileToS3 } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course, Lecture } from "@/types";
 import type { BackendProcessingLecture } from "@/api/courseApi";
-import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
 import debug from "@/utils/debug";
 
 const POLL_INTERVAL_MS = 10_000;
@@ -54,7 +53,6 @@ export function CourseCurriculumTab({
     const lectures = await getProcessingLectures(courseId);
     setProcessingLectures(lectures);
 
-    // If we previously had processing lectures and now some completed, refresh the main list
     if (
       prevProcessingCountRef.current !== null &&
       prevProcessingCountRef.current > lectures.length
@@ -64,7 +62,6 @@ export function CourseCurriculumTab({
     prevProcessingCountRef.current = lectures.length;
   }, [courseId, loadCourseData]);
 
-  // Initial fetch + polling
   useEffect(() => {
     pollProcessingLectures();
     const interval = setInterval(pollProcessingLectures, POLL_INTERVAL_MS);
@@ -112,7 +109,6 @@ export function CourseCurriculumTab({
       setSelectedVideo(null);
       setUploadProgress(0);
       await loadCourseData();
-      // Immediately refresh processing list so the new lecture shows up
       await pollProcessingLectures();
     } catch (err: unknown) {
       debug(err);
@@ -155,33 +151,33 @@ export function CourseCurriculumTab({
       {/* Processing Lectures Section */}
       {processingLectures.length > 0 && (
         <div>
-          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+          <h2 className="text-lg font-heading font-black text-foreground mb-4 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-foreground" />
             Processing Videos
           </h2>
           <div className="flex flex-col gap-2.5">
             {processingLectures.map((lect) => (
               <div
                 key={lect._id}
-                className="flex items-center justify-between p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl"
+                className="flex items-center justify-between p-3.5 bg-main border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000]"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-amber-100">
-                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-base bg-background border-2 border-border">
+                    <Clock className="w-4 h-4 text-foreground" />
                   </span>
                   <div className="min-w-0">
-                    <h4 className="text-sm font-bold text-slate-800 truncate">
+                    <h4 className="text-sm font-heading font-black text-main-foreground truncate">
                       {lect.title}
                     </h4>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                    <p className="text-xs font-base text-main-foreground/80 truncate mt-0.5">
                       {lect.description}
                     </p>
                   </div>
                 </div>
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full flex-shrink-0 ml-3">
+                <span className="flex items-center gap-1.5 text-xs font-heading font-black text-foreground bg-background border-2 border-border px-2.5 py-1 rounded-base flex-shrink-0 ml-3 shadow-[1px_1px_0px_0px_#000]">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-black" />
                   </span>
                   Processing
                 </span>
@@ -192,32 +188,32 @@ export function CourseCurriculumTab({
       )}
 
       <div>
-        <h2 className="text-lg font-bold text-slate-900 mb-4">
+        <h2 className="text-lg font-heading font-black text-foreground mb-4">
           Course Lectures
         </h2>
         {mappedLectures.length === 0 ? (
-          <div className="text-center py-10 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
-            <p className="text-slate-500 text-sm">
+          <div className="text-center py-10 bg-secondary-background border-2 border-border rounded-base shadow-shadow">
+            <p className="text-foreground/70 font-heading font-bold text-sm">
               No lectures added to this course yet.
             </p>
           </div>
         ) : (
-          <ScrollArea className="h-[280px] sm:h-[320px] md:h-[420px] border border-slate-100 rounded-xl bg-slate-50/50">
-            <div className="flex flex-col gap-2.5 p-2">
+          <div className="h-[280px] sm:h-[320px] md:h-[420px] border-2 border-border rounded-base bg-secondary-background p-2 overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col gap-2.5">
               {mappedLectures.map((lect, idx) => (
                 <div
                   key={lect.id}
-                  className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl"
+                  className="flex items-center justify-between p-3.5 bg-background border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000]"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-heading font-black text-main-foreground bg-main border-2 border-border w-7 h-7 rounded-base flex items-center justify-center flex-shrink-0 shadow-[1px_1px_0px_0px_#000]">
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-slate-800 truncate">
+                      <h4 className="text-sm font-heading font-black text-foreground truncate">
                         {lect.title}
                       </h4>
-                      <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                      <p className="text-xs font-base text-foreground/70 truncate mt-0.5">
                         {lect.description}
                       </p>
                     </div>
@@ -225,9 +221,9 @@ export function CourseCurriculumTab({
                   <Button
                     onClick={() => handleDeleteLecture(lect.id)}
                     disabled={deletingLectureId === lect.id}
-                    variant="ghost"
-                    className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg p-2"
+                    variant="neutral"
                     size="icon"
+                    className="border-2 border-border text-red-600 hover:bg-red-500 hover:text-white rounded-base h-8 w-8 cursor-pointer"
                   >
                     {deletingLectureId === lect.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -238,25 +234,25 @@ export function CourseCurriculumTab({
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </div>
 
       <Separator />
 
       <div>
-        <h3 className="font-bold text-slate-900 mb-4">Add New Lecture</h3>
+        <h3 className="font-heading font-black text-lg text-foreground mb-4">Add New Lecture</h3>
         <form onSubmit={handleAddLecture} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-baseline">
               <Label
                 htmlFor="lecture-title"
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-heading font-bold text-foreground"
               >
                 Lecture Title
               </Label>
               {lectureErrors.title && (
-                <span className="text-xs text-rose-600 font-semibold">
+                <span className="text-xs text-red-600 font-heading font-bold">
                   {lectureErrors.title}
                 </span>
               )}
@@ -274,13 +270,11 @@ export function CourseCurriculumTab({
                 });
               }}
               placeholder="e.g. Setting up the environment"
-              className={
-                lectureErrors.title
-                  ? "border-rose-500 focus-visible:ring-rose-500/20"
-                  : "border-slate-200"
-              }
+              className={`bg-secondary-background ${
+                lectureErrors.title ? "border-red-500" : ""
+              }`}
             />
-            <span className="text-[10px] text-slate-400 text-right block mt-0.5">
+            <span className="text-[10px] font-mono text-foreground/60 text-right block mt-0.5">
               {lectureForm.title.length}/50
             </span>
           </div>
@@ -289,12 +283,12 @@ export function CourseCurriculumTab({
             <div className="flex justify-between items-baseline">
               <Label
                 htmlFor="lecture-description"
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-heading font-bold text-foreground"
               >
                 Lecture Description
               </Label>
               {lectureErrors.description && (
-                <span className="text-xs text-rose-600 font-semibold">
+                <span className="text-xs text-red-600 font-heading font-bold">
                   {lectureErrors.description}
                 </span>
               )}
@@ -312,24 +306,22 @@ export function CourseCurriculumTab({
               }}
               placeholder="Brief summary (max 100 characters)"
               maxLength={100}
-              className={
-                lectureErrors.description
-                  ? "border-rose-500 focus-visible:ring-rose-500/20"
-                  : "border-slate-200"
-              }
+              className={`bg-secondary-background ${
+                lectureErrors.description ? "border-red-500" : ""
+              }`}
             />
-            <span className="text-[10px] text-slate-400 text-right">
+            <span className="text-[10px] font-mono text-foreground/60 text-right">
               {lectureForm.description.length}/100
             </span>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-baseline">
-              <Label className="text-sm font-medium text-slate-700">
+              <Label className="text-sm font-heading font-bold text-foreground">
                 Lecture Video File
               </Label>
               {lectureErrors.video && (
-                <span className="text-xs text-rose-600 font-semibold">
+                <span className="text-xs text-red-600 font-heading font-bold">
                   {lectureErrors.video}
                 </span>
               )}
@@ -340,10 +332,10 @@ export function CourseCurriculumTab({
                   document.getElementById("lecture-video-upload")?.click();
                 }
               }}
-              className={`w-full flex items-center h-10 rounded-xl border border-slate-200 bg-white transition-colors ${
+              className={`w-full flex items-center h-11 rounded-base border-2 border-border bg-secondary-background transition-colors ${
                 addingLecture || processingLectures.length > 0
                   ? "cursor-not-allowed opacity-60"
-                  : "cursor-pointer hover:bg-slate-50"
+                  : "cursor-pointer hover:bg-secondary-background/80"
               }`}
             >
               <input
@@ -361,48 +353,48 @@ export function CourseCurriculumTab({
                       return copy;
                     });
                   }
-                  e.target.value = ""; // Reset input
+                  e.target.value = "";
                 }}
               />
-              <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg ml-3 mr-4 hover:bg-indigo-100 transition-colors">
+              <span className="text-xs font-heading font-black bg-main text-main-foreground px-3 py-1.5 rounded-base border-2 border-border ml-3 mr-4 shadow-[1px_1px_0px_0px_#000]">
                 Choose File
               </span>
-              <span className="text-xs text-slate-500 truncate">
+              <span className="text-xs font-base text-foreground/70 truncate">
                 {selectedVideo ? selectedVideo.name : "No file chosen"}
               </span>
             </div>
             {addingLecture && uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="w-full bg-slate-200 rounded-full h-2.5 mt-2 overflow-hidden">
+              <div className="w-full bg-secondary-background rounded-base border-2 border-border h-3 mt-2 overflow-hidden">
                 <div
-                  className="bg-indigo-600 h-2.5 rounded-full"
+                  className="bg-main h-full transition-all"
                   style={{ width: `${uploadProgress}%` }}
-                ></div>
+                />
               </div>
             )}
             {selectedVideo && !addingLecture && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between bg-indigo-50 border border-indigo-100 p-2.5 rounded-xl mt-2"
+                className="flex items-center justify-between bg-main border-2 border-border p-2.5 rounded-base mt-2 shadow-[2px_2px_0px_0px_#000]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                    <Video className="w-4 h-4 text-indigo-600" />
+                  <div className="w-8 h-8 rounded-base bg-background border-2 border-border flex items-center justify-center flex-shrink-0">
+                    <Video className="w-4 h-4 text-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] text-indigo-400 font-medium uppercase tracking-wider mb-0.5">
+                    <p className="text-[10px] text-main-foreground font-heading font-black uppercase tracking-wider">
                       Ready to upload
                     </p>
-                    <p className="text-xs text-indigo-700 font-semibold truncate pr-2">
+                    <p className="text-xs font-heading font-bold text-main-foreground truncate pr-2">
                       {selectedVideo.name}
                     </p>
                   </div>
                 </div>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="neutral"
                   size="sm"
-                  className="h-8 w-8 p-0 text-indigo-400 hover:text-rose-600 hover:bg-rose-100 rounded-lg flex-shrink-0"
+                  className="h-8 w-8 p-0 text-red-600 hover:bg-red-500 hover:text-white rounded-base flex-shrink-0"
                   onClick={() => setSelectedVideo(null)}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -412,7 +404,7 @@ export function CourseCurriculumTab({
           </div>
 
           {lectureGeneralError && (
-            <p className="text-sm text-rose-600 font-medium bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5">
+            <p className="text-sm text-red-600 font-heading font-bold bg-red-100 border-2 border-red-500 rounded-base px-4 py-2.5 shadow-[2px_2px_0px_0px_#ef4444]">
               {lectureGeneralError}
             </p>
           )}
@@ -420,26 +412,26 @@ export function CourseCurriculumTab({
           <Button
             type="submit"
             disabled={addingLecture || processingLectures.length > 0}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold mt-2"
+            size="lg"
+            variant="default"
+            className="font-heading font-black shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none mt-2 cursor-pointer"
           >
             {addingLecture ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Adding
-                Lecture...
+                <Loader2 className="w-5 h-5 animate-spin mr-2" /> Adding Lecture...
               </>
             ) : processingLectures.length > 0 ? (
               <>
-                <Plus className="w-4 h-4 mr-2" /> Video Processing... Please
-                Wait
+                <Plus className="w-5 h-5 mr-2" /> Video Processing... Please Wait
               </>
             ) : (
               <>
-                <Plus className="w-4 h-4 mr-2" /> Add Lecture
+                <Plus className="w-5 h-5 mr-2" /> Add Lecture
               </>
             )}
           </Button>
           {addingLecture && (
-            <p className="text-xs text-amber-600 font-medium animate-pulse mt-1">
+            <p className="text-xs text-foreground font-heading font-bold animate-pulse mt-1">
               Uploading video... Please do not refresh or close the page.
             </p>
           )}

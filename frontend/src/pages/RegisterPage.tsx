@@ -21,36 +21,28 @@ export function RegisterPage() {
   } = useRegister();
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-12"
-      style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f0fdf4 50%, #faf5ff 100%)" }}
-    >
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-72 h-72 rounded-full blur-3xl opacity-40" style={{ background: "#c7d2fe" }} />
-        <div className="absolute bottom-1/4 -right-32 w-72 h-72 rounded-full blur-3xl opacity-30" style={{ background: "#ddd6fe" }} />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 hero-gradient bg-secondary-background">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="relative w-full max-w-md"
       >
-        <div className="glass rounded-3xl shadow-2xl p-8 sm:p-10">
+        <div className="bg-background border-4 border-border rounded-base shadow-shadow p-8 sm:p-10">
           <div className="flex items-center justify-center gap-2.5 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-              <GraduationCap className="w-5 h-5 text-white" />
+            <div className="w-11 h-11 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[3px_3px_0px_0px_#000]">
+              <GraduationCap className="w-6 h-6 text-main-foreground" />
             </div>
-            <span className="font-bold text-xl text-slate-800 tracking-tight">
-              Edu<span className="text-indigo-600">Node</span>
+            <span className="font-heading font-black text-2xl text-foreground tracking-tight">
+              Edu<span className="bg-main px-1.5 py-0.5 border-2 border-border rounded-base ml-1 text-main-foreground shadow-[2px_2px_0px_0px_#000]">Node</span>
             </span>
           </div>
 
-          <h1 className="text-2xl font-extrabold text-slate-900 text-center mb-1">
-            Create your account
+          <h1 className="text-2xl font-heading font-black text-foreground text-center mb-1">
+            Create Your Account
           </h1>
-          <p className="text-sm text-slate-500 text-center mb-8">
-            Start your learning journey today — it's free
+          <p className="text-sm font-base text-foreground/70 text-center mb-8">
+            Start your learning journey today — it's completely free
           </p>
 
           <RegisterForm
@@ -67,9 +59,9 @@ export function RegisterPage() {
             handleSubmit={handleSubmit}
           />
 
-          <p className="text-center text-sm text-slate-500 mt-6">
+          <p className="text-center text-sm font-base text-foreground/80 mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="text-indigo-600 font-semibold hover:underline">
+            <Link to="/login" className="font-heading font-black text-foreground underline decoration-2 hover:bg-main px-1 rounded-base transition-colors">
               Sign in
             </Link>
           </p>

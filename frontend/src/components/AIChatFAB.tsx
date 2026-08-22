@@ -3,19 +3,17 @@ import { motion, AnimatePresence } from "motion/react";
 import { MessageCircle, X, Send, Bot, User, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store";
 import { fetchChatHistoryThunk, sendChatMessageThunk } from "@/store/chatSlice";
 
-
 function TypingDots() {
   return (
-    <div className="flex items-center gap-1 px-4 py-3">
+    <div className="flex items-center gap-1.5 px-4 py-3">
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
-          className="w-2 h-2 rounded-full bg-indigo-400"
+          className="w-2.5 h-2.5 rounded-full bg-foreground"
           animate={{ y: [0, -6, 0] }}
           transition={{
             duration: 0.6,
@@ -53,14 +51,12 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
     };
   }, [open]);
 
-  // Fetch chat history when panel opens
   useEffect(() => {
     if (open && courseId && lectureId && messages.length === 0) {
       dispatch(fetchChatHistoryThunk({ courseId, lectureId }));
     }
   }, [open, courseId, lectureId, dispatch, messages.length]);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
@@ -90,7 +86,7 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             onClick={() => setOpen(true)}
-            className="fab-breathe fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xl hover:bg-indigo-700 transition-colors"
+            className="fab-breathe fixed bottom-6 right-6 z-50 w-14 h-14 rounded-base bg-main text-main-foreground border-2 border-border flex items-center justify-center shadow-shadow hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
             aria-label="Open AI Chat"
             id="ai-chat-fab"
           >
@@ -98,7 +94,6 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
           </motion.button>
         )}
       </AnimatePresence>
-
 
       <AnimatePresence>
         {open && (
@@ -109,43 +104,41 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 28 }}
-            className="fixed bottom-0 right-0 z-50 flex flex-col shadow-2xl rounded-tl-2xl rounded-bl-2xl overflow-hidden"
+            className="fixed bottom-0 right-0 z-50 flex flex-col shadow-shadow rounded-tl-base rounded-bl-base overflow-hidden border-l-4 border-t-4 border-border bg-background"
             style={{
               width: 400,
               height: "min(640px, 90vh)",
-              background: "white",
-              border: "1px solid #e0e7ff",
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-100 bg-indigo-600 flex-shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b-2 border-border bg-main flex-shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-base bg-background border-2 border-border flex items-center justify-center shadow-[1px_1px_0px_0px_#000]">
+                  <Bot className="w-4 h-4 text-foreground" />
                 </div>
                 <div>
-                  <p className="text-white font-semibold text-sm">EduNode AI</p>
-                  <p className="text-indigo-200 text-xs">Your study assistant</p>
+                  <p className="text-main-foreground font-heading font-black text-sm">EduNode AI</p>
+                  <p className="text-main-foreground/80 text-xs font-base">Your Contextual Tutor</p>
                 </div>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="text-white/80 hover:text-white transition-colors rounded p-1 hover:bg-white/10"
+                className="text-main-foreground hover:bg-background/30 rounded-base p-1 cursor-pointer transition-colors"
                 aria-label="Close chat"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 py-4" style={{ minHeight: 0 }}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 bg-background" style={{ minHeight: 0 }}>
               {loading ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-2">
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
-                        className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                        className="w-3 h-3 bg-main border border-border rounded-full animate-bounce"
                         style={{ animationDelay: `${i * 0.15}s` }}
                       />
                     ))}
@@ -153,15 +146,15 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full gap-4 text-center px-6">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center">
-                    <Sparkles className="w-7 h-7 text-indigo-500" />
+                  <div className="w-14 h-14 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+                    <Sparkles className="w-7 h-7 text-main-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-800 mb-1">
-                      Ask anything about this lecture
+                    <p className="text-base font-heading font-black text-foreground mb-1">
+                      Ask Anything About This Lecture
                     </p>
-                    <p className="text-xs text-slate-500 leading-relaxed">
-                      I can answer questions based on the lecture content. Try asking about key concepts, definitions, or explanations.
+                    <p className="text-xs font-base text-foreground/70 leading-relaxed">
+                      I can answer questions based on the video transcription and course materials.
                     </p>
                   </div>
                 </div>
@@ -176,22 +169,22 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
                       className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       {msg.role === "assistant" && (
-                        <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                          <Bot className="w-3.5 h-3.5 text-indigo-600" />
+                        <div className="w-7 h-7 rounded-base bg-main border-2 border-border flex items-center justify-center mr-2 mt-1 flex-shrink-0 shadow-[1px_1px_0px_0px_#000]">
+                          <Bot className="w-3.5 h-3.5 text-main-foreground" />
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                        className={`max-w-[80%] px-3.5 py-2.5 rounded-base text-sm leading-relaxed border-2 border-border shadow-[2px_2px_0px_0px_#000] ${
                           msg.role === "user"
-                            ? "bg-indigo-600 text-white rounded-br-md"
-                            : "bg-slate-100 text-slate-800 rounded-bl-md"
+                            ? "bg-main text-main-foreground font-medium"
+                            : "bg-secondary-background text-foreground font-base"
                         }`}
                       >
                         {msg.content}
                       </div>
                       {msg.role === "user" && (
-                        <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center ml-2 mt-1 flex-shrink-0">
-                          <User className="w-3.5 h-3.5 text-white" />
+                        <div className="w-7 h-7 rounded-base bg-background border-2 border-border flex items-center justify-center ml-2 mt-1 flex-shrink-0 shadow-[1px_1px_0px_0px_#000]">
+                          <User className="w-3.5 h-3.5 text-foreground" />
                         </div>
                       )}
                     </motion.div>
@@ -199,10 +192,10 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
 
                   {sending && (
                     <div className="flex justify-start">
-                      <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center mr-2 mt-1 flex-shrink-0">
-                        <Bot className="w-3.5 h-3.5 text-indigo-600" />
+                      <div className="w-7 h-7 rounded-base bg-main border-2 border-border flex items-center justify-center mr-2 mt-1 flex-shrink-0 shadow-[1px_1px_0px_0px_#000]">
+                        <Bot className="w-3.5 h-3.5 text-main-foreground" />
                       </div>
-                      <div className="bg-slate-100 rounded-2xl rounded-bl-md">
+                      <div className="bg-secondary-background border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000]">
                         <TypingDots />
                       </div>
                     </div>
@@ -214,22 +207,23 @@ export function AIChatFAB({ courseId, lectureId }: { courseId?: string; lectureI
             </div>
 
             {/* Input Area */}
-            <div className="flex-shrink-0 border-t border-slate-100 p-3 bg-white">
+            <div className="flex-shrink-0 border-t-2 border-border p-3 bg-secondary-background">
               <div className="flex items-center gap-2">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about this lecture..."
+                  placeholder="Ask a question about this lecture..."
                   disabled={sending}
-                  className="flex-1 h-10 rounded-xl border-slate-200 bg-slate-50 text-sm placeholder:text-slate-400 focus-visible:ring-indigo-400"
+                  className="flex-1 h-10 bg-background font-base"
                   id="ai-chat-input"
                 />
                 <Button
                   onClick={handleSend}
                   disabled={!input.trim() || sending}
                   size="icon"
-                  className="h-10 w-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex-shrink-0 disabled:opacity-50"
+                  variant="default"
+                  className="h-10 w-10 flex-shrink-0 shadow-[2px_2px_0px_0px_#000] cursor-pointer"
                   aria-label="Send message"
                   id="ai-chat-send"
                 >

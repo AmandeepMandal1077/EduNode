@@ -14,11 +14,11 @@ export function CourseAbout({ course, showFullDesc, setShowFullDesc }: CourseAbo
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15 }}
-      className="bento-card"
+      className="bg-background border-2 border-border rounded-base p-6 shadow-shadow"
     >
-      <h2 className="text-xl font-bold text-slate-800 mb-3">About this course</h2>
+      <h2 className="text-xl font-heading font-black text-foreground mb-3">About This Course</h2>
       <p
-        className={`text-slate-600 text-sm leading-relaxed whitespace-pre-wrap break-words ${
+        className={`text-foreground/80 text-sm leading-relaxed whitespace-pre-wrap break-words font-base ${
           !showFullDesc ? "line-clamp-4" : ""
         }`}
       >
@@ -26,7 +26,7 @@ export function CourseAbout({ course, showFullDesc, setShowFullDesc }: CourseAbo
       </p>
       <button
         onClick={() => setShowFullDesc((s) => !s)}
-        className="flex items-center gap-1 text-indigo-600 text-sm font-medium mt-3 hover:underline"
+        className="flex items-center gap-1 font-heading font-bold text-foreground text-sm mt-3 underline decoration-2 hover:bg-main px-1 rounded-base cursor-pointer"
       >
         {showFullDesc ? (
           <>

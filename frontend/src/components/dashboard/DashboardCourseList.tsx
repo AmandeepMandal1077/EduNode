@@ -13,14 +13,14 @@ export function DashboardCourseList({ enrolled, navigate }: DashboardCourseListP
   if (enrolled.length === 0) return null;
 
   return (
-    <div className="mt-6">
+    <div className="mt-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-slate-800">My Courses</h2>
+        <h2 className="text-xl font-heading font-black text-foreground">Enrolled Courses</h2>
         <Button
-          variant="ghost"
+          variant="neutral"
           size="sm"
           onClick={() => navigate("/my-courses")}
-          className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 cursor-pointer"
+          className="font-heading font-bold cursor-pointer"
         >
           View all
           <ChevronRight className="w-4 h-4 ml-1" />
@@ -34,9 +34,9 @@ export function DashboardCourseList({ enrolled, navigate }: DashboardCourseListP
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.06 }}
             onClick={() => navigate(`/learn/${e.course.id}/lecture/${e.enrollment.lastLectureId}`)}
-            className="bento-card bento-card-interactive flex gap-3 p-3 cursor-pointer"
+            className="bg-background border-2 border-border rounded-base p-3 shadow-shadow flex gap-3 cursor-pointer hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
           >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden bg-slate-100">
+            <div className="w-12 h-12 rounded-base border-2 border-border flex items-center justify-center flex-shrink-0 overflow-hidden bg-secondary-background shadow-[1px_1px_0px_0px_#000]">
               {e.course.thumbnail ? (
                 <img
                   src={e.course.thumbnail}
@@ -45,18 +45,17 @@ export function DashboardCourseList({ enrolled, navigate }: DashboardCourseListP
                 />
               ) : (
                 <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{ background: `${e.course.thumbnailAccent}22` }}
+                  className="w-full h-full flex items-center justify-center bg-main"
                 >
-                  <BookOpen className="w-5 h-5" style={{ color: e.course.thumbnailAccent }} />
+                  <BookOpen className="w-5 h-5 text-foreground" />
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-800 truncate">{e.course.title}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <Progress value={e.enrollment.progressPercent} className="h-1.5 flex-1" />
-                <span className="text-xs font-semibold text-indigo-600 flex-shrink-0">{e.enrollment.progressPercent}%</span>
+              <p className="text-sm font-heading font-black text-foreground truncate">{e.course.title}</p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Progress value={e.enrollment.progressPercent} className="h-2 flex-1" />
+                <span className="text-xs font-mono font-bold text-foreground flex-shrink-0">{e.enrollment.progressPercent}%</span>
               </div>
             </div>
           </motion.div>

@@ -2,7 +2,6 @@ import { motion } from "motion/react";
 import type { Variants } from "motion/react";
 import { Bell, ChevronRight } from "lucide-react";
 import type { DashboardAnnouncement } from "@/hooks/useDashboard";
-import ScrollArea from "@/components/shadix-ui/components/smooth-scroll-area/scroll-area";
 
 interface DashboardAnnouncementsProps {
   announcements: DashboardAnnouncement[];
@@ -44,25 +43,25 @@ export function DashboardAnnouncements({
   return (
     <motion.div
       variants={cardVariants}
-      className="md:col-span-2 xl:col-span-4 bento-card flex flex-col gap-3"
+      className="md:col-span-2 xl:col-span-4 bg-background border-2 border-border rounded-base p-6 shadow-shadow flex flex-col gap-4"
     >
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-          <Bell className="w-4 h-4 text-violet-600" />
+      <div className="flex items-center gap-2.5 mb-1">
+        <div className="w-9 h-9 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+          <Bell className="w-4 h-4 text-main-foreground" />
         </div>
-        <span className="text-sm font-semibold text-slate-700">
-          Announcements
+        <span className="text-base font-heading font-black text-foreground">
+          Course Announcements
         </span>
       </div>
       {announcements.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
-          <p className="text-slate-500 text-sm">
+          <p className="text-foreground/60 font-heading font-bold text-sm">
             No announcements from your courses yet.
           </p>
         </div>
       ) : (
-        <ScrollArea className="max-h-[280px]">
-          <div className="flex flex-col gap-3">
+        <div className="max-h-[280px] overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col gap-3 pr-2">
             {announcements.map((ann) => (
               <div
                 key={ann.id}
@@ -71,29 +70,29 @@ export function DashboardAnnouncements({
                     `/learn/${ann.courseId}/lecture/${ann.lastLectureId}`,
                   )
                 }
-                className="flex flex-col gap-1 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group"
+                className="flex flex-col gap-1.5 p-3 rounded-base border-2 border-transparent hover:border-border hover:bg-secondary-background cursor-pointer transition-all group shadow-none hover:shadow-[2px_2px_0px_0px_#000]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider">
+                  <span className="text-[10px] font-heading font-black bg-main px-2 py-0.5 border border-border rounded-base text-main-foreground uppercase tracking-wider">
                     {ann.courseTitle}
                   </span>
-                  <span className="text-[10px] text-slate-400">
+                  <span className="text-[10px] font-mono font-bold text-foreground/60">
                     {formatTimeAgo(ann.time)}
                   </span>
                 </div>
 
-                <div className="pl-3.5 flex items-start gap-2">
+                <div className="flex items-start gap-2 pt-1">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-600 group-hover:text-indigo-700 transition-colors leading-relaxed line-clamp-3 break-all whitespace-pre-wrap">
+                    <p className="text-sm font-base text-foreground group-hover:font-medium leading-relaxed line-clamp-3 break-all whitespace-pre-wrap">
                       {ann.message}
                     </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 flex-shrink-0 transition-colors mt-0.5" />
+                  <ChevronRight className="w-4 h-4 text-foreground/40 group-hover:text-foreground flex-shrink-0 transition-colors mt-0.5" />
                 </div>
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       )}
     </motion.div>
   );

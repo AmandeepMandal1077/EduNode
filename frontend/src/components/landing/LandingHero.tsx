@@ -8,96 +8,90 @@ interface LandingHeroProps {
 
 export function LandingHero({ navigate }: LandingHeroProps) {
   return (
-    <section className="relative overflow-hidden hero-gradient pt-20 pb-28 px-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-30"
-          style={{ background: "radial-gradient(circle, #c7d2fe, transparent)" }}
-        />
-        <div
-          className="absolute -bottom-20 -left-20 w-[400px] h-[400px] rounded-full opacity-20"
-          style={{ background: "radial-gradient(circle, #a5b4fc, transparent)" }}
-        />
-      </div>
-
+    <section className="relative overflow-hidden hero-gradient pt-16 pb-24 px-4 border-b-4 border-border">
       <div className="relative max-w-6xl mx-auto text-center">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 text-xs font-semibold px-3.5 py-1.5 rounded-full mb-6 border border-indigo-200">
-            <TrendingUp className="w-3 h-3" />
-            Over 500,000 students already learning
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="inline-flex items-center gap-2 bg-main text-main-foreground text-xs font-heading font-black px-4 py-2 rounded-base mb-6 border-2 border-border shadow-[3px_3px_0px_0px_#000]">
+            <TrendingUp className="w-4 h-4" />
+            OVER 500,000 STUDENTS ALREADY LEARNING
           </div>
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight mb-6"
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-4xl sm:text-6xl md:text-7xl font-heading font-black text-foreground leading-[1.1] tracking-tight mb-6"
         >
-          Master Skills That
+          Master Real Skills That
           <br />
-          <span className="gradient-text">Matter in 2024</span>
+          <span className="bg-main text-main-foreground px-3 py-1 border-4 border-border shadow-[4px_4px_0px_0px_#000] inline-block mt-2 rounded-base">
+            Matter in 2025
+          </span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-base sm:text-xl text-foreground/80 max-w-2xl mx-auto mb-10 leading-relaxed font-base"
         >
-          Expert-taught courses in programming, design, data science, and business. Learn at your own pace with an AI study assistant by your side.
+          Expert-taught courses in engineering, AI, design, and architecture. Learn at your own pace with a context-aware AI assistant by your side.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <Button
             size="lg"
+            variant="default"
             onClick={() => navigate("/explore")}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 text-base font-semibold rounded-xl shadow-lg shadow-indigo-200 h-auto cursor-pointer"
+            className="px-8 py-6 text-base font-heading font-black cursor-pointer shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             id="hero-cta-explore"
           >
             Start Learning Free
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
           <Button
             size="lg"
-            variant="outline"
+            variant="neutral"
             onClick={() => navigate("/explore")}
-            className="px-8 py-4 text-base font-semibold rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 h-auto cursor-pointer"
+            className="px-8 py-6 text-base font-heading font-black cursor-pointer shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             id="hero-cta-browse"
           >
-            <PlayCircle className="w-4 h-4 mr-2 text-indigo-600" />
-            Browse Courses
+            <PlayCircle className="w-5 h-5 mr-2" />
+            Browse All Courses
           </Button>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 48 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-16 grid grid-cols-3 gap-3 max-w-3xl mx-auto"
+          transition={{ duration: 0.7, delay: 0.4 }}
+          className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto"
         >
           {[
-            { label: "Continue Watching", sub: "React Hooks Deep Dive", progress: 45, accent: "#6366f1" },
-            { label: "Next Up", sub: "Redux Toolkit Basics", progress: 0, accent: "#7c3aed" },
-            { label: "Completed", sub: "Next.js App Router", progress: 100, accent: "#0d9488" },
+            { label: "Continue Watching", sub: "React Hooks Deep Dive", progress: 45, badgeBg: "bg-main" },
+            { label: "Next Up", sub: "Redux Toolkit Architecture", progress: 0, badgeBg: "bg-[#ff9900]" },
+            { label: "Completed", sub: "Next.js Full-Stack Mastery", progress: 100, badgeBg: "bg-[#10b981]" },
           ].map((card, i) => (
             <motion.div
               key={card.label}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 + i * 0.1 }}
-              className="bento-card text-left py-3 px-4"
+              transition={{ delay: 0.5 + i * 0.1 }}
+              className="bg-background border-2 border-border rounded-base p-4 text-left shadow-shadow"
             >
-              <p className="text-xs font-medium mb-1" style={{ color: card.accent }}>{card.label}</p>
-              <p className="text-xs font-semibold text-slate-700 truncate">{card.sub}</p>
+              <span className={`text-[10px] font-heading font-black uppercase px-2 py-0.5 rounded-base border-2 border-border ${card.badgeBg} text-black inline-block mb-1.5 shadow-[1px_1px_0px_0px_#000]`}>
+                {card.label}
+              </span>
+              <p className="text-xs font-heading font-bold text-foreground truncate">{card.sub}</p>
               {card.progress > 0 && (
-                <div className="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${card.progress}%`, background: card.accent }} />
+                <div className="mt-2.5 h-2.5 bg-secondary-background rounded-base border-2 border-border overflow-hidden">
+                  <div className="h-full bg-main border-r-2 border-border transition-all" style={{ width: `${card.progress}%` }} />
                 </div>
               )}
             </motion.div>

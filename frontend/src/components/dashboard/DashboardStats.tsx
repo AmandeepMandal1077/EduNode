@@ -13,33 +13,33 @@ interface DashboardStatsProps {
 export function DashboardStats({ totalProgress, enrolledCount, completedCount, cardVariants }: DashboardStatsProps) {
   return (
     <>
-      <motion.div variants={cardVariants} className="md:col-span-2 xl:col-span-2 bento-card flex flex-col items-center justify-center gap-3 text-center">
-        <div className="flex items-center gap-2 w-full">
-          <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-            <BarChart2 className="w-4 h-4 text-teal-600" />
+      <motion.div variants={cardVariants} className="md:col-span-2 xl:col-span-2 bg-background border-2 border-border rounded-base p-6 shadow-shadow flex flex-col items-center justify-center gap-4 text-center">
+        <div className="flex items-center gap-2.5 w-full">
+          <div className="w-9 h-9 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+            <BarChart2 className="w-4 h-4 text-main-foreground" />
           </div>
-          <span className="text-sm font-semibold text-slate-700">Overall Progress</span>
+          <span className="text-base font-heading font-black text-foreground">Overall Progress</span>
         </div>
-        <CircularProgress value={totalProgress} size={88} label="avg" />
-        <p className="text-xs text-slate-500">{enrolledCount} course{enrolledCount !== 1 ? "s" : ""} enrolled</p>
+        <CircularProgress value={totalProgress} size={96} label="avg" />
+        <p className="text-xs font-heading font-bold text-foreground/70">{enrolledCount} course{enrolledCount !== 1 ? "s" : ""} enrolled</p>
       </motion.div>
 
-      <motion.div variants={cardVariants} className="md:col-span-2 bento-card flex flex-col gap-3">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-indigo-600" />
+      <motion.div variants={cardVariants} className="md:col-span-2 bg-background border-2 border-border rounded-base p-6 shadow-shadow flex flex-col gap-4">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="w-9 h-9 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+            <TrendingUp className="w-4 h-4 text-main-foreground" />
           </div>
-          <span className="text-sm font-semibold text-slate-700">Your Stats</span>
+          <span className="text-base font-heading font-black text-foreground">Your Learning Stats</span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {[
-            { icon: BookOpen, value: enrolledCount, label: "Enrolled", color: "text-indigo-600", bg: "bg-indigo-50" },
-            { icon: Award, value: completedCount, label: "Completed", color: "text-amber-600", bg: "bg-amber-50" },
+            { icon: BookOpen, value: enrolledCount, label: "Enrolled", bg: "bg-secondary-background" },
+            { icon: Award, value: completedCount, label: "Completed", bg: "bg-main" },
           ].map((stat) => (
-            <div key={stat.label} className={`rounded-xl p-3 ${stat.bg} flex flex-col gap-1`}>
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
-              <span className={`text-xl font-extrabold ${stat.color}`}>{stat.value}</span>
-              <span className="text-xs text-slate-500">{stat.label}</span>
+            <div key={stat.label} className={`rounded-base p-4 ${stat.bg} border-2 border-border flex flex-col gap-1 shadow-[2px_2px_0px_0px_#000]`}>
+              <stat.icon className="w-5 h-5 text-foreground" />
+              <span className="text-2xl sm:text-3xl font-heading font-black text-foreground tracking-tight">{stat.value}</span>
+              <span className="text-xs font-heading font-bold uppercase tracking-wider text-foreground/70">{stat.label}</span>
             </div>
           ))}
         </div>

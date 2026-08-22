@@ -44,25 +44,25 @@ export function CourseSidebar({
     <motion.div
       initial={{ opacity: 0, x: 24 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="bento-card sticky top-24 shadow-xl"
+      transition={{ duration: 0.4, delay: 0.1 }}
+      className="bg-background border-4 border-border rounded-base p-6 shadow-shadow sticky top-24"
     >
       <div className="mb-5">
         {course.price === 0 ? (
-          <span className="text-3xl font-extrabold text-emerald-600">Free</span>
+          <span className="text-3xl font-heading font-black text-foreground">Free</span>
         ) : (
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-slate-900">
+            <span className="text-3xl font-heading font-black text-foreground">
               ${course.price.toFixed(2)}
             </span>
             {course.originalPrice > course.price && (
-              <span className="text-lg text-slate-400 line-through">
+              <span className="text-lg font-heading font-bold text-foreground/50 line-through">
                 ${course.originalPrice.toFixed(2)}
               </span>
             )}
             {course.originalPrice > course.price && (
-              <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">
-                {Math.round((1 - course.price / course.originalPrice) * 100)}% off
+              <Badge variant="default" className="text-xs font-heading font-black">
+                {Math.round((1 - course.price / course.originalPrice) * 100)}% OFF
               </Badge>
             )}
           </div>
@@ -72,17 +72,17 @@ export function CourseSidebar({
       <Button
         onClick={handleEnroll}
         disabled={enrolling}
-        className={`w-full h-12 text-base font-semibold rounded-xl mb-4 ${
-          enrolled ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700"
-        } text-white shadow-lg`}
+        size="lg"
+        variant={enrolled ? "neutral" : "default"}
+        className="w-full h-12 text-base font-heading font-black mb-4 cursor-pointer shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
         id="course-enroll-btn"
       >
         {enrolling ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <Loader2 className="w-5 h-5 animate-spin mr-2" />
         ) : enrolled ? (
-          <Play className="w-4 h-4 mr-2 fill-white" />
+          <Play className="w-5 h-5 mr-2 fill-current" />
         ) : (
-          <ShoppingCart className="w-4 h-4 mr-2" />
+          <ShoppingCart className="w-5 h-5 mr-2" />
         )}
         {enrolling
           ? "Processing..."
@@ -94,15 +94,15 @@ export function CourseSidebar({
       </Button>
 
       {enrolled && user && (
-        <div className="mb-4 p-4 bg-slate-50 border border-slate-100 rounded-xl flex flex-col gap-2">
+        <div className="mb-4 p-4 bg-secondary-background border-2 border-border rounded-base flex flex-col gap-2 shadow-[2px_2px_0px_0px_#000]">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="text-xs font-heading font-black text-foreground uppercase tracking-wider">
               {hasRated ? "Your Rating" : isEditingRating ? "Edit Rating" : "Rate this course"}
             </p>
             {hasRated && (
               <button
                 onClick={() => setIsEditingRating(true)}
-                className="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
+                className="text-foreground hover:bg-main transition-colors p-1 border border-border rounded-base"
                 title="Edit Rating"
                 id="edit-rating-btn"
               >
@@ -122,26 +122,26 @@ export function CourseSidebar({
                   onMouseLeave={() => canRate && setHoverRating(0)}
                   className={`w-5 h-5 ${
                     canRate ? "cursor-pointer transition-colors duration-150" : ""
-                  } ${isLit ? "text-amber-400 fill-amber-400" : "text-slate-200 fill-slate-200"}`}
+                  } ${isLit ? "text-amber-500 fill-amber-500" : "text-border/30 fill-border/30"}`}
                 />
               );
             })}
           </div>
-          {ratingError && <p className="text-xs text-rose-500 font-semibold">{ratingError}</p>}
+          {ratingError && <p className="text-xs text-red-600 font-heading font-bold">{ratingError}</p>}
           {hasRated && (
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs font-heading font-bold text-foreground/80">
               You rated this course {existingRating} stars.
             </p>
           )}
           {isEditingRating && (
             <div className="flex justify-between items-center mt-1">
-              <span className="text-[10px] text-slate-400 font-medium">Click a star to save</span>
+              <span className="text-[10px] text-foreground/70 font-base">Click a star to save</span>
               <button
                 onClick={() => {
                   setIsEditingRating(false);
                   setHoverRating(0);
                 }}
-                className="text-xs text-slate-500 hover:text-slate-700 font-semibold"
+                className="text-xs text-foreground font-heading font-bold underline"
               >
                 Cancel
               </button>
@@ -152,8 +152,8 @@ export function CourseSidebar({
 
       <Separator className="mb-4" />
 
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-        This course includes
+      <p className="text-xs font-heading font-black text-foreground uppercase tracking-wider mb-3">
+        This Course Includes
       </p>
       <div className="flex flex-col gap-2.5">
         {[
@@ -162,8 +162,8 @@ export function CourseSidebar({
           { icon: Globe, text: "Full lifetime access" },
           { icon: Award, text: "Certificate of completion" },
         ].map((item, i) => (
-          <div key={i} className="flex items-center gap-2.5 text-sm text-slate-600">
-            <item.icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          <div key={i} className="flex items-center gap-2.5 text-sm font-base text-foreground">
+            <item.icon className="w-4 h-4 text-foreground flex-shrink-0" />
             {item.text}
           </div>
         ))}
@@ -171,7 +171,7 @@ export function CourseSidebar({
 
       <div className="flex flex-wrap gap-1.5 mt-5">
         {course.tags.map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-xs bg-slate-100 text-slate-600 border-0">
+          <Badge key={tag} variant="neutral" className="text-xs">
             {tag}
           </Badge>
         ))}

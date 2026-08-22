@@ -6,14 +6,13 @@ export function CourseInstructor({ course }: { course: Course }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.35 }}
-      className="bento-card"
+      transition={{ delay: 0.25 }}
+      className="bg-background border-2 border-border rounded-base p-6 shadow-shadow"
     >
-      <h2 className="text-xl font-bold text-slate-800 mb-4">Your Instructor</h2>
+      <h2 className="text-xl font-heading font-black text-foreground mb-4">Your Instructor</h2>
       <div className="flex items-start gap-4">
         <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-          style={{ background: course.thumbnailAccent }}
+          className="w-14 h-14 rounded-base bg-main border-2 border-border flex items-center justify-center text-lg font-heading font-black text-main-foreground shadow-[2px_2px_0px_0px_#000] flex-shrink-0"
         >
           {course.instructor
             .split(" ")
@@ -22,8 +21,8 @@ export function CourseInstructor({ course }: { course: Course }) {
             .slice(0, 2)}
         </div>
         <div>
-          <p className="font-semibold text-slate-800">{course.instructor}</p>
-          <p className="text-sm text-slate-500 mt-1 leading-relaxed">
+          <p className="font-heading font-black text-base text-foreground">{course.instructor}</p>
+          <p className="text-sm font-base text-foreground/80 mt-1 leading-relaxed">
             {course.instructorBio}
           </p>
         </div>

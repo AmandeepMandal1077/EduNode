@@ -16,18 +16,18 @@ export function DashboardContinueWatching({ continueItem, cardVariants, navigate
   return (
     <motion.div
       variants={cardVariants}
-      className="md:col-span-2 xl:col-span-2 xl:row-span-2 bento-card flex flex-col gap-4"
+      className="md:col-span-2 xl:col-span-2 xl:row-span-2 bg-background border-2 border-border rounded-base p-6 shadow-shadow flex flex-col gap-4"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-            <Play className="w-4 h-4 text-indigo-600" />
+          <div className="w-9 h-9 rounded-base bg-main border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+            <Play className="w-4 h-4 text-main-foreground" />
           </div>
-          <span className="text-sm font-semibold text-slate-700">Continue Watching</span>
+          <span className="text-base font-heading font-black text-foreground">Continue Watching</span>
         </div>
         {continueItem && (
-          <Badge variant="secondary" className="text-xs bg-indigo-50 text-indigo-600 border-0">
-            {continueItem.enrollment.progressPercent}% done
+          <Badge variant="default" className="font-heading font-black text-xs">
+            {continueItem.enrollment.progressPercent}% DONE
           </Badge>
         )}
       </div>
@@ -35,33 +35,33 @@ export function DashboardContinueWatching({ continueItem, cardVariants, navigate
       {continueItem ? (
         <>
           <div
-            className="w-full rounded-xl overflow-hidden relative flex items-center justify-center bg-slate-100"
+            className="w-full rounded-base border-2 border-border overflow-hidden relative flex items-center justify-center bg-secondary-background"
             style={{ aspectRatio: "16/9" }}
           >
             {continueItem.course.thumbnail ? (
               <img
                 src={continueItem.course.thumbnail}
                 alt={continueItem.course.title}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div
-                className="w-full h-full flex items-center justify-center relative overflow-hidden"
-                style={{ background: `linear-gradient(135deg, ${continueItem.course.thumbnailAccent}dd, ${continueItem.course.thumbnailAccent}88)` }}
+                className="w-full h-full flex items-center justify-center relative overflow-hidden bg-main"
               >
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-                <div className="relative z-10 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center border border-white/30">
-                  <BookOpen className="w-5 h-5 text-white" />
+                <div className="relative z-10 w-14 h-14 rounded-base bg-background border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+                  <BookOpen className="w-7 h-7 text-foreground" />
                 </div>
               </div>
             )}
           </div>
 
           <div className="flex-1">
-            <p className="text-xs text-slate-500 mb-0.5">{continueItem.course.category}</p>
-            <h3 className="font-bold text-slate-800 text-base leading-snug mb-1">{continueItem.course.title}</h3>
-            <p className="text-xs text-slate-500">
-              Next: <span className="text-slate-700 font-medium">
+            <span className="text-xs font-heading font-black uppercase text-foreground/70 mb-0.5 tracking-wider inline-block">
+              {continueItem.course.category}
+            </span>
+            <h3 className="font-heading font-black text-foreground text-lg leading-snug mb-1">{continueItem.course.title}</h3>
+            <p className="text-xs font-base text-foreground/70">
+              Next: <span className="text-foreground font-heading font-bold">
                 {continueItem.course.modules
                   .flatMap((m) => m.lectures)
                   .find((l) => l.id === continueItem.enrollment.lastLectureId)?.title ?? "First lecture"}
@@ -70,32 +70,35 @@ export function DashboardContinueWatching({ continueItem, cardVariants, navigate
           </div>
 
           <div>
-            <div className="flex justify-between text-xs text-slate-500 mb-1.5">
+            <div className="flex justify-between text-xs font-heading font-bold text-foreground mb-1.5">
               <span>Progress</span>
-              <span className="font-semibold text-indigo-600">{continueItem.enrollment.progressPercent}%</span>
+              <span>{continueItem.enrollment.progressPercent}%</span>
             </div>
-            <Progress value={continueItem.enrollment.progressPercent} className="h-2" />
+            <Progress value={continueItem.enrollment.progressPercent} className="h-3" />
           </div>
 
           <Button
+            size="lg"
+            variant="default"
             onClick={() => navigate(`/learn/${continueItem.course.id}/lecture/${continueItem.enrollment.lastLectureId}`)}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold cursor-pointer"
+            className="w-full font-heading font-black text-sm h-11 cursor-pointer shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             id="dashboard-resume-btn"
           >
-            <Play className="w-4 h-4 mr-2 fill-white" />
+            <Play className="w-4 h-4 mr-2 fill-current" />
             Resume Learning
           </Button>
         </>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 py-8">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-slate-400" />
+          <div className="w-14 h-14 rounded-base bg-secondary-background border-2 border-border flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+            <BookOpen className="w-7 h-7 text-foreground" />
           </div>
-          <p className="text-slate-600 text-sm">No courses in progress yet.</p>
+          <p className="text-foreground font-heading font-bold text-sm">No courses in progress yet.</p>
           <Button
             onClick={() => navigate("/explore")}
             size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+            variant="default"
+            className="font-heading font-bold cursor-pointer"
           >
             Explore Courses
           </Button>

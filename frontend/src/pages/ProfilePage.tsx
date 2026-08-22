@@ -7,23 +7,23 @@ import { ProfileSecurityTab } from "@/components/profile/ProfileSecurityTab";
 import { ProfileBillingTab } from "@/components/profile/ProfileBillingTab";
 
 const TABS = [
-  { id: "general", label: "General", icon: User },
-  { id: "security", label: "Security", icon: Shield },
-  { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "general", label: "General Profile", icon: User },
+  { id: "security", label: "Security & Login", icon: Shield },
+  { id: "billing", label: "Billing & Receipts", icon: CreditCard },
 ];
 
 export function ProfilePage() {
   const { activeTab, setActiveTab, user, setUser, purchases } = useProfile();
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div className="min-h-screen bg-background py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <motion.h1
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-extrabold text-slate-900 mb-8"
+          className="text-3xl sm:text-4xl font-heading font-black text-foreground mb-8"
         >
-          Settings
+          Account Settings
         </motion.h1>
 
         <div className="flex flex-col sm:flex-row gap-6">
@@ -31,17 +31,17 @@ export function ProfilePage() {
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="sm:w-48 flex-shrink-0"
+            className="sm:w-56 flex-shrink-0"
           >
-            <div className="bento-card p-2 flex flex-col gap-0.5">
+            <div className="bg-secondary-background border-2 border-border rounded-base p-2 shadow-shadow flex flex-col gap-1.5">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full text-left cursor-pointer ${
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-base text-sm transition-all w-full text-left cursor-pointer border-2 ${
                     activeTab === tab.id
-                      ? "bg-indigo-50 text-indigo-700"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      ? "bg-main text-main-foreground border-border shadow-[2px_2px_0px_0px_#000] font-heading font-black"
+                      : "border-transparent text-foreground font-heading font-bold hover:bg-main/30"
                   }`}
                   id={`profile-tab-${tab.id}`}
                 >

@@ -37,12 +37,11 @@ export function CreateCourseForm({
 }: CreateCourseFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
-          <Label htmlFor="title" className="text-sm font-medium text-slate-700">Course Title</Label>
+          <Label htmlFor="title" className="text-sm font-heading font-bold text-foreground">Course Title</Label>
           {errors.title && (
-            <span className="text-xs text-rose-600 font-medium">{errors.title}</span>
+            <span className="text-xs text-red-600 font-heading font-bold">{errors.title}</span>
           )}
         </div>
         <Input
@@ -52,17 +51,16 @@ export function CreateCourseForm({
           onChange={handleChange}
           placeholder="e.g. Master React 19 from Scratch"
           maxLength={50}
-          className={`rounded-xl border-slate-200 ${errors.title ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
+          className={`bg-secondary-background ${errors.title ? "border-red-500" : ""}`}
         />
-        <span className="text-[10px] text-slate-400 text-right">{form.title.length}/50</span>
+        <span className="text-[10px] font-mono text-foreground/60 text-right">{form.title.length}/50</span>
       </div>
-
 
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
-          <Label htmlFor="subtitle" className="text-sm font-medium text-slate-700">Subtitle / Headline</Label>
+          <Label htmlFor="subtitle" className="text-sm font-heading font-bold text-foreground">Subtitle / Headline</Label>
           {errors.subtitle && (
-            <span className="text-xs text-rose-600 font-medium">{errors.subtitle}</span>
+            <span className="text-xs text-red-600 font-heading font-bold">{errors.subtitle}</span>
           )}
         </div>
         <Input
@@ -70,19 +68,18 @@ export function CreateCourseForm({
           name="subtitle"
           value={form.subtitle}
           onChange={handleChange}
-          placeholder="e.g. Build modern web apps using custom hooks, Redux, and concurrent mode features"
+          placeholder="e.g. Build modern web apps using custom hooks, Redux, and concurrent features"
           maxLength={100}
-          className={`rounded-xl border-slate-200 ${errors.subtitle ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
+          className={`bg-secondary-background ${errors.subtitle ? "border-red-500" : ""}`}
         />
-        <span className="text-[10px] text-slate-400 text-right">{form.subtitle.length}/100</span>
+        <span className="text-[10px] font-mono text-foreground/60 text-right">{form.subtitle.length}/100</span>
       </div>
-
 
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
-          <Label htmlFor="description" className="text-sm font-medium text-slate-700">Description</Label>
+          <Label htmlFor="description" className="text-sm font-heading font-bold text-foreground">Description</Label>
           {errors.description && (
-            <span className="text-xs text-rose-600 font-medium">{errors.description}</span>
+            <span className="text-xs text-red-600 font-heading font-bold">{errors.description}</span>
           )}
         </div>
         <textarea
@@ -92,19 +89,18 @@ export function CreateCourseForm({
           onChange={handleChange}
           rows={4}
           maxLength={200}
-          placeholder="Describe what your students will learn in this course..."
-          className={`w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors ${errors.description ? "border-rose-500 focus:ring-rose-500/20" : ""}`}
+          placeholder="Describe what your students will master in this course..."
+          className={`w-full rounded-base border-2 border-border px-3 py-2.5 text-sm font-base bg-secondary-background resize-none focus:outline-hidden focus:ring-2 focus:ring-black transition-all ${errors.description ? "border-red-500" : ""}`}
         />
-        <span className="text-[10px] text-slate-400 text-right">{form.description.length}/200</span>
+        <span className="text-[10px] font-mono text-foreground/60 text-right">{form.description.length}/200</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-baseline">
-            <Label htmlFor="category" className="text-sm font-medium text-slate-700">Category</Label>
+            <Label htmlFor="category" className="text-sm font-heading font-bold text-foreground">Category</Label>
             {errors.category && (
-              <span className="text-xs text-rose-600 font-medium">{errors.category}</span>
+              <span className="text-xs text-red-600 font-heading font-bold">{errors.category}</span>
             )}
           </div>
           <Input
@@ -114,19 +110,18 @@ export function CreateCourseForm({
             onChange={handleChange}
             placeholder="e.g. Web Development"
             maxLength={50}
-            className={`rounded-xl border-slate-200 ${errors.category ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
+            className={`bg-secondary-background ${errors.category ? "border-red-500" : ""}`}
           />
         </div>
 
-
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="level" className="text-sm font-medium text-slate-700">Difficulty Level</Label>
+          <Label htmlFor="level" className="text-sm font-heading font-bold text-foreground">Difficulty Level</Label>
           <select
             id="level"
             name="level"
             value={form.level}
             onChange={handleChange}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
+            className="w-full h-10 rounded-base border-2 border-border px-3 py-2 text-sm font-base bg-secondary-background focus:outline-hidden focus:ring-2 focus:ring-black"
           >
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
@@ -134,12 +129,11 @@ export function CreateCourseForm({
           </select>
         </div>
 
-
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-baseline">
-            <Label htmlFor="price" className="text-sm font-medium text-slate-700">Price (INR)</Label>
+            <Label htmlFor="price" className="text-sm font-heading font-bold text-foreground">Price (INR)</Label>
             {errors.price && (
-              <span className="text-xs text-rose-600 font-medium">{errors.price}</span>
+              <span className="text-xs text-red-600 font-heading font-bold">{errors.price}</span>
             )}
           </div>
           <Input
@@ -149,22 +143,21 @@ export function CreateCourseForm({
             min={0}
             value={form.price}
             onChange={handlePriceChange}
-            className={`rounded-xl border-slate-200 ${errors.price ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
+            className={`bg-secondary-background ${errors.price ? "border-red-500" : ""}`}
           />
         </div>
       </div>
 
-
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-baseline">
-          <Label className="text-sm font-medium text-slate-700">Thumbnail Image File</Label>
+          <Label className="text-sm font-heading font-bold text-foreground">Thumbnail Image File</Label>
           {errors.thumbnail && (
-            <span className="text-xs text-rose-600 font-medium">{errors.thumbnail}</span>
+            <span className="text-xs text-red-600 font-heading font-bold">{errors.thumbnail}</span>
           )}
         </div>
         <div
           onClick={() => document.getElementById("thumbnail-upload")?.click()}
-          className={`cursor-pointer w-full flex items-center h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors ${errors.thumbnail ? "border-rose-500 focus-visible:ring-rose-500/20" : ""}`}
+          className={`cursor-pointer w-full flex items-center h-11 rounded-base border-2 border-border bg-secondary-background hover:bg-secondary-background/80 transition-colors ${errors.thumbnail ? "border-red-500" : ""}`}
         >
           <input
             id="thumbnail-upload"
@@ -173,24 +166,24 @@ export function CreateCourseForm({
             className="hidden"
             onChange={handleThumbnailChange}
           />
-          <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg ml-3 mr-4 hover:bg-indigo-100 transition-colors">
+          <span className="text-xs font-heading font-black bg-main text-main-foreground px-3 py-1.5 rounded-base border-2 border-border ml-3 mr-4 shadow-[1px_1px_0px_0px_#000]">
             {uploadingThumbnail ? "Uploading..." : "Choose File"}
           </span>
-          <span className="text-xs text-slate-500 truncate">
+          <span className="text-xs font-base text-foreground/70 truncate">
             {thumbnailPreview ? "Thumbnail selected" : "No file chosen"}
           </span>
         </div>
-        <p className="text-[10px] text-slate-400">Supported types: PNG, JPG, or JPEG. Max file size: 5MB.</p>
+        <p className="text-[10px] text-foreground/60">Supported formats: PNG, JPG, or JPEG. Max file size: 5MB.</p>
         
         {thumbnailPreview && (
-          <div className="mt-2 relative w-full max-w-sm rounded-xl overflow-hidden border border-slate-200 aspect-video">
+          <div className="mt-2 relative w-full max-w-sm rounded-base overflow-hidden border-2 border-border aspect-video shadow-shadow">
             <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-full h-full object-cover" />
           </div>
         )}
       </div>
 
       {generalError && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5 mt-2">
+        <div className="text-sm font-heading font-bold text-red-600 bg-red-100 border-2 border-red-500 rounded-base px-4 py-2.5 mt-2 shadow-[2px_2px_0px_0px_#ef4444]">
           {generalError}
         </div>
       )}
@@ -198,11 +191,13 @@ export function CreateCourseForm({
       <Button
         type="submit"
         disabled={loading || uploadingThumbnail}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold h-11 shadow-lg shadow-indigo-100 mt-2 cursor-pointer"
+        size="lg"
+        variant="default"
+        className="font-heading font-black h-12 text-base shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none mt-2 cursor-pointer"
       >
         {loading ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            <Loader2 className="w-5 h-5 animate-spin mr-2" />
             Creating Course...
           </>
         ) : (

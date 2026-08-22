@@ -3,7 +3,6 @@ import { FileText, MessageSquare, Loader2, BookOpen, X, Bell } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIChatFAB } from "@/components/AIChatFAB";
-import { ScrollArea } from "@/components/smooth-scroll-area";
 
 import { useLearningRoom } from "@/hooks/useLearningRoom";
 import { VideoSection } from "@/components/learning-room/VideoSection";
@@ -36,17 +35,17 @@ export function LearningRoomPage() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      <div className="h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-foreground animate-spin" />
       </div>
     );
   }
 
   if (!course || !currentLecture || !courseId) {
     return (
-      <div className="h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 text-slate-800">
-        <p className="font-semibold text-slate-650">Lecture not found.</p>
-        <Button onClick={() => navigate("/my-courses")} variant="outline" className="rounded-xl border-slate-200">
+      <div className="h-screen bg-background flex flex-col items-center justify-center gap-4 text-foreground p-4">
+        <p className="font-heading font-black text-xl">Lecture not found.</p>
+        <Button onClick={() => navigate("/my-courses")} variant="neutral" className="font-heading font-bold">
           Back to My Courses
         </Button>
       </div>
@@ -54,7 +53,7 @@ export function LearningRoomPage() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-background text-foreground flex flex-col overflow-hidden">
       <LearningRoomTopBar
         course={course}
         currentLecture={currentLecture}
@@ -66,8 +65,8 @@ export function LearningRoomPage() {
       />
 
       <div className="max-w-screen-2xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
-        <ScrollArea className="lg:col-span-9 h-full">
-          <div className="flex flex-col gap-6 pr-1 pb-8">
+        <div className="lg:col-span-9 h-full overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex flex-col gap-6 pb-12">
             <VideoSection
               currentLecture={currentLecture}
               courseId={courseId}
@@ -77,36 +76,36 @@ export function LearningRoomPage() {
             />
 
             <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col flex-shrink-0">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col pb-12">
-                <TabsList className="bg-transparent border-y border-slate-200 rounded-none w-full justify-start h-auto p-0 flex-wrap gap-4 shrink-0">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col pb-12">
+                <TabsList className="bg-secondary-background border-2 border-border rounded-base p-1 h-12 shadow-[2px_2px_0px_0px_#000] w-full justify-start shrink-0">
                   <TabsTrigger
                     value="overview"
-                    className="data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 rounded-none bg-transparent shadow-none font-semibold text-slate-500 h-full py-3 px-4 transition-colors -my-[1px]"
+                    className="font-heading font-bold px-4 text-xs sm:text-sm cursor-pointer"
                   >
                     <FileText className="w-4 h-4 mr-2" />
                     Overview
                   </TabsTrigger>
                   <TabsTrigger
                     value="qa"
-                    className="data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 rounded-none bg-transparent shadow-none font-semibold text-slate-500 h-full py-3 px-4 transition-colors -my-[1px]"
+                    className="font-heading font-bold px-4 text-xs sm:text-sm cursor-pointer"
                   >
                     <MessageSquare className="w-4 h-4 mr-2" />
-                    Q&A
+                    Q&A Discussion
                   </TabsTrigger>
                   <TabsTrigger
                     value="announcements"
-                    className="data-[state=active]:border-indigo-600 data-[state=active]:text-indigo-600 rounded-none bg-transparent shadow-none font-semibold text-slate-500 h-full py-3 px-4 transition-colors -my-[1px]"
+                    className="font-heading font-bold px-4 text-xs sm:text-sm cursor-pointer"
                   >
                     <Bell className="w-4 h-4 mr-2" />
                     Announcements
                   </TabsTrigger>
                 </TabsList>
 
-                <div className="pt-6 flex-1 h-full min-h-[300px]">
+                <div className="pt-6 flex-1">
                   {activeTab === "overview" && (
-                    <div className="space-y-6">
-                      <h2 className="text-xl font-bold text-slate-800">About this lecture</h2>
-                      <p className="text-slate-600 leading-relaxed whitespace-pre-wrap break-words text-sm">
+                    <div className="space-y-4 bg-background border-2 border-border rounded-base p-6 shadow-shadow">
+                      <h2 className="text-xl font-heading font-black text-foreground">About This Lecture</h2>
+                      <p className="text-foreground/80 font-base leading-relaxed whitespace-pre-wrap break-words text-sm">
                         {currentLecture.description || "No description provided for this lecture."}
                       </p>
                     </div>
@@ -121,13 +120,13 @@ export function LearningRoomPage() {
               </Tabs>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <div className="hidden lg:flex lg:col-span-3 h-full bg-white border border-slate-200 rounded-2xl flex-col shadow-sm overflow-hidden min-h-0">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
-            <h2 className="font-bold text-slate-800 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-500" />
-              Course Content
+        <div className="hidden lg:flex lg:col-span-3 h-full bg-background border-4 border-border rounded-base flex-col shadow-shadow overflow-hidden min-h-0">
+          <div className="p-4 border-b-2 border-border bg-secondary-background flex items-center justify-between shrink-0">
+            <h2 className="font-heading font-black text-foreground flex items-center gap-2 text-sm">
+              <BookOpen className="w-4 h-4 text-foreground" />
+              Course Syllabus
             </h2>
           </div>
           <LectureListSidebar
@@ -142,15 +141,15 @@ export function LearningRoomPage() {
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
-          <div className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-2xl flex flex-col slide-in-from-right-full animate-in duration-300">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <h2 className="font-bold text-slate-800 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-indigo-500" />
-                Course Content
+          <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
+          <div className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-background border-l-4 border-border shadow-shadow flex flex-col slide-in-from-right-full animate-in duration-200">
+            <div className="p-4 border-b-2 border-border bg-secondary-background flex items-center justify-between shrink-0">
+              <h2 className="font-heading font-black text-foreground flex items-center gap-2 text-sm">
+                <BookOpen className="w-4 h-4 text-foreground" />
+                Course Syllabus
               </h2>
-              <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)} className="rounded-xl cursor-pointer">
-                <X className="w-5 h-5" />
+              <Button variant="neutral" size="icon" onClick={() => setSidebarOpen(false)} className="rounded-base cursor-pointer h-8 w-8">
+                <X className="w-4 h-4" />
               </Button>
             </div>
             <LectureListSidebar

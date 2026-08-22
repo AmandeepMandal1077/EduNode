@@ -40,32 +40,33 @@ export function ExploreFilters({
   clearFilters,
 }: ExploreFiltersProps) {
   return (
-    <div className="bg-white border-b border-slate-200 sticky top-16 z-30">
+    <div className="bg-secondary-background border-b-4 border-border sticky top-16 z-30 shadow-[0px_4px_0px_0px_#000]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
-
-          <div className="input-glow flex-1 flex items-center gap-2.5 border border-slate-200 rounded-xl bg-white px-3.5 py-2.5">
-            <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+          <div className="relative flex-1 w-full flex items-center">
+            <Search className="w-4 h-4 text-foreground/60 absolute left-3 pointer-events-none z-10" />
             <Input
               id="explore-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search courses, topics, or instructors..."
-              className="border-0 shadow-none focus-visible:ring-0 bg-transparent p-0 h-auto text-sm"
+              className="pl-9 pr-9 bg-background font-base"
             />
             {query && (
-              <button onClick={() => setQuery("")} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <X className="w-3.5 h-3.5" />
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 text-foreground/60 hover:text-foreground cursor-pointer z-10"
+              >
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <SlidersHorizontal className="w-4 h-4 text-slate-400 hidden sm:block" />
+          <div className="flex items-center gap-2.5 flex-wrap w-full md:w-auto">
+            <SlidersHorizontal className="w-4 h-4 text-foreground hidden sm:block" />
 
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-44 rounded-xl border-slate-200 text-sm h-10" id="explore-category-filter">
+              <SelectTrigger className="w-full sm:w-44 font-heading font-bold" id="explore-category-filter">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -77,7 +78,7 @@ export function ExploreFilters({
             </Select>
 
             <Select value={price} onValueChange={setPrice}>
-              <SelectTrigger className="w-36 rounded-xl border-slate-200 text-sm h-10" id="explore-price-filter">
+              <SelectTrigger className="w-full sm:w-36 font-heading font-bold" id="explore-price-filter">
                 <SelectValue placeholder="Price" />
               </SelectTrigger>
               <SelectContent>
@@ -88,7 +89,7 @@ export function ExploreFilters({
             </Select>
 
             <Select value={level} onValueChange={setLevel}>
-              <SelectTrigger className="w-40 rounded-xl border-slate-200 text-sm h-10" id="explore-level-filter">
+              <SelectTrigger className="w-full sm:w-40 font-heading font-bold" id="explore-level-filter">
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
@@ -101,7 +102,7 @@ export function ExploreFilters({
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium px-2 cursor-pointer"
+                className="flex items-center gap-1 text-xs font-heading font-black bg-main text-main-foreground px-3 py-2 border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 Clear

@@ -36,18 +36,18 @@ export function RegisterForm({
 
   const passwordStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
   const strengthLabel = ["", "Weak", "Good", "Strong"];
-  const strengthColor = ["", "#ef4444", "#f59e0b", "#10b981"];
+  const strengthColor = ["", "#ff4d4d", "#ff9900", "#10b981"];
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex gap-2 p-1 bg-slate-100/80 border border-slate-200/50 rounded-xl">
+      <div className="flex gap-2 p-1 bg-secondary-background border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000]">
         <button
           type="button"
           onClick={() => setRole("student")}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+          className={`flex-1 py-2 text-xs font-heading font-black rounded-base transition-all cursor-pointer border-2 ${
             role === "student"
-              ? "bg-white text-indigo-700 shadow-sm"
-              : "text-slate-500 hover:text-slate-800"
+              ? "bg-main text-main-foreground border-border shadow-[2px_2px_0px_0px_#000]"
+              : "border-transparent text-foreground hover:bg-main/30"
           }`}
         >
           Register as Student
@@ -55,10 +55,10 @@ export function RegisterForm({
         <button
           type="button"
           onClick={() => setRole("instructor")}
-          className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+          className={`flex-1 py-2 text-xs font-heading font-black rounded-base transition-all cursor-pointer border-2 ${
             role === "instructor"
-              ? "bg-white text-indigo-700 shadow-sm"
-              : "text-slate-500 hover:text-slate-800"
+              ? "bg-main text-main-foreground border-border shadow-[2px_2px_0px_0px_#000]"
+              : "border-transparent text-foreground hover:bg-main/30"
           }`}
         >
           Register as Instructor
@@ -66,11 +66,11 @@ export function RegisterForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="register-name" className="text-sm font-medium text-slate-700">
-          Full name
+        <Label htmlFor="register-name" className="text-sm font-heading font-bold text-foreground">
+          Full Name
         </Label>
-        <div className="input-glow rounded-xl border border-slate-200 flex items-center bg-white overflow-hidden">
-          <User className="w-4 h-4 text-slate-400 ml-3 flex-shrink-0" />
+        <div className="relative flex items-center">
+          <User className="w-4 h-4 text-foreground/60 absolute left-3 pointer-events-none z-10" />
           <Input
             id="register-name"
             type="text"
@@ -79,17 +79,17 @@ export function RegisterForm({
             maxLength={50}
             onChange={(e) => setName(e.target.value)}
             required
-            className="border-0 shadow-none focus-visible:ring-0 bg-transparent pl-2"
+            className="pl-9 bg-background"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="register-email" className="text-sm font-medium text-slate-700">
-          Email address
+        <Label htmlFor="register-email" className="text-sm font-heading font-bold text-foreground">
+          Email Address
         </Label>
-        <div className="input-glow rounded-xl border border-slate-200 flex items-center bg-white overflow-hidden">
-          <Mail className="w-4 h-4 text-slate-400 ml-3 flex-shrink-0" />
+        <div className="relative flex items-center">
+          <Mail className="w-4 h-4 text-foreground/60 absolute left-3 pointer-events-none z-10" />
           <Input
             id="register-email"
             type="email"
@@ -98,17 +98,17 @@ export function RegisterForm({
             maxLength={50}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="border-0 shadow-none focus-visible:ring-0 bg-transparent pl-2"
+            className="pl-9 bg-background"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="register-password" className="text-sm font-medium text-slate-700">
+        <Label htmlFor="register-password" className="text-sm font-heading font-bold text-foreground">
           Password
         </Label>
-        <div className="input-glow rounded-xl border border-slate-200 flex items-center bg-white overflow-hidden">
-          <Lock className="w-4 h-4 text-slate-400 ml-3 flex-shrink-0" />
+        <div className="relative flex items-center">
+          <Lock className="w-4 h-4 text-foreground/60 absolute left-3 pointer-events-none z-10" />
           <Input
             id="register-password"
             type={showPassword ? "text" : "password"}
@@ -117,12 +117,12 @@ export function RegisterForm({
             maxLength={32}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="border-0 shadow-none focus-visible:ring-0 bg-transparent pl-2"
+            className="pl-9 pr-10 bg-background"
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="p-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+            className="absolute right-2.5 p-1 text-foreground/60 hover:text-foreground cursor-pointer z-10"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -135,14 +135,14 @@ export function RegisterForm({
               {[1, 2, 3].map((s) => (
                 <div
                   key={s}
-                  className="h-1 flex-1 rounded-full transition-all duration-300"
+                  className="h-2 flex-1 rounded-base border border-border transition-all duration-300"
                   style={{
-                    background: s <= passwordStrength ? strengthColor[passwordStrength] : "#e2e8f0",
+                    background: s <= passwordStrength ? strengthColor[passwordStrength] : "var(--secondary-background)",
                   }}
                 />
               ))}
             </div>
-            <span className="text-xs font-medium" style={{ color: strengthColor[passwordStrength] }}>
+            <span className="text-xs font-heading font-black" style={{ color: strengthColor[passwordStrength] }}>
               {strengthLabel[passwordStrength]}
             </span>
           </div>
@@ -153,7 +153,7 @@ export function RegisterForm({
         <motion.p
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2"
+          className="text-sm font-heading font-bold text-red-600 bg-red-100 border-2 border-red-500 rounded-base px-3 py-2 shadow-[2px_2px_0px_0px_#ef4444]"
         >
           {error}
         </motion.p>
@@ -162,13 +162,15 @@ export function RegisterForm({
       <Button
         type="submit"
         disabled={loading}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white h-11 rounded-xl font-semibold shadow-lg shadow-indigo-200 mt-1 cursor-pointer"
+        size="lg"
+        variant="default"
+        className="w-full font-heading font-black text-base h-12 shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer mt-2"
         id="register-submit-btn"
       >
         {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          <Loader2 className="w-5 h-5 animate-spin mr-2" />
         ) : (
-          <ArrowRight className="w-4 h-4 mr-2" />
+          <ArrowRight className="w-5 h-5 mr-2" />
         )}
         {loading ? "Creating account..." : "Create Account"}
       </Button>

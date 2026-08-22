@@ -50,7 +50,7 @@ export function LectureHeatmap({ lectureId }: { lectureId: string }) {
   }, [normalizedData]);
 
   if (heatmap.length === 0) {
-    return null; // Don't render anything if no heatmap data yet
+    return null;
   }
 
   return (
@@ -62,8 +62,8 @@ export function LectureHeatmap({ lectureId }: { lectureId: string }) {
       >
         <defs>
           <linearGradient id="heatmap-gradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#818cf8" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="#ffc700" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#ffc700" stopOpacity="0.0" />
           </linearGradient>
         </defs>
         <path
@@ -74,7 +74,7 @@ export function LectureHeatmap({ lectureId }: { lectureId: string }) {
         <path
           d={paths.strokePath}
           fill="none"
-          stroke="#a5b4fc"
+          stroke="#ffc700"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"

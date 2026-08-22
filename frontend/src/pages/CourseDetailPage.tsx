@@ -36,18 +36,18 @@ export function CourseDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-foreground animate-spin" />
       </div>
     );
   }
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Course not found</h2>
-          <Button onClick={() => navigate("/explore")} variant="outline">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center bg-secondary-background border-2 border-border rounded-base p-8 shadow-shadow max-w-sm">
+          <h2 className="text-xl font-heading font-black text-foreground mb-2">Course not found</h2>
+          <Button onClick={() => navigate("/explore")} variant="neutral" className="font-heading font-bold">
             Browse courses
           </Button>
         </div>
@@ -56,10 +56,10 @@ export function CourseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <CourseHero course={course} />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 flex flex-col gap-6">
           <CoursePreview course={course} />
           <CourseAbout

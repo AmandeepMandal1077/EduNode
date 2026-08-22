@@ -7,8 +7,8 @@ export function CoursePreview({ course }: { course: Course }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.1 }}
-      className="rounded-2xl overflow-hidden aspect-video flex items-center justify-center relative bg-slate-100"
+      transition={{ duration: 0.4, delay: 0.1 }}
+      className="rounded-base border-4 border-border overflow-hidden aspect-video flex items-center justify-center relative bg-secondary-background shadow-shadow"
     >
       {course.thumbnail ? (
         <img
@@ -18,27 +18,16 @@ export function CoursePreview({ course }: { course: Course }) {
         />
       ) : (
         <div
-          className="absolute inset-0 w-full h-full"
-          style={{
-            background: `linear-gradient(135deg, ${course.thumbnailAccent}cc, ${course.thumbnailAccent}66)`,
-          }}
+          className="absolute inset-0 w-full h-full bg-main"
         />
       )}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-      {course.thumbnail && <div className="absolute inset-0 bg-black/25" />}
+      <div className="absolute inset-0 bg-black/30" />
       <div className="relative z-10 flex flex-col items-center gap-3">
-        <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center border border-white/30 hover:scale-105 transition-transform duration-200 cursor-pointer shadow-lg">
-          <Play className="w-7 h-7 text-white fill-white ml-1" />
+        <div className="w-16 h-16 rounded-base bg-main border-2 border-border flex items-center justify-center text-main-foreground shadow-[3px_3px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all cursor-pointer">
+          <Play className="w-7 h-7 fill-current ml-1" />
         </div>
-        <span className="text-white/90 text-sm font-medium drop-shadow-md">
-          Preview available
+        <span className="bg-background text-foreground font-heading font-black text-xs uppercase px-3 py-1 border-2 border-border rounded-base shadow-[2px_2px_0px_0px_#000]">
+          Preview Available
         </span>
       </div>
     </motion.div>

@@ -22,7 +22,7 @@ export function VideoSection({
 
   return (
     <>
-      <div className="max-w-4xl mx-auto w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 bg-black shadow-sm relative flex-shrink-0">
+      <div className="max-w-4xl mx-auto w-full aspect-video rounded-base overflow-hidden border-4 border-border bg-black shadow-shadow relative flex-shrink-0">
         <VideoPlayer
           key={currentLecture.id}
           src={currentLecture.videoUrl}
@@ -33,23 +33,18 @@ export function VideoSection({
           onProgress={handleProgress}
           className="h-full w-full"
         />
-
       </div>
-
 
       <div className="max-w-4xl mx-auto w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2 pb-6 flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 break-words">{currentLecture.title}</h1>
-          <p className="text-sm text-slate-500 mt-1 font-medium">{currentLecture.duration}</p>
+          <h1 className="text-2xl sm:text-3xl font-heading font-black text-foreground break-words">{currentLecture.title}</h1>
+          <p className="text-xs font-mono font-bold text-foreground/70 mt-1">{currentLecture.duration}</p>
         </div>
         <Button
           onClick={(e) => handleToggleCompletion(e, currentLecture.id, currentLecture.durationSeconds)}
-          variant={isCurrentlyCompleted ? "outline" : "default"}
-          className={`flex-shrink-0 h-11 px-5 rounded-xl font-bold transition-all shadow-sm ${
-            isCurrentlyCompleted
-              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800"
-              : "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md"
-          }`}
+          variant={isCurrentlyCompleted ? "neutral" : "default"}
+          size="lg"
+          className="flex-shrink-0 h-11 px-6 font-heading font-black cursor-pointer shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
         >
           {isCurrentlyCompleted ? (
             <>
@@ -57,7 +52,7 @@ export function VideoSection({
               Completed
             </>
           ) : (
-            "Mark as completed"
+            "Mark as Completed"
           )}
         </Button>
       </div>

@@ -73,15 +73,13 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
-      className="bento-card flex flex-col gap-6"
+      className="bg-background border-4 border-border rounded-base p-6 sm:p-8 shadow-shadow flex flex-col gap-6"
     >
-      <h2 className="text-lg font-bold text-slate-800">General Information</h2>
-
+      <h2 className="text-xl font-heading font-black text-foreground">General Information</h2>
 
       <div className="flex items-center gap-4">
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0 overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #6366f1, #7c3aed)" }}
+          className="w-16 h-16 rounded-base border-2 border-border bg-main text-main-foreground flex items-center justify-center text-xl font-heading font-black flex-shrink-0 overflow-hidden shadow-[2px_2px_0px_0px_#000]"
         >
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt={formName} className="w-full h-full object-cover" />
@@ -91,9 +89,9 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
         </div>
         <div>
           <Button 
-            variant="outline" 
+            variant="neutral" 
             size="sm" 
-            className="border-slate-200 rounded-lg text-sm"
+            className="font-heading font-bold cursor-pointer"
             onClick={() => {
               if (!uploadingAvatar) {
                 document.getElementById("avatar-upload")?.click();
@@ -102,7 +100,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
             disabled={uploadingAvatar}
           >
             {uploadingAvatar ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Camera className="w-3.5 h-3.5 mr-1.5" />}
-            {uploadingAvatar ? "Uploading..." : "Change photo"}
+            {uploadingAvatar ? "Uploading..." : "Change Photo"}
           </Button>
           <input
             id="avatar-upload"
@@ -134,7 +132,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
               }
             }}
           />
-          <p className="text-xs text-slate-400 mt-1">PNG, JPG or GIF. Max 5MB.</p>
+          <p className="text-xs font-base text-foreground/60 mt-1">PNG, JPG or GIF. Max 5MB.</p>
         </div>
       </div>
 
@@ -142,9 +140,9 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="profile-name" className="text-sm font-medium text-slate-700">Full Name</Label>
+          <Label htmlFor="profile-name" className="text-sm font-heading font-bold text-foreground">Full Name</Label>
           {nameError && (
-            <p className="text-xs text-rose-600 font-medium" id="profile-name-error">
+            <p className="text-xs text-red-600 font-heading font-bold" id="profile-name-error">
               {nameError}
             </p>
           )}
@@ -156,40 +154,40 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
               setFormName(e.target.value);
               if (nameError) setNameError("");
             }}
-            className={`rounded-xl border-slate-200 ${
-              nameError ? "border-rose-500 focus-visible:ring-rose-500/20" : ""
+            className={`bg-secondary-background ${
+              nameError ? "border-red-500" : ""
             }`}
           />
         </div>
         <div className="flex flex-col gap-1.5 justify-center">
-          <p className="text-sm font-medium text-slate-700">Email Address</p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm font-heading font-bold text-foreground">Email Address</p>
+          <p className="text-sm font-mono text-foreground/70">
             {user?.email ?? "Loading..."}
           </p>
         </div>
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <Label htmlFor="profile-bio" className="text-sm font-medium text-slate-700">Bio</Label>
+          <Label htmlFor="profile-bio" className="text-sm font-heading font-bold text-foreground">Bio</Label>
           <textarea
             id="profile-bio"
             value={formBio}
             onChange={(e) => setFormBio(e.target.value)}
             rows={3}
             maxLength={250}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-colors"
+            className="w-full rounded-base border-2 border-border px-3 py-2.5 text-sm font-base bg-secondary-background resize-none focus:outline-hidden focus:ring-2 focus:ring-black transition-all"
             placeholder="Tell us about yourself..."
           />
-          <span className="text-[10px] text-slate-400 text-right block mt-0.5">{formBio.length}/250</span>
+          <span className="text-[10px] font-mono text-foreground/60 text-right block mt-0.5">{formBio.length}/250</span>
         </div>
         <div className="flex flex-col gap-1.5 sm:col-span-2">
-          <p className="text-sm font-medium text-slate-700">Member Since</p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm font-heading font-bold text-foreground">Member Since</p>
+          <p className="text-sm font-base text-foreground/70">
             {user ? new Date(user.joinedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Loading..."}
           </p>
         </div>
       </div>
 
       {generalError && (
-        <p className="text-sm text-rose-600 font-medium bg-rose-50 border border-rose-100 rounded-xl px-4 py-2.5">
+        <p className="text-sm text-red-600 font-heading font-bold bg-red-100 border-2 border-red-500 rounded-base px-4 py-2.5 shadow-[2px_2px_0px_0px_#ef4444]">
           {generalError}
         </p>
       )}
@@ -198,7 +196,9 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
         <Button
           onClick={handleSaveGeneral}
           disabled={saving}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold"
+          size="lg"
+          variant="default"
+          className="font-heading font-black shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer"
           id="profile-save-btn"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
@@ -210,7 +210,7 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium"
+              className="flex items-center gap-1.5 bg-main text-main-foreground border-2 border-border px-3 py-1.5 rounded-base text-sm font-heading font-bold shadow-[2px_2px_0px_0px_#000]"
             >
               <Check className="w-4 h-4" />
               Saved!

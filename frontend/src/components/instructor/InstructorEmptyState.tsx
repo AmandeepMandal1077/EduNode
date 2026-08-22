@@ -7,19 +7,21 @@ interface InstructorEmptyStateProps {
 
 export function InstructorEmptyState({ navigate }: InstructorEmptyStateProps) {
   return (
-    <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl shadow-sm p-8">
-      <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mx-auto mb-4">
-        <BookOpen className="w-8 h-8 text-indigo-600" />
+    <div className="text-center py-20 bg-secondary-background border-2 border-border rounded-base shadow-shadow p-8 max-w-lg mx-auto">
+      <div className="w-16 h-16 rounded-base bg-main border-2 border-border flex items-center justify-center mx-auto mb-4 shadow-[2px_2px_0px_0px_#000]">
+        <BookOpen className="w-8 h-8 text-main-foreground" />
       </div>
-      <h3 className="text-lg font-bold text-slate-800 mb-2">No courses created yet</h3>
-      <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
-        Share your knowledge with the world. Create your first online course in just a few clicks.
+      <h3 className="text-xl font-heading font-black text-foreground mb-2">No courses created yet</h3>
+      <p className="text-foreground/70 text-sm font-base mb-6 max-w-sm mx-auto">
+        Share your expertise with thousands of learners. Create your first course in just a few minutes.
       </p>
       <Button
+        variant="default"
+        size="lg"
         onClick={() => navigate("/instructor/courses/create")}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold cursor-pointer"
+        className="font-heading font-black shadow-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer"
       >
-        <Plus className="w-4 h-4 mr-2" />
+        <Plus className="w-5 h-5 mr-2" />
         Create Your First Course
       </Button>
     </div>
