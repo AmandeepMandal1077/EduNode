@@ -5,14 +5,13 @@ import {
   GraduationCap,
   Menu,
   X,
-  BookOpen,
-  LayoutDashboard,
   LogOut,
   User,
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +25,6 @@ export function Navbar() {
   const { authenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -46,12 +44,6 @@ export function Navbar() {
   }, [userMenuOpen]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
     setMobileOpen(false);
     setUserMenuOpen(false);
   }, [location.pathname]);
@@ -60,8 +52,6 @@ export function Navbar() {
     logout();
     navigate("/");
   };
-
-  const isLanding = location.pathname === "/";
 
   return (
     <motion.header
@@ -101,7 +91,9 @@ export function Navbar() {
 
         <div className="flex-1" />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <ThemeToggle />
+
           {authenticated ? (
             <>
               <div className="relative" ref={menuRef}>

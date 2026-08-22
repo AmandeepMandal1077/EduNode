@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { Course, Lecture } from "@/types";
 
 interface LearningRoomTopBarProps {
@@ -38,6 +39,8 @@ export function LearningRoomTopBar({
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
+        <ThemeToggle />
+
         <Button
           size="sm"
           variant="neutral"
