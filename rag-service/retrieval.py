@@ -37,36 +37,36 @@ async def query(course_id: str, lecture_id: str, data: QueryRequest):
         return "\n\n".join(doc.page_content for doc in docs)
 
     prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            """
-            You are a retrieval-augmented teaching assistant.
+    (
+        "system",
+        """
+        You are an AI Teaching Assistant for an online course.
 
-            Use ONLY the supplied context.
+        Don't point out towards lecture if information needed to answer is sufficient.
 
-            If the context does not contain enough information
-            to answer the question, respond exactly:
+        Guidelines:
+        1. Context-First: Always check the provided Context first. If the Context contains the answer, base your explanation directly on it.
+        2. Unmentioned / Missing Details:
+           - If the question is related to the course topic but the specific detail was NOT mentioned in the context:
+             a) Explicitly state that the video does not cover or mention this specific detail.
+             b) Provide the standard, accurate answer using general programming knowledge, clearly labeled as supplementary information.
+        3. Completely Off-Topic / Unrelated Questions:
+           - If the question is completely unrelated to the subject of the video, respond:
+             "I could not find that information in this course, and it is outside the scope of this lecture."
+        4. Tone: Clear, educational, concise, and helpful.
+        """
+    ),
+    (
+        "human",
+        """
+        Context from video transcript:
+        {context}
 
-            "I could not find that information in the course."
-
-            Never:
-            - use prior knowledge
-            - guess
-            - fabricate information
-            - answer from general knowledge
-            """
-        ),
-        (
-            "human",
-            """
-            Context:
-            {context}
-
-            Question:
-            {question}
-            """
-        )
-    ])
+        Student Question:
+        {question}
+        """
+    )
+])
 
     docs = await retriever.ainvoke(data.question)
     context = format_docs(docs)
