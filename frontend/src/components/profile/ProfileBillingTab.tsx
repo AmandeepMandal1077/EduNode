@@ -56,7 +56,7 @@ export function ProfileBillingTab({ purchases }: ProfileBillingTabProps) {
                     {new Date(p.purchasedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </td>
                   <td className="py-3 px-4 font-mono font-bold text-foreground whitespace-nowrap">
-                    {p.currency?.toUpperCase() === "INR" || p.currency?.toUpperCase() === "RUPEES" ? "₹" : "$"}{p.amount.toFixed(2)}
+                    {p.currency?.toUpperCase() === "USD" ? "$" : "₹"}{p.amount.toFixed(2)}
                   </td>
                   <td className="py-3 px-4 text-foreground/80 font-base text-xs">{p.paymentMethod}</td>
                   <td className="py-3 px-4">

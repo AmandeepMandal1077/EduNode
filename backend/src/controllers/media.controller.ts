@@ -14,6 +14,7 @@ import type { AuthenticatedRequest } from "../types/user.js";
 import debug from "../utils/debug.js";
 import mongoose from "mongoose";
 import { getPublicUrl } from "../utils/s3.js";
+import { invalidatePublishedCoursesInCache } from "../cache/courses-cache.js";
 
 /**
  * @desc Creates a presigned upload URL and tracks the pending upload session.
@@ -247,6 +248,13 @@ export const updateMediaStatus = asyncHandler(
 
     if (!lecture) {
       throw new ApiError("Lecture not found or already in terminal state", 404);
+    }
+
+    if (status === EUploadStatus.READY && duration) {
+      await Course.findByIdAndUpdate(lecture.courseId, {
+        $inc: { totalDuration: Math.round(duration) },
+      });
+      await invalidatePublishedCoursesInCache();
     }
 
     if (error) {

@@ -53,11 +53,11 @@ export function CourseSidebar({
         ) : (
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-heading font-black text-foreground">
-              ${course.price.toFixed(2)}
+              ₹{course.price.toFixed(2)}
             </span>
             {course.originalPrice > course.price && (
               <span className="text-lg font-heading font-bold text-foreground/50 line-through">
-                ${course.originalPrice.toFixed(2)}
+                ₹{course.originalPrice.toFixed(2)}
               </span>
             )}
             {course.originalPrice > course.price && (

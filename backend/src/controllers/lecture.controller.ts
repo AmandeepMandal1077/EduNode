@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apiError.js";
 import { Lecture, EUploadStatus } from "../models/lecture.model.js";
 import { Course } from "../models/course.model.js";
 import { asyncHandler } from "../utils/asynchandler.js";
+import { invalidatePublishedCoursesInCache } from "../cache/courses-cache.js";
 import type { Response } from "express";
 
 /**
@@ -72,8 +73,13 @@ export const deleteLecture = asyncHandler(
 
     await Course.findByIdAndUpdate(lecture.courseId, {
       $pull: { lectures: lecture._id },
-      $inc: { totalLectures: -1 },
+      $inc: {
+        totalLectures: -1,
+        totalDuration: -(lecture.duration || 0),
+      },
     });
+
+    await invalidatePublishedCoursesInCache();
 
     await Lecture.findByIdAndDelete(lecture._id);
 
