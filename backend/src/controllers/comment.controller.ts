@@ -4,6 +4,8 @@ import type { AuthenticatedRequest } from "../types/user.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import mongoose from "mongoose";
 import { ApiError } from "../utils/apiError.js";
+import { Lecture } from "../models/lecture.model.js";
+import { Course } from "../models/course.model.js";
 
 /**
  * @desc Creates a new comment or a reply to an existing comment on a lecture.
@@ -24,7 +26,19 @@ export const writeComment = asyncHandler(
     if (parentCommentId && !mongoose.Types.ObjectId.isValid(parentCommentId)) {
       throw new ApiError("Invalid parentCommentId", 400);
     }
+
     const userId = req.userId;
+    const course = await Lecture.findById(lectureId).select("courseId").lean();
+
+    const exists = await Course.exists({
+      _id: course?.courseId,
+      "enrolledStudents.student": new mongoose.Types.ObjectId(userId),
+    });
+
+    if(!exists) {
+      throw new ApiError("User not enrolled in course", 400);
+    }
+
     const comment = await Comment.create({
       lectureId: new mongoose.Types.ObjectId(lectureId),
       userId: new mongoose.Types.ObjectId(userId),
@@ -75,6 +89,17 @@ export const likeComment = asyncHandler(
       throw new ApiError("Invalid commentId", 400);
     }
     const userId = req.userId;
+    const course = await Lecture.findById(lectureId).select("courseId").lean();
+
+    const exists = await Course.exists({
+      _id: course?.courseId,
+      "enrolledStudents.student": new mongoose.Types.ObjectId(userId),
+    });
+
+    if(!exists) {
+      throw new ApiError("User not enrolled in course", 400);
+    }
+    
     const comment = await Comment.findOne({
       _id: new mongoose.Types.ObjectId(commentId),
       lectureId: new mongoose.Types.ObjectId(lectureId),
@@ -111,6 +136,17 @@ export const dislikeComment = asyncHandler(
       throw new ApiError("Invalid commentId", 400);
     }
     const userId = req.userId;
+    const course = await Lecture.findById(lectureId).select("courseId").lean();
+
+    const exists = await Course.exists({
+      _id: course?.courseId,
+      "enrolledStudents.student": new mongoose.Types.ObjectId(userId),
+    });
+
+    if(!exists) {
+      throw new ApiError("User not enrolled in course", 400);
+    }
+    
     const comment = await Comment.findOne({
       _id: new mongoose.Types.ObjectId(commentId),
       lectureId: new mongoose.Types.ObjectId(lectureId),
@@ -146,6 +182,18 @@ export const deleteComment = asyncHandler(
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       throw new ApiError("Invalid commentId", 400);
     }
+    const userId = req.userId;
+    const course = await Lecture.findById(lectureId).select("courseId").lean();
+
+    const exists = await Course.exists({
+      _id: course?.courseId,
+      "enrolledStudents.student": new mongoose.Types.ObjectId(userId),
+    });
+
+    if(!exists) {
+      throw new ApiError("User not enrolled in course", 400);
+    }
+    
     const comment = await Comment.findOne({
       _id: new mongoose.Types.ObjectId(commentId),
       lectureId: new mongoose.Types.ObjectId(lectureId),
@@ -182,6 +230,18 @@ export const getComments = asyncHandler(
     if (!mongoose.Types.ObjectId.isValid(lectureId)) {
       throw new ApiError("Invalid lectureId", 400);
     }
+    const userId = req.userId;
+    const course = await Lecture.findById(lectureId).select("courseId").lean();
+
+    const exists = await Course.exists({
+      _id: course?.courseId,
+      "enrolledStudents.student": new mongoose.Types.ObjectId(userId),
+    });
+
+    if(!exists) {
+      throw new ApiError("User not enrolled in course", 400);
+    }
+    
     const comments = await Comment.find({
       lectureId: new mongoose.Types.ObjectId(lectureId),
     }).populate({
@@ -191,7 +251,6 @@ export const getComments = asyncHandler(
 
 
     const commentIds = comments.map(c => c._id);
-    const userId = req.userId;
 
     const userLikes = await CommentLike.find({
       userId: new mongoose.Types.ObjectId(userId),

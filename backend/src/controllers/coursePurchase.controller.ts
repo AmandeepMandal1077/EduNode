@@ -146,6 +146,49 @@ export const verifyStripeSession = asyncHandler(
       throw new ApiError("Course amount does not match", 400);
     }
 
+    if (coursePurchase.status !== PaymentStatus.COMPLETED && session.payment_status === "paid") {
+      coursePurchase.paymentId = session.payment_intent as string;
+      coursePurchase.status = PaymentStatus.COMPLETED;
+      
+      const course = await Course.findById(coursePurchase.course);
+      if (course) {
+        const isStudentEnrolled = course.enrolledStudents.some(
+          (s) => s.student.toString() === coursePurchase.user.toString(),
+        );
+        if (!isStudentEnrolled) {
+          course.enrolledStudents.push({
+            student: new mongoose.Types.ObjectId(coursePurchase.user.toString()),
+          });
+          await course.save();
+        }
+
+        const existingProgress = await CourseProgress.findOne({
+          user: coursePurchase.user,
+          course: coursePurchase.course,
+        });
+
+        if (!existingProgress) {
+          const lectures = course.lectures || [];
+          const lectureProgressEntries = lectures.map((lectureId: mongoose.Types.ObjectId) => ({
+            lecture: lectureId,
+            userId: coursePurchase.user,
+            isCompleted: false,
+            lastWatchedPosition: 0,
+            lastWatched: new Date(),
+          }));
+
+          await CourseProgress.create({
+            user: coursePurchase.user,
+            course: coursePurchase.course,
+            isCompleted: false,
+            completionPercentage: 0,
+            lectureProgress: lectureProgressEntries,
+          });
+        }
+      }
+      await coursePurchase.save();
+    }
+
     res.status(200).json({
       success: true,
       message: "Session verified successfully",

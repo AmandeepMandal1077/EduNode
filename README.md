@@ -121,11 +121,10 @@ This will boot up the frontend, backend, RAG service, python worker, MongoDB, an
 
 ### 3. Initialize Database (First-time only)
 
-In a new terminal window, initialize the MongoDB replica set and seed the database with mock data:
+The MongoDB replica set is automatically initialized on startup. To seed the database with mock data, open a terminal window and run:
 
 ```bash
-docker exec -it edunode-mongodb-1 mongosh --eval "rs.initiate()"
-docker exec -it edunode-backend-1 bun run seed.ts
+docker compose exec backend bun run seed.ts
 ```
 
 > All seeded user accounts share the password: `Seeded@123`. Query the `users` collection in the `LMS` database for email addresses.

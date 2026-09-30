@@ -40,11 +40,20 @@ dotenv.config();
 
 const app = express();
 
+const corsOptions = {
+  origin: [
+    process.env.FRONTEND_URL?.trim() || "http://localhost:5173",
+    process.env.RAG_SERVER_URL?.trim() || "http://rag-service:8000"
+  ],
+  methods: ["GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
-
 
 app.use(hpp());
 app.use(helmet());
@@ -53,10 +62,13 @@ const authLimiter = rateLimit({
   limit: 10,
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
-app.use("/api/v1/users/signin", authLimiter);
-app.use("/api/v1/users/signup", authLimiter);
-app.use("/api/v1/users/forgot-password", authLimiter);
-app.use("/api/v1/users/reset-password", authLimiter);
+
+if(process.env.NODE_ENV !== "development") {
+  app.use("/api/v1/users/signin", authLimiter);
+  app.use("/api/v1/users/signup", authLimiter);
+  app.use("/api/v1/users/forgot-password", authLimiter);
+  app.use("/api/v1/users/reset-password", authLimiter);
+}
 
 
 app.post(
@@ -78,17 +90,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
-const corsOptions = {
-  origin: [
-    process.env.FRONTEND_URL!,
-    process.env.RAG_SERVER_URL!
-  ],
-  methods: ["GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-};
-app.use(cors(corsOptions));
 
 
 app.use("/health", healthCheckRouter);

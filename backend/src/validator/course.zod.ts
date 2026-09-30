@@ -27,7 +27,7 @@ export const courseSchema = z.object({
     .int({ error: "Price must be an integer" })
     .min(0, { error: "Price must be non-negative" })
     .default(0),
-  thumbnail: z.string().min(1, { error: "Thumbnail is required" }).optional(),
+  thumbnail: z.string().min(1, { error: "Thumbnail is required" }),
   enrolledStudents: z
     .array(
       z.object({

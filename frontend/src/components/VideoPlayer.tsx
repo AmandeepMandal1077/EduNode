@@ -47,9 +47,9 @@ function PlayerHooks({
   onHeatmapTarget: (el: HTMLElement | null) => void;
   onSeekingChange: (seeking: boolean) => void;
 }) {
-  const remote = useMediaRemote();
-  const currentTime = useMediaState("currentTime");
   const playerRef = useRef<MediaPlayerInstance>(null);
+  const remote = useMediaRemote(playerRef);
+  const currentTime = useMediaState("currentTime", playerRef);
 
   const onProgressRef = useRef(onProgress);
 
@@ -126,6 +126,7 @@ function PlayerHooks({
     <MediaPlayer
       ref={playerRef}
       src={src ?? undefined}
+      crossOrigin="anonymous"
       onLoadedMetadata={handleLoadedMetadata}
       onProviderSetup={handleProviderSetup}
       className="w-full h-full"

@@ -11,8 +11,10 @@ services:
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     depends_on:
-      - redis
-      - mongodb
+      redis:
+        condition: service_started
+      mongodb:
+        condition: service_healthy
 
   rag-service:
     build: ./rag-service
@@ -36,13 +38,21 @@ services:
 
   mongodb:
     image: mongo:latest
-    command:
-      - mongod
-      - --bind_ip_all
-      - --replSet
-      - rs0
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: |
+        mongosh --quiet --eval '
+          try { rs.status().ok }
+          catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]}).ok }
+        '
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
 
   redis:
     image: redis:latest
