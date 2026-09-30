@@ -19,8 +19,8 @@ interface ExploreFiltersProps {
 const PRICE_FILTERS = [
   { value: "all", label: "All Prices" },
   { value: "free", label: "Free" },
-  { value: "under50", label: "Under $50" },
-  { value: "under100", label: "Under $100" },
+  { value: "under1000", label: "Under ₹1,000" },
+  { value: "under5000", label: "Under ₹5,000" },
   { value: "paid", label: "Paid" },
 ];
 
