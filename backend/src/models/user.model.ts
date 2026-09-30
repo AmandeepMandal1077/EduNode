@@ -73,7 +73,6 @@ const userSchema = new mongoose.Schema<
     },
     avatar: {
       type: String,
-      default: "default.png",
     },
     bio: {
       type: String,

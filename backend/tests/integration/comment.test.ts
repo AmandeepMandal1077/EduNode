@@ -45,6 +45,10 @@ describe("Comment Controller Integration Tests", () => {
       price: 0,
       instructor: new mongoose.Types.ObjectId(),
       thumbnail: "http://example.com/thumbnail.png",
+      enrolledStudents: [
+        { student: authUser._id },
+        { student: (await User.findOne({ email: otherUser.email }))?._id }
+      ],
     });
 
     const lecture = await Lecture.create({

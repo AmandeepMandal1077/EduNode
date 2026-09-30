@@ -39,3 +39,4 @@ ai/context
 .vscode
 # uploads
 src/uploads/
+seed-data
