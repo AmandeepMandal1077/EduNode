@@ -40,6 +40,8 @@ dotenv.config();
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 const corsOptions = {
   origin: [
     process.env.FRONTEND_URL?.trim() || "http://localhost:5173",
@@ -60,7 +62,13 @@ app.use(helmet());
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
-  message: "Too many requests from this IP, please try again after 15 minutes",
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === "OPTIONS",
+  message: {
+    success: false,
+    message: "Too many requests from this IP, please try again after 15 minutes",
+  },
 });
 
 if(process.env.NODE_ENV !== "development") {
