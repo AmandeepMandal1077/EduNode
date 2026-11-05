@@ -263,6 +263,13 @@ export const updateMediaStatus = asyncHandler(
       throw new ApiError("Lecture not found or already in terminal state", 404);
     }
 
+    if (status === EUploadStatus.READY && duration) {
+      await Course.findByIdAndUpdate(lecture.courseId, {
+        $inc: { totalDuration: Math.round(duration) },
+      });
+      await invalidatePublishedCoursesInCache();
+    }
+
     if (error) {
       debug(
         `Lecture processing error for ${uploadSessionId || storageKey}:`,

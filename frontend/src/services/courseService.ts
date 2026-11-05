@@ -65,10 +65,13 @@ function toBackendLevel(lvl: string): string {
 }
 
 function fmtDuration(seconds: number | undefined): string {
-  if (seconds == null || isNaN(seconds)) return "0m";
+  if (seconds == null || isNaN(seconds) || seconds <= 0) return "0m";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
 }
 
 function mapLecture(bl: BackendLecture): Lecture {
@@ -125,7 +128,10 @@ function mapCourse(bc: BackendCourse, lectures?: BackendLecture[]): Course {
     reviewCount:
       bc.enrolledStudents?.filter((s) => s.rating !== undefined).length ?? 0,
     studentCount: bc.enrolledStudents?.length ?? 0,
-    totalDuration: fmtDuration(bc.totalDuration),
+    totalDuration: fmtDuration(
+      bc.totalDuration ||
+        mappedLectures.reduce((acc, l) => acc + (l.durationSeconds || 0), 0),
+    ),
     lectureCount: bc.totalLectures,
     language: "English",
     lastUpdated: bc.updatedAt?.slice(0, 10) ?? "",
@@ -263,10 +269,10 @@ export async function searchCourses(
     courses = courses.filter((c) => c.price === 0);
   } else if (priceFilter === "paid") {
     courses = courses.filter((c) => c.price > 0);
-  } else if (priceFilter === "under50") {
-    courses = courses.filter((c) => c.price > 0 && c.price < 4000);
-  } else if (priceFilter === "under100") {
-    courses = courses.filter((c) => c.price > 0 && c.price < 8000);
+  } else if (priceFilter === "under1000" || priceFilter === "under50") {
+    courses = courses.filter((c) => c.price > 0 && c.price <= 1000);
+  } else if (priceFilter === "under5000" || priceFilter === "under100") {
+    courses = courses.filter((c) => c.price > 0 && c.price <= 5000);
   }
 
   return courses;
