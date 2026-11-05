@@ -5,8 +5,10 @@ import {
   getPublishedCourses,
   getMyCreatedCourses,
   updateCourseDetails,
+  getPublishedCourseDetails,
   getCourseDetails,
   addLectureToCourse,
+  getPublishedCourseLectures,
   getCourseLectures,
   announceMessage,
   getCourseAnnouncements,
@@ -31,6 +33,25 @@ router.get("/published", getPublishedCourses);
 router.get("/search", searchCourses);
 router.get("/categories", getCourseCategories);
 
+router.get("/", authenticateUserMiddleware, getMyCreatedCourses);
+router.get("/purchased", authenticateUserMiddleware, getPurchasedCourses);
+router.get("/my-announcements", authenticateUserMiddleware, getMyAnnouncements);
+
+// Published courses are public; drafts fall through to auth and the owner check.
+router.get(
+  "/:courseId",
+  getPublishedCourseDetails,
+  authenticateUserMiddleware,
+  getCourseDetails,
+);
+
+router.get(
+  "/:courseId/lectures",
+  getPublishedCourseLectures,
+  authenticateUserMiddleware,
+  getCourseLectures,
+);
+
 router.use(authenticateUserMiddleware);
 
 router
@@ -38,25 +59,14 @@ router
   .post(
     validator(SourceType.BODY, courseValidator),
     createNewCourse,
-  )
-  .get(getMyCreatedCourses);
-
-router
-  .route("/purchased")
-  .get(getPurchasedCourses);
-
-router
-  .route("/my-announcements")
-  .get(getMyAnnouncements);
-
-router
-  .route("/:courseId")
-  .get(getCourseDetails)
-  .patch(
-    restrictToInstructor(),
-    validator(SourceType.BODY, courseUpdateSchema),
-    updateCourseDetails,
   );
+
+router.patch(
+  "/:courseId",
+  restrictToInstructor(),
+  validator(SourceType.BODY, courseUpdateSchema),
+  updateCourseDetails,
+);
 
 router
   .route("/:courseId/announce")
@@ -83,7 +93,6 @@ router
 
 router
   .route("/:courseId/lectures")
-  .get(getCourseLectures)
   .post(restrictToInstructor(), addLectureToCourse);
 
 export default router;

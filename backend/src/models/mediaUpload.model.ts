@@ -12,7 +12,7 @@ export interface IMediaUpload {
   userId: mongoose.Types.ObjectId;
   entityType: "avatar" | "course-image";
   entityId: string;
-  s3Key: string;
+  storageKey: string;
   status: EMediaUploadStatus;
   presignedUrlExpiresAt: Date;
   finalUrl?: string;
@@ -60,7 +60,7 @@ const mediaUploadSchema = new mongoose.Schema<
       type: String,
       required: true,
     },
-    s3Key: {
+    storageKey: {
       type: String,
       required: true,
     },

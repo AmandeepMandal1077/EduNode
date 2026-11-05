@@ -3,6 +3,7 @@ from faster_whisper import WhisperModel
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from req_schemas import IngestData
+from ingest_status import get_status
 from vectorstore import vector_store
 from langsmith import traceable
 from debug import debug
@@ -51,6 +52,12 @@ async def ingest(data: IngestData):
 
     file_path = await asyncio.to_thread(transcribe_video, video_url, slug)
     texts = await asyncio.to_thread(load_and_split_documents, file_path, data.course_id, data.lecture_id)
+
+    # A cleanup request marks the job failed while transcription is still running.
+    if get_status(data.lecture_id) == "failed":
+        debug(f"Skipping vector store for cleaned up lecture {data.lecture_id}")
+        return
+
     await store_documents(texts, video_url)
 
     debug(f"Finished ingesting {video_url}")

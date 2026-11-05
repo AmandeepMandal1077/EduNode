@@ -3,6 +3,9 @@ services:
     build: ./frontend
     ports:
       - "5173:5173"
+    environment:
+      # .env is excluded from the image; vite dev reads VITE_* from process.env
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:3000/api/v1}
 
   backend:
     build: ./backend
@@ -10,10 +13,20 @@ services:
       - ./backend/.env
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
+    environment:
+      STORAGE_PROVIDER: localstack
+      STORAGE_ENDPOINT: http://localstack:4566
+      STORAGE_PRESIGN_ENDPOINT: http://localhost:4566
+      STORAGE_PUBLIC_BASE_URL: http://localhost:4566/edunode-dev-bucket
+      STORAGE_CONTAINER: edunode-dev-bucket
+      STORAGE_REGION: us-east-1
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-local-dev-secret}
     depends_on:
       redis:
         condition: service_started
       mongodb:
+        condition: service_healthy
+      localstack:
         condition: service_healthy
 
   rag-service:
@@ -22,19 +35,81 @@ services:
       - ./rag-service/.env
     ports:
       - "${PYTHON_PORT}:8000"
+    environment:
+      STORAGE_PROVIDER: localstack
+      STORAGE_ENDPOINT: http://localstack:4566
+      STORAGE_CONTAINER: edunode-dev-bucket
+      STORAGE_REGION: us-east-1
     volumes:
       - rag_videos:/app/videos
       - rag_transcribe:/app/transcribe
       - chroma_db:/app/chroma_db
+    extra_hosts:
+      # dev embeddings use Ollama on the host (Linux needs the mapping)
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      localstack:
+        condition: service_healthy
 
   media-worker:
     build: ./worker
     env_file:
       - ./worker/.env
     environment:
-      - BACKEND_URL=http://backend:3000
+      BACKEND_URL: http://backend:3000
+      STORAGE_PROVIDER: localstack
+      STORAGE_ENDPOINT: http://localstack:4566
+      STORAGE_PUBLIC_BASE_URL: http://localhost:4566/edunode-dev-bucket
+      STORAGE_CONTAINER: edunode-dev-bucket
+      STORAGE_REGION: us-east-1
+      QUEUE_PROVIDER: localstack
+      QUEUE_ENDPOINT: http://localstack:4566
+      QUEUE_URL: http://localstack:4566/000000000000/edunode-media-queue
+      QUEUE_NAME: edunode-media-queue
+      QUEUE_REGION: us-east-1
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-local-dev-secret}
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+      localstack:
+        condition: service_healthy
+
+  trigger-builder:
+    build:
+      context: ./lambda/storage-upload-trigger
+      dockerfile: Dockerfile.localstack
+    volumes:
+      - trigger_build:/out
+
+  localstack:
+    image: localstack/localstack:4
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: s3,sqs,lambda,iam,sts
+      DEBUG: "0"
+      PERSISTENCE: "1"
+      DEFAULT_REGION: us-east-1
+      LAMBDA_DOCKER_NETWORK: edunode
+      STORAGE_CONTAINER: edunode-dev-bucket
+      QUEUE_NAME: edunode-media-queue
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET:-local-dev-secret}
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./localstack/init:/etc/localstack/init/ready.d:ro
+      - trigger_build:/opt/trigger:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      trigger-builder:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - awslocal s3api head-bucket --bucket "$$STORAGE_CONTAINER" >/dev/null 2>&1 && awslocal sqs get-queue-url --queue-name "$$QUEUE_NAME" >/dev/null 2>&1
+      interval: 5s
+      timeout: 10s
+      retries: 60
+      start_period: 20s
 
   mongodb:
     image: mongo:latest
@@ -60,9 +135,15 @@ services:
     volumes:
       - redis_data:/data
 
+networks:
+  default:
+    name: edunode
+
 volumes:
   mongo_data:
   redis_data:
   rag_videos:
   rag_transcribe:
   chroma_db:
+  localstack_data:
+  trigger_build:

@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../../src/app.js";
 import { User, Role } from "../../src/models/user.model.js";
 import { Course, CourseLevel } from "../../src/models/course.model.js";
+import { Lecture, EUploadStatus } from "../../src/models/lecture.model.js";
 import { Announcement } from "../../src/models/announcement.model.js";
 import { loginUser } from "../setup.js";
 import mongoose from "mongoose";
@@ -187,5 +188,90 @@ describe("Course Controller Integration Tests", () => {
 
     const updatedCourse = await Course.findById(course._id);
     expect(updatedCourse?.announcements).toHaveLength(1);
+  });
+
+  it("8. GET /api/v1/courses/:courseId should return a published course without auth", async () => {
+    const course = await Course.create({
+      title: "Public Course",
+      subtitle: "Sub",
+      description: "Desc",
+      category: "Tech",
+      level: CourseLevel.BEGINNER,
+      price: 50,
+      instructor: new mongoose.Types.ObjectId(instructorId),
+      isPublished: true,
+      thumbnail: "http://example.com/thumbnail.png",
+    });
+
+    const response = await request(app).get(`/api/v1/courses/${course._id}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.course.title).toBe("Public Course");
+  });
+
+  it("9. GET /api/v1/courses/:courseId should require auth for a draft course", async () => {
+    const course = await Course.create({
+      title: "Draft Course",
+      subtitle: "Sub",
+      description: "Desc",
+      category: "Tech",
+      level: CourseLevel.BEGINNER,
+      price: 50,
+      instructor: new mongoose.Types.ObjectId(instructorId),
+      isPublished: false,
+      thumbnail: "http://example.com/thumbnail.png",
+    });
+
+    const guestResponse = await request(app).get(`/api/v1/courses/${course._id}`);
+    expect(guestResponse.status).toBe(401);
+
+    const ownerResponse = await request(app)
+      .get(`/api/v1/courses/${course._id}`)
+      .set("Cookie", [instructorToken]);
+    expect(ownerResponse.status).toBe(200);
+    expect(ownerResponse.body.data.course.title).toBe("Draft Course");
+
+    const otherResponse = await request(app)
+      .get(`/api/v1/courses/${course._id}`)
+      .set("Cookie", [studentToken]);
+    expect(otherResponse.status).toBe(404);
+  });
+
+  it("10. GET /api/v1/courses/:courseId/lectures should be public for a published course", async () => {
+    const course = await Course.create({
+      title: "Lecture Course",
+      subtitle: "Sub",
+      description: "Desc",
+      category: "Tech",
+      level: CourseLevel.BEGINNER,
+      price: 50,
+      instructor: new mongoose.Types.ObjectId(instructorId),
+      isPublished: true,
+      thumbnail: "http://example.com/thumbnail.png",
+    });
+
+    const lecture = await Lecture.create({
+      title: "First Lecture",
+      slug: "first-lecture",
+      courseId: course._id,
+      description: "Desc",
+      videoUrl: "http://example.com/video.m3u8",
+      storageKey: "root/courses/x/lectures/y/video.mp4",
+      uploadSessionId: "session-public-lectures",
+      uploadStatus: EUploadStatus.READY,
+    });
+
+    await Course.findByIdAndUpdate(course._id, {
+      $push: { lectures: lecture._id },
+    });
+
+    const response = await request(app).get(
+      `/api/v1/courses/${course._id}/lectures`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.lectures.lectures).toHaveLength(1);
+    expect(response.body.data.lectures.lectures[0].title).toBe("First Lecture");
   });
 });

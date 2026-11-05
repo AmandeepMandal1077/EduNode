@@ -4,15 +4,17 @@ python-dotenv
 httpx
 langchain
 langchain-community
-langchain-ollama
 langchain-chroma
 langchain-qdrant
 langchain-text-splitters
 langsmith
 qdrant-client
-faster-whisper
+faster-whisper==1.2.1
+# faster-whisper passes metadata_errors= to av.open, which av 19 removed
+av>=11,<19
 chromadb
 deepeval
 pytest-asyncio
 boto3
+azure-storage-blob
 langchain-google-genai

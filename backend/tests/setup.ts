@@ -15,11 +15,11 @@ process.env.STRIPE_SECRET_KEY = "sk_test_mock";
 process.env.REDIS_HOST_NAME = "localhost";
 process.env.REDIS_PORT = "6380";
 process.env.REDIS_PASSWORD = "testpass";
-process.env.AWS_REGION = "us-east-1";
-process.env.AWS_ACCESS_KEY_ID = "test-access-key";
-process.env.AWS_SECRET_ACCESS_KEY = "test-secret-key";
-process.env.AWS_S3_BUCKET_NAME = "test-bucket";
-process.env.S3_BUCKET_NAME = "test-bucket";
+process.env.STORAGE_PROVIDER = "aws";
+process.env.STORAGE_REGION = "us-east-1";
+process.env.STORAGE_ACCESS_KEY = "test-access-key";
+process.env.STORAGE_SECRET_KEY = "test-secret-key";
+process.env.STORAGE_CONTAINER = "test-bucket";
 process.env.INTERNAL_API_SECRET = "test-internal-secret";
 process.env.FRONTEND_URL = "http://localhost:5173";
 process.env.RAG_SERVER_URL = "http://localhost:8000";
@@ -155,30 +155,25 @@ vi.mock("express-rate-limit", () => {
   };
 });
 
-// Mock S3 Client and Presigner
-vi.mock("@aws-sdk/client-s3", () => {
+// Mock the storage factory so tests never talk to a real provider
+vi.mock("../src/storage/index.js", () => {
+  const storage = {
+    provider: "aws",
+    createUploadTarget: vi.fn().mockResolvedValue({
+      url: "https://mock-presigned-url.example.com",
+      method: "PUT",
+      headers: {},
+    }),
+    getPublicUrl: vi.fn((key: string) => `https://cdn.example.com/${key}`),
+    deleteObject: vi.fn().mockResolvedValue(undefined),
+    emptyContainer: vi.fn().mockResolvedValue(undefined),
+  };
+
   return {
-    S3Client: vi.fn(() => ({
-      send: vi.fn(),
-    })),
-    PutObjectCommand: vi.fn(),
-    DeleteObjectCommand: vi.fn(),
-    DeleteObjectsCommand: vi.fn(),
+    getStorage: () => storage,
+    resetStorage: vi.fn(),
   };
 });
-
-vi.mock("@aws-sdk/s3-request-presigner", () => ({
-  getSignedUrl: vi.fn().mockResolvedValue("https://mock-presigned-url.s3.amazonaws.com"),
-}));
-
-vi.mock("../src/utils/s3.js", () => ({
-  generatePresignedPutUrl: vi.fn().mockResolvedValue("https://mock-presigned-url.s3.amazonaws.com"),
-  getPublicUrl: vi.fn((key: string) => `https://cdn.example.com/${key}`),
-  deleteS3Object: vi.fn().mockResolvedValue(undefined),
-  getS3Client: vi.fn(),
-  getBucketName: vi.fn().mockReturnValue("test-bucket"),
-  getPublicBaseUrl: vi.fn().mockReturnValue("https://cdn.example.com/"),
-}));
 
 // Mock Nodemailer
 export const mockSendMail = vi.fn().mockResolvedValue({ messageId: "mock-id" });

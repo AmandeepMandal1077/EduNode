@@ -468,10 +468,11 @@ export async function addLecture(
   lecture: Lecture;
   uploadSessionId: string;
   presignedUrl: string;
-  s3Key: string;
+  uploadHeaders?: Record<string, string>;
+  storageKey: string;
 }> {
   const response = await apiAddLecture(courseId, data);
-  // The API returns { lecture, presignedUrl, uploadSessionId, s3Key }
+  // The API returns { lecture, presignedUrl, uploadHeaders, uploadSessionId, storageKey }
   return {
     ...response,
     lecture: mapLecture(response.lecture),

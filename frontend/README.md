@@ -14,7 +14,7 @@ The React single-page application for EduNode. Provides the student and instruct
 - **Threaded Q&A** — Nested comment trees with like/dislike on each lecture
 - **AI Chat FAB** — Floating action button for AI-powered Q&A about the current lecture
 - **Video Player** — Uses **Vidstack** for HLS playback with automatic quality selection (replaces VideoJS)
-- **Instructor Dashboard** — Create courses, manage curriculum, upload videos via S3 presigned URLs, publish courses
+- **Instructor Dashboard** — Create courses, manage curriculum, upload videos via presigned storage URLs, publish courses
 - **Profile Management** — Edit account details, change password, security settings
 - **Auth Flow** — Login, register, forgot/reset password with form validation
 - **Stripe Checkout** — Success and cancel pages with purchase verification
@@ -38,7 +38,7 @@ The React single-page application for EduNode. Provides the student and instruct
 | **HTTP**         | [Axios](https://axios-http.com/) with auth interceptors                 |
 | **Icons**        | [Lucide React](https://lucide.dev/)                                     |
 | **Font**         | [Geist](https://vercel.com/font) via Fontsource                         |
-| **Media**        | S3 Presigned Uploads (client-side)                                      |
+| **Media**        | Presigned storage uploads (S3/Azure/LocalStack, client-side)            |
 | **Video Player** | Vidstack (https://vidstack.io/)                                         |
 
 ---
@@ -114,7 +114,7 @@ frontend/
     │   ├── authService.ts        # Login, register, logout logic
     │   ├── courseService.ts       # Course data transformations
     │   ├── commentService.ts     # Comment tree management
-    │   ├── mediaService.ts       # Axios-based S3 upload logic
+    │   ├── mediaService.ts       # Axios-based storage upload logic
     │   ├── userService.ts        # Profile update logic
     │   └── debounceService.ts    # Debounce utility
     │

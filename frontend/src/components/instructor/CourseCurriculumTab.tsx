@@ -10,7 +10,7 @@ import {
   deleteLecture,
   getProcessingLectures,
 } from "@/services/courseService";
-import { uploadFileToS3 } from "@/services/mediaService";
+import { uploadFileToStorage } from "@/services/mediaService";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import type { Course, Lecture } from "@/types";
 import type { BackendProcessingLecture } from "@/api/courseApi";
@@ -90,19 +90,25 @@ export function CourseCurriculumTab({
       return;
     }
 
+    if (!selectedVideo) return;
+    const videoFile = selectedVideo;
+
     try {
       setAddingLecture(true);
       setUploadProgress(0);
 
-      const { presignedUrl } = await addLecture(courseId, {
+      const { presignedUrl, uploadHeaders } = await addLecture(courseId, {
         title: lectureForm.title,
         description: lectureForm.description,
-        fileName: selectedVideo.name,
-        contentType: selectedVideo.type,
+        fileName: videoFile.name,
+        contentType: videoFile.type,
       });
 
-      await uploadFileToS3(presignedUrl, selectedVideo, (percent) =>
-        setUploadProgress(percent),
+      await uploadFileToStorage(
+        presignedUrl,
+        videoFile,
+        (percent) => setUploadProgress(percent),
+        uploadHeaders,
       );
 
       setLectureForm({ title: "", description: "" });

@@ -44,7 +44,7 @@ describe("Course Progress Controller Integration Tests", () => {
       description: "Desc",
       videoUrl: "https://example.com/v.mp4",
       courseId: course._id,
-      s3Key: "progress/lecture/key.mp4",
+      storageKey: "progress/lecture/key.mp4",
       uploadSessionId: "progress-upload-session-id",
     });
     lectureId = lecture._id.toString();

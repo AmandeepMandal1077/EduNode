@@ -8,7 +8,7 @@
 
 - **Multi-Role Auth** — JWT-based authentication with `Student` and `Instructor` roles, cookie-managed sessions, and rate-limited auth endpoints.
 - **Course & Lecture Management** — Full CRUD for courses and lectures. Instructors can publish/unpublish courses, manage curricula, and control lecture ordering.
-- **Async Media Pipeline** — Presigned S3 PUT uploads trigger a Lambda → SQS → Python media worker flow that transcodes video and automatically updates lecture status.
+- **Async Media Pipeline** — Presigned storage uploads trigger a provider-native event → media queue → Python worker flow that transcodes video and automatically updates lecture status.
 - **AI Lecture Q&A (RAG)** — After a lecture is processed, a Python RAG service transcribes the video and indexes it into a vector store (ChromaDB / Qdrant). Students can ask natural-language questions about any lecture.
 - **Stripe Payments** — Full purchase flow with webhook handling, enrollment gating, and real-time payment confirmation emails.
 - **Redis Caching** — Published courses are cached in Redis to reduce database pressure on high-traffic listing endpoints. Cache is invalidated on mutations.
@@ -28,9 +28,9 @@
 | **Language**           | TypeScript 5                                                                           |
 | **Database**           | MongoDB via [Mongoose 9](https://mongoosejs.com)                                       |
 | **Cache / Broker**     | Redis + [BullMQ](https://docs.bullmq.io) + [ioredis](https://github.com/redis/ioredis) |
-| **Object Storage**     | AWS S3                                                                                 |
-| **Event Queue**        | AWS SQS                                                                                |
-| **Serverless Trigger** | AWS Lambda — `s3-upload-trigger`                                                       |
+| **Object Storage**     | S3 / Azure Blob / LocalStack (provider factory)                                        |
+| **Event Queue**        | SQS / Azure Storage Queue / LocalStack (provider factory)                              |
+| **Event Trigger**      | AWS Lambda — `storage-upload-trigger`, Azure Event Grid function                      |
 | **Payments**           | [Stripe](https://stripe.com)                                                           |
 | **Email**              | Nodemailer + Handlebars templates                                                     |
 | **Validation**         | [Zod 4](https://zod.dev)                                                               |
@@ -84,11 +84,21 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret_key
 RESETPASSWORDTOKENEXPIRY=3600000        # 60 min in milliseconds
 
-# AWS / S3
-AWS_REGION=your_aws_region
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-S3_BUCKET_NAME=your_s3_bucket_name
+# Storage: aws | azure | localstack
+STORAGE_PROVIDER=aws
+STORAGE_CONTAINER=your_storage_container
+STORAGE_REGION=your_storage_region
+STORAGE_ACCESS_KEY=your_storage_access_key
+STORAGE_SECRET_KEY=your_storage_secret_key
+# STORAGE_ENDPOINT=http://localhost:4566
+# STORAGE_PRESIGN_ENDPOINT=http://localhost:4566
+# STORAGE_PUBLIC_BASE_URL=https://cdn.example.com
+
+# Azure (when STORAGE_PROVIDER=azure)
+# STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=edunodemedia;AccountKey=EXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLE==;EndpointSuffix=core.windows.net
+# STORAGE_ACCOUNT_NAME=your_account
+# STORAGE_ACCOUNT_KEY=your_key
+
 INTERNAL_API_SECRET=your_internal_api_secret
 
 # Stripe
@@ -159,7 +169,8 @@ backend/
 │   ├── cache/             # Redis caching logic
 │   ├── queue/             # BullMQ producers for async tasks
 │   ├── cron/              # Scheduled background jobs
-│   ├── utils/             # Helper functions (S3, Email, Tokens)
+│   ├── storage/           # Provider-neutral storage factory
+│   ├── utils/             # Helper functions (Email, Tokens)
 │   └── types/             # TypeScript interfaces & type definitions
 ├── tests/                 # Unit & Integration tests
 │   ├── unit/
@@ -218,10 +229,10 @@ PYTHON_PORT=8000
 
 ### 3. Run the Full Stack (Recommended)
 
-From the **repository root**, start all services with a single command:
+From the **repository root**, start the local stack with LocalStack defaults:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 This starts:
@@ -309,9 +320,12 @@ backend/
 │   │   ├── rag.route.ts
 │   │   ├── internal.route.ts   # Service-to-service callbacks (not browser-facing)
 │   │   └── ...
+│   ├── storage/
+│   │   ├── index.ts            # getStorage() provider registry
+│   │   ├── config.ts           # STORAGE_* resolution + legacy fallbacks
+│   │   └── providers/          # aws.ts, azure.ts, localstack.ts, s3.ts
 │   ├── types/                  # Shared TypeScript types and interfaces
 │   ├── utils/
-│   │   ├── s3.ts               # Presigned URL generation helpers
 │   │   ├── apiError.ts         # Typed HTTP error class
 │   │   └── asynchandler.ts     # Express async wrapper (eliminates try/catch boilerplate)
 │   └── validator/              # Zod schemas for request body validation
@@ -345,7 +359,7 @@ All routes are prefixed with `/api/v1`. `✓` means a valid JWT cookie is requir
 | `POST`   | `/lecture`                       | Instructor | Add a lecture to a course                 |
 | `PATCH`  | `/lecture/:lectureId`            | Instructor | Update lecture metadata                   |
 | `DELETE` | `/lecture/:lectureId`            | Instructor | Delete a lecture                          |
-| `GET`    | `/media/presigned-url`           | Instructor | Get presigned S3 URL for video upload     |
+| `POST`   | `/media/upload-session`          | User       | Get a presigned storage upload URL        |
 | `POST`   | `/payments/checkout`             | Student    | Create Stripe checkout session            |
 | `POST`   | `/payments/webhook`              | —          | Stripe webhook handler                    |
 | `GET`    | `/progress/:courseId`            | Student    | Get course completion progress            |
@@ -387,10 +401,16 @@ See [`README_TESTS.md`](./README_TESTS.md) for a full breakdown of test coverage
 | `MONGO_URI`                | Yes      | MongoDB connection string                           |
 | `JWT_SECRET`               | Yes      | Secret key for signing JWTs                         |
 | `RESETPASSWORDTOKENEXPIRY` | Yes      | Token expiry in ms (e.g. `3600000` = 60 min)        |
-| `AWS_REGION`               | Yes      | AWS region (e.g. `ap-south-1`)                      |
-| `AWS_ACCESS_KEY_ID`        | Yes      | AWS access key                                      |
-| `AWS_SECRET_ACCESS_KEY`    | Yes      | AWS secret key                                      |
-| `S3_BUCKET_NAME`           | Yes      | S3 bucket for media uploads                         |
+| `STORAGE_PROVIDER`         | Yes      | `aws`, `azure` or `localstack` (default `aws`)      |
+| `STORAGE_CONTAINER`        | Yes      | Bucket/container name                               |
+| `STORAGE_REGION`           | AWS/LocalStack | Storage region                                |
+| `STORAGE_ACCESS_KEY`       | AWS/LocalStack | Access key                                    |
+| `STORAGE_SECRET_KEY`       | AWS/LocalStack | Secret key                                    |
+| `STORAGE_ENDPOINT`         | LocalStack | S3-compatible endpoint used by the server        |
+| `STORAGE_PRESIGN_ENDPOINT` | LocalStack | Endpoint used in browser-facing signed URLs      |
+| `STORAGE_PUBLIC_BASE_URL`  | No       | CDN/proxy base for stored media links               |
+| `STORAGE_CONNECTION_STRING`| Azure    | Blob Storage connection string                      |
+| `STORAGE_ACCOUNT_NAME` / `STORAGE_ACCOUNT_KEY` | Azure | Alternative to the connection string |
 | `INTERNAL_API_SECRET`      | Yes      | Shared secret for internal service-to-service calls |
 | `STRIPE_PUBLISHABLE_KEY`   | Yes      | Stripe publishable key                              |
 | `STRIPE_SECRET_KEY`        | Yes      | Stripe secret key                                   |
@@ -414,18 +434,24 @@ See [`README_TESTS.md`](./README_TESTS.md) for a full breakdown of test coverage
 ### Upload a Lecture Video
 
 ```bash
-# Step 1: Request a presigned S3 PUT URL from the backend
-curl -X GET \
-  "http://localhost:3000/api/v1/media/presigned-url?lectureId=<lectureId>&fileName=lecture.mp4" \
-  -H "Cookie: token=<your_jwt>"
+# Step 1: Create the lecture and receive a presigned upload URL
+curl -X POST \
+  "http://localhost:3000/api/v1/courses/<courseId>/lectures" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: token=<your_jwt>" \
+  -d '{"title":"Intro","description":"Lecture","fileName":"lecture.mp4","contentType":"video/mp4"}'
 
-# Step 2: Upload the video file directly to S3 using the returned URL
-curl -X PUT "<presigned_url_from_step_1>" \
+# Step 2: PUT the file to data.presignedUrl with data.uploadHeaders
+curl -X PUT "<presigned_url>" \
   -H "Content-Type: video/mp4" \
   --data-binary @./lecture.mp4
 ```
 
-Once the upload completes, S3 fires the `s3-upload-trigger` Lambda → Lambda sends a message to the SQS queue → the Python media worker picks it up, transcodes the video with FFmpeg, uploads the processed output back to S3, and calls `PATCH /api/v1/internal/media/status` to mark the lecture as `READY`.
+Once the upload completes, the storage trigger (`storage-upload-trigger` on
+AWS/LocalStack, `storageUploadTrigger` on Azure) confirms the upload and
+enqueues a media job. The Python worker transcodes with FFmpeg, uploads HLS
+output back to storage, and calls `PATCH /api/v1/internal/media/status` to mark
+the lecture `READY`.
 
 ---
 
