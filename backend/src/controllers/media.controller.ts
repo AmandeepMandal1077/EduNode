@@ -177,13 +177,15 @@ export const confirmUpload = asyncHandler(
       // Auto-update the entity
       if (mediaUpload.entityType === "avatar") {
         await User.findByIdAndUpdate(mediaUpload.entityId, {
-          avatarUrl: mediaUpload.finalUrl,
+          avatar: mediaUpload.finalUrl,
         });
       } else if (mediaUpload.entityType === "course-image") {
         await Course.findByIdAndUpdate(mediaUpload.entityId, {
           thumbnail: mediaUpload.finalUrl,
         });
       }
+      // Thumbnail and instructor avatar both appear in the cached course list.
+      await invalidatePublishedCoursesInCache();
       return res
         .status(200)
         .json({ success: true, message: "Media upload confirmed" });
