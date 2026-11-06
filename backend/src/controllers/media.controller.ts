@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asynchandler.js";
-import { generatePresignedPutUrl } from "../utils/s3.js";
+import { getStorage } from "../storage/index.js";
 import { Lecture, EUploadStatus } from "../models/lecture.model.js";
 import {
   MediaUpload,
@@ -13,8 +13,6 @@ import { v4 as uuidv4 } from "uuid";
 import type { AuthenticatedRequest } from "../types/user.js";
 import debug from "../utils/debug.js";
 import mongoose from "mongoose";
-import { getPublicUrl } from "../utils/s3.js";
-import { invalidatePublishedCoursesInCache } from "../cache/courses-cache.js";
 
 /**
  * @desc Creates a presigned upload URL and tracks the pending upload session.
@@ -36,13 +34,13 @@ export const createUploadSession = asyncHandler(
 
     const uploadSessionId = uuidv4();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
-    let s3Key = "";
+    let storageKey = "";
 
     if (type === "avatar") {
       if (entityId !== userId) {
         throw new ApiError("Unauthorized", 403);
       }
-      s3Key = `root/avatars/users/${userId}/${Date.now()}_${fileName}`;
+      storageKey = `root/avatars/users/${userId}/${Date.now()}_${fileName}`;
 
       // Create MediaUpload
       await MediaUpload.create({
@@ -50,7 +48,7 @@ export const createUploadSession = asyncHandler(
         userId: new mongoose.Types.ObjectId(userId),
         entityType: "avatar",
         entityId,
-        s3Key,
+        storageKey,
         status: EMediaUploadStatus.PENDING_UPLOAD,
         presignedUrlExpiresAt: expiresAt,
       });
@@ -61,14 +59,14 @@ export const createUploadSession = asyncHandler(
       if (course.instructor.toString() !== userId)
         throw new ApiError("Unauthorized", 403);
 
-      s3Key = `root/courses/${entityId}/images/${Date.now()}_${fileName}`;
+      storageKey = `root/courses/${entityId}/images/${Date.now()}_${fileName}`;
 
       await MediaUpload.create({
         uploadSessionId,
         userId: new mongoose.Types.ObjectId(userId),
         entityType: "course-image",
         entityId,
-        s3Key,
+        storageKey,
         status: EMediaUploadStatus.PENDING_UPLOAD,
         presignedUrlExpiresAt: expiresAt,
       });
@@ -81,14 +79,19 @@ export const createUploadSession = asyncHandler(
       throw new ApiError("Invalid upload type", 400);
     }
 
-    const presignedUrl = await generatePresignedPutUrl(s3Key, contentType, 900);
+    const uploadTarget = await getStorage().createUploadTarget(
+      storageKey,
+      contentType,
+      900,
+    );
 
     res.status(200).json({
       success: true,
       data: {
         uploadSessionId,
-        s3Key,
-        presignedUrl,
+        storageKey,
+        presignedUrl: uploadTarget.url,
+        uploadHeaders: uploadTarget.headers,
         expiresAt,
       },
     });
@@ -138,21 +141,25 @@ export const getUploadStatus = asyncHandler(
 );
 
 /**
- * @desc Internal endpoint called by Lambda when an S3 object is created.
- * @input {Request} req - The request containing s3Key in body.
+ * @desc Internal endpoint called by the storage event trigger when an object is created.
+ * @input {Request} req - The request containing storageKey in body.
  * @input {Response} res - The response object.
  * @output {Promise<void>} Sends a JSON response confirming upload.
  */
 export const confirmUpload = asyncHandler(
   async (req: Request, res: Response) => {
-    const { s3Key } = req.body;
-    if (!s3Key) {
-      throw new ApiError("s3Key is required", 400);
+    // Accept the legacy field while older deployed triggers drain.
+    const storageKey = req.body.storageKey || req.body.s3Key;
+    if (!storageKey) {
+      throw new ApiError("storageKey is required", 400);
     }
 
-    // 1. Try Lecture Video
+    // 1. Try Lecture Video. The legacy field is read for one release.
     const lecture = await Lecture.findOneAndUpdate(
-      { s3Key, uploadStatus: EUploadStatus.PENDING_UPLOAD },
+      {
+        $or: [{ storageKey }, { s3Key: storageKey }],
+        uploadStatus: EUploadStatus.PENDING_UPLOAD,
+      },
       { uploadStatus: EUploadStatus.UPLOADED },
       { new: true },
     );
@@ -163,12 +170,15 @@ export const confirmUpload = asyncHandler(
         .json({ success: true, message: "Lecture upload confirmed" });
     }
 
-    // 2. Try MediaUpload (Avatar / Course Image)
+    // 2. Try MediaUpload (Avatar / Course Image). Legacy field read too.
     const mediaUpload = await MediaUpload.findOneAndUpdate(
-      { s3Key, status: EMediaUploadStatus.PENDING_UPLOAD },
+      {
+        $or: [{ storageKey }, { s3Key: storageKey }],
+        status: EMediaUploadStatus.PENDING_UPLOAD,
+      },
       {
         status: EMediaUploadStatus.UPLOADED,
-        finalUrl: getPublicUrl(s3Key),
+        finalUrl: getStorage().getPublicUrl(storageKey),
       },
       { new: true },
     );
@@ -199,19 +209,20 @@ export const confirmUpload = asyncHandler(
 );
 
 /**
- * @desc Internal endpoint called by Python worker to update lecture status (e.g. PROCESSING, READY, FAILED)
- * @input {Request} req - The request containing uploadSessionId or s3Key, and new status details in body.
+ * @desc Internal endpoint called by the media worker to update lecture status (e.g. PROCESSING, READY, FAILED)
+ * @input {Request} req - The request containing uploadSessionId or storageKey, and new status details in body.
  * @input {Response} res - The response object.
  * @output {Promise<void>} Sends a JSON response with updated lecture.
  */
 export const updateMediaStatus = asyncHandler(
   async (req: Request, res: Response) => {
-    const { uploadSessionId, s3Key, status, videoUrl, duration, error } =
-      req.body;
+    const { uploadSessionId, status, videoUrl, duration, error } = req.body;
+    // Accept the legacy field while older deployed workers drain.
+    const storageKey = req.body.storageKey || req.body.s3Key;
 
-    if ((!uploadSessionId && !s3Key) || !status) {
+    if ((!uploadSessionId && !storageKey) || !status) {
       throw new ApiError(
-        "uploadSessionId or s3Key, and status are required",
+        "uploadSessionId or storageKey, and status are required",
         400,
       );
     }
@@ -231,7 +242,9 @@ export const updateMediaStatus = asyncHandler(
       if (duration) updateFields.duration = duration;
     }
 
-    const query = uploadSessionId ? { uploadSessionId } : { s3Key };
+    const query = uploadSessionId
+      ? { uploadSessionId }
+      : { $or: [{ storageKey }, { s3Key: storageKey }] };
 
     const lecture = await Lecture.findOneAndUpdate(
       {
@@ -260,7 +273,10 @@ export const updateMediaStatus = asyncHandler(
     }
 
     if (error) {
-      debug(`Lecture processing error for ${uploadSessionId || s3Key}:`, error);
+      debug(
+        `Lecture processing error for ${uploadSessionId || storageKey}:`,
+        error,
+      );
     }
 
     res.status(200).json({

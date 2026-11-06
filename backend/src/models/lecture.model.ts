@@ -17,7 +17,7 @@ export interface ILecture {
   videoUrl: string;
   duration?: number;
   isPreview?: boolean;
-  s3Key: string;
+  storageKey: string;
   uploadSessionId: string;
   presignedUrlExpiresAt?: Date;
   order?: number;
@@ -77,9 +77,9 @@ const lectureSchema = new mongoose.Schema<
       type: Boolean,
       default: true,
     },
-    s3Key: {
+    storageKey: {
       type: String,
-      required: [true, "S3 key is required"],
+      required: [true, "Storage key is required"],
     },
     uploadSessionId: {
       type: String,

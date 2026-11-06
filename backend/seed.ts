@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import "dotenv/config";
+import { getStorage } from "./src/storage/index.js";
 
 const BACKEND_URL = "http://localhost:3000/api/v1";
-const RAG_URL = "http://rag-service:8000";
 
 class Api {
   cookie = "";
@@ -31,44 +30,28 @@ class Api {
 
 async function seed() {
   console.log("Starting E2E Seed process...");
+  const storage = getStorage();
 
-  // 2. Drop MongoDB
+  // 1. Drop MongoDB
   console.log("Connecting to MongoDB...");
   await mongoose.connect(process.env.MONGO_URI as string);
   await mongoose.connection.db?.dropDatabase();
   console.log("MongoDB dropped successfully.");
 
-  // 3. Clear S3 Bucket
-  const s3Client = new S3Client({
-    region: process.env.AWS_REGION as string,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
-    },
-  });
-  const bucketName = process.env.S3_BUCKET_NAME as string;
+  // 2. Clear the configured storage container
   try {
-    console.log("Emptying S3 bucket...");
-    let listedObjects = await s3Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
-    while (listedObjects.Contents && listedObjects.Contents.length > 0) {
-      await s3Client.send(
-        new DeleteObjectsCommand({
-          Bucket: bucketName,
-          Delete: { Objects: listedObjects.Contents.map((c) => ({ Key: c.Key! })) },
-        })
-      );
-      listedObjects = await s3Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
-    }
-    console.log("S3 Bucket cleared.");
+    console.log("Emptying storage container...");
+    await storage.emptyContainer();
+    console.log("Storage container cleared.");
   } catch (err: any) {
-    console.log("S3 bucket empty failed:", err.message);
+    console.log("Storage container empty failed:", err.message);
   }
 
-  // 4. Wait a few seconds to ensure backend is fully reachable
+  // 3. Wait a few seconds to ensure backend is fully reachable
   console.log("Waiting for backend API to be ready...");
   await new Promise(r => setTimeout(r, 5000));
 
-  // 5. Seed Users
+  // 4. Seed Users
   const internalApi = new Api();
   const users = [
     { name: "Instructor", email: "instructor@edunode.dev", password: "Seeded@123", role: "instructor" },
@@ -82,7 +65,7 @@ async function seed() {
   }
   console.log("Users registered via API.");
 
-  // 6. Instructor Creates Courses & Uploads Videos
+  // 5. Instructor Creates Courses & Uploads Videos
   const instApi = new Api();
   await instApi.request("POST", "/users/signin", { email: "instructor@edunode.dev", password: "Seeded@123" });
   
@@ -115,22 +98,38 @@ async function seed() {
       title: "Test Lecture", description: "Lecture details", fileName: videoFile.name, contentType: "video/mp4", order: 1
     });
     
-    const { presignedUrl, s3Key, uploadSessionId, lecture: { _id: lectureId } } = lecRes.data;
+    const { presignedUrl, uploadHeaders, storageKey, uploadSessionId, lecture: { _id: lectureId } } = lecRes.data;
     courseLecs[cid] = lectureId;
     uploadSessionsToWait.push({ sessionId: uploadSessionId, lectureId });
 
-    console.log("PUT to S3 presigned URL...");
-    await fetch(presignedUrl, { method: "PUT", body: videoBuffer, headers: { "Content-Type": "video/mp4" } });
+    if (storage.provider === "localstack") {
+      // LocalStack presigned URLs use the browser-facing localhost host,
+      // which the seed cannot reach from inside the backend container.
+      console.log("Uploading video through the local storage provider...");
+      await storage.uploadObject(storageKey, videoBuffer, "video/mp4");
+    } else {
+      console.log("Uploading video to storage...");
+      const uploadRes = await fetch(presignedUrl, {
+        method: "PUT",
+        body: videoBuffer,
+        headers: { "Content-Type": "video/mp4", ...(uploadHeaders ?? {}) },
+      });
+      if (!uploadRes.ok) {
+        throw new Error(
+          `Storage upload failed: ${uploadRes.status} ${await uploadRes.text()}`,
+        );
+      }
+    }
 
     console.log("Confirming upload internally...");
-    await internalApi.request("POST", "/internal/media/confirm-upload", { s3Key }, { "x-internal-secret": process.env.INTERNAL_API_SECRET });
+    await internalApi.request("POST", "/internal/media/confirm-upload", { storageKey }, { "x-internal-secret": process.env.INTERNAL_API_SECRET });
 
 
     console.log("Adding announcement...");
     await instApi.request("POST", `/courses/${cid}/announce`, { message: "Welcome to this newly seeded course!" });
   }
 
-  // 7. Enrolled Students actions in Free Course
+  // 6. Enrolled Students actions in Free Course
   console.log("Enrolling students and adding comments...");
   const enrolledEmails = ["alice@edunode.dev", "bob@edunode.dev", "charlie@edunode.dev"];
   const freeLecId = courseLecs[freeCourseId];

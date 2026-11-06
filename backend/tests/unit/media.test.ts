@@ -49,7 +49,8 @@ describe("Media Routes", () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data.uploadSessionId).toBeDefined();
       expect(res.body.data.presignedUrl).toContain("mock-presigned-url");
-      expect(res.body.data.s3Key).toContain(`avatars/users/${testUserId}/`);
+      expect(res.body.data.storageKey).toContain(`avatars/users/${testUserId}/`);
+      expect(res.body.data.uploadHeaders).toEqual({});
     });
 
     it("should reject avatar upload if entityId does not match user id", async () => {
@@ -69,27 +70,27 @@ describe("Media Routes", () => {
   });
 
   describe("Internal Media Routes", () => {
-    let testS3Key: string;
+    let testStorageKey: string;
 
     beforeEach(async () => {
-      testS3Key = "test-s3-key";
+      testStorageKey = "test-storage-key";
       await MediaUpload.create({
         uploadSessionId: uuidv4(),
         userId: new mongoose.Types.ObjectId(testUserId),
         entityType: "avatar",
         entityId: testUserId,
-        s3Key: testS3Key,
+        storageKey: testStorageKey,
         status: EMediaUploadStatus.PENDING_UPLOAD,
         presignedUrlExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
       });
     });
 
-    it("should allow Lambda to confirm upload with correct secret", async () => {
+    it("should allow the storage trigger to confirm upload with correct secret", async () => {
       const res = await request(app)
         .post("/api/v1/internal/media/confirm-upload")
         .set("x-internal-secret", process.env.INTERNAL_API_SECRET || "test-internal-secret")
         .send({
-          s3Key: testS3Key,
+          storageKey: testStorageKey,
         });
 
       expect(res.status).toBe(200);
@@ -101,7 +102,7 @@ describe("Media Routes", () => {
         .post("/api/v1/internal/media/confirm-upload")
         .set("x-internal-secret", "wrong-secret")
         .send({
-          s3Key: testS3Key,
+          storageKey: testStorageKey,
         });
 
       expect(res.status).toBe(403);

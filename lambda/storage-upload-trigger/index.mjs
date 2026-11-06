@@ -1,17 +1,34 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
-const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
+const queueRegion =
+  process.env.QUEUE_REGION || process.env.AWS_REGION || "us-east-1";
+const queueEndpoint = process.env.QUEUE_ENDPOINT || undefined;
+
+const sqsClient = new SQSClient({
+  region: queueRegion,
+  ...(queueEndpoint
+    ? {
+        endpoint: queueEndpoint,
+        credentials: {
+          accessKeyId: process.env.QUEUE_ACCESS_KEY || "test",
+          secretAccessKey: process.env.QUEUE_SECRET_KEY || "test",
+        },
+      }
+    : {}),
+});
 
 export const handler = async (event) => {
   console.log("Received event:", JSON.stringify(event, null, 2));
 
   for (const record of event.Records) {
-    const s3Key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
-    const bucket = record.s3.bucket.name;
+    const storageKey = decodeURIComponent(
+      record.s3.object.key.replace(/\+/g, " "),
+    );
+    const container = record.s3.bucket.name;
 
-    console.log(`Processing file: ${s3Key} from bucket: ${bucket}`);
+    console.log(`Processing file: ${storageKey} from container: ${container}`);
 
-    const keyParts = s3Key.split("/");
+    const keyParts = storageKey.split("/");
 
     if (keyParts.includes("hls")) {
       console.log("HLS segment detected, skipping processing.");
@@ -27,7 +44,7 @@ export const handler = async (event) => {
             "Content-Type": "application/json",
             "x-internal-secret": process.env.INTERNAL_API_SECRET,
           },
-          body: JSON.stringify({ s3Key }),
+          body: JSON.stringify({ storageKey }),
         },
       );
 
@@ -48,28 +65,28 @@ export const handler = async (event) => {
 
     if (isRawLectureVideo) {
       const payload = {
-        s3Key,
+        storageKey,
         courseId: keyParts[2],
         lectureId: keyParts[4],
-        bucket,
+        container,
       };
 
-      console.log("Dispatching SQS job for lecture video:", payload);
+      console.log("Dispatching media job:", payload);
 
       const command = new SendMessageCommand({
-        QueueUrl: process.env.SQS_QUEUE_URL,
+        QueueUrl: process.env.QUEUE_URL || process.env.SQS_QUEUE_URL,
         MessageBody: JSON.stringify(payload),
       });
 
       try {
         await sqsClient.send(command);
-        console.log("SQS message sent successfully");
+        console.log("Queue message sent successfully");
       } catch (error) {
-        console.error("Error sending message to SQS (skipping):", error);
+        console.error("Error sending message to the queue (skipping):", error);
       }
     } else {
       console.log(
-        "Non-video upload (image/avatar) confirmed, no SQS dispatch.",
+        "Non-video upload (image/avatar) confirmed, no media job dispatched.",
       );
     }
   }

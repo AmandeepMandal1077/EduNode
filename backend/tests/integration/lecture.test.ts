@@ -58,7 +58,7 @@ describe("Lecture Controller Integration Tests", () => {
       videoUrl: "https://example.com/video.mp4",
       courseId: course._id,
       uploadStatus: EUploadStatus.READY,
-      s3Key: "some/s3/key.mp4",
+      storageKey: "some/storage/key.mp4",
       uploadSessionId: "mock-session-id",
     });
     lectureId = lecture._id.toString();

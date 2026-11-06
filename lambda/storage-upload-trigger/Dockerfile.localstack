@@ -1,0 +1,13 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache zip
+
+WORKDIR /trigger
+
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY index.mjs ./
+RUN npm run package
+
+CMD ["sh", "-c", "cp package.zip /out/package.zip"]

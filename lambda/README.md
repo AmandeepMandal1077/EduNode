@@ -1,66 +1,83 @@
-# EduNode — AWS Lambda Functions
+# EduNode — AWS / LocalStack Trigger
 
-This directory contains the serverless functions deployed to AWS that handle event-driven tasks for the EduNode platform.
+This directory contains the AWS Lambda function used for event-driven media
+uploads. The same function runs inside LocalStack during local development.
 
-These functions are internal microservices and are not directly exposed to the public client.
+The function is an internal microservice and is not exposed to the public client.
 
 ---
 
 ## Functions
 
-### s3-upload-trigger
+### storage-upload-trigger
 
-An event-driven Node.js function triggered by S3 bucket events (`s3:ObjectCreated:*`).
+An event-driven Node.js function triggered by object storage events
+(`s3:ObjectCreated:*` on AWS, the equivalent notification inside LocalStack).
 
-#### Flow
+### Flow
 
-1. **Trigger**: An instructor uploads a raw lecture video (`.mp4`) to the S3 bucket path matching: `root/courses/{courseId}/lectures/{lectureId}/{filename}.mp4`.
-2. **Backend Notification**: The Lambda makes an internal POST request to the backend's `/api/v1/internal/media/confirm-upload` endpoint (secured via `x-internal-secret`) to transition the lecture upload status from pending to uploaded.
-3. **Queue Dispatch**: The Lambda publishes an SQS message to the video transcoding queue with a payload containing:
-   - `s3Key`: Path to the raw video file
-   - `bucket`: S3 bucket name
-   - `courseId`: Associated course identifier
-   - `lectureId`: Associated lecture identifier
-4. **HLS Ignore**: The Lambda is configured to ignore uploads inside `hls/` subfolders to prevent infinite event loops when the media worker uploads transcoded streaming segments.
+1. **Trigger**: An instructor uploads a raw lecture video (`.mp4`) to
+   `root/courses/{courseId}/lectures/{lectureId}/{filename}.mp4`.
+2. **Backend Notification**: The function calls
+   `POST /api/v1/internal/media/confirm-upload` (secured with `x-internal-secret`)
+   to move the lecture from `PENDING_UPLOAD` to `UPLOADED`.
+3. **Queue Dispatch**: It publishes a media job with:
+   - `storageKey`: path to the raw video
+   - `container`: bucket/container name
+   - `courseId`
+   - `lectureId`
+4. **HLS Ignore**: Keys containing an `hls` path segment are skipped to prevent
+   the worker's HLS output from re-triggering the pipeline.
 
 ---
 
 ## Directory Structure
 
-```
+```text
 lambda/
-├── .gitignore
-└── s3-upload-trigger/
-    ├── index.mjs         # Lambda entrypoint handler
-    ├── package.json      # Node.js dependencies
-    ├── .env.example      # Example environment variables for testing
-    └── package.zip       # Zip archive prepared for AWS upload
+└── storage-upload-trigger/
+    ├── index.mjs                # Lambda entrypoint
+    ├── package.json             # `npm run package` builds package.zip
+    ├── Dockerfile.localstack    # Builds the zip for LocalStack
+    ├── .env.example
+    └── package.zip              # generated, not committed
 ```
 
 ---
 
 ## Environment Variables
 
-The Lambda function expects the following environment variables:
-
-| Variable              | Description                                                               |
-| --------------------- | ------------------------------------------------------------------------- |
-| `AWS_REGION`          | Target AWS Region (e.g., `us-east-1` or `ap-south-1`)                     |
-| `SQS_QUEUE_URL`       | URL of the SQS queue where transcoding jobs are sent                      |
-| `BACKEND_URL`         | Base URL of the backend API (e.g., `http://backend:3000`)                 |
-| `INTERNAL_API_SECRET` | Secret token used to authenticate calls to the internal backend endpoints |
+| Variable | Description |
+| --- | --- |
+| `BACKEND_URL` | Backend base URL, reachable from the trigger |
+| `INTERNAL_API_SECRET` | Must match the backend |
+| `QUEUE_URL` | Media queue URL (legacy `SQS_QUEUE_URL` also accepted) |
+| `QUEUE_REGION` | Queue region (falls back to `AWS_REGION`) |
+| `QUEUE_ENDPOINT` | Set for LocalStack/SQS-compatible endpoints |
+| `QUEUE_ACCESS_KEY` / `QUEUE_SECRET_KEY` | Optional queue credentials |
 
 ---
 
-## Local Development and Packaging
-
-### Packaging for AWS
-
-AWS Lambda requires node dependencies to be bundled. To package the function:
+## Packaging
 
 ```bash
-cd s3-upload-trigger
-npm install --production
-# Create zip containing index.mjs and node_modules
-zip -r package.zip index.mjs node_modules package.json
+cd lambda/storage-upload-trigger
+npm ci
+npm run package
 ```
+
+`package.zip` contains `index.mjs`, `package.json` and `node_modules`.
+
+Do **not** commit `package.zip`; rebuild it for every deployment. The LocalStack
+Compose stack builds it automatically with `Dockerfile.localstack`.
+
+---
+
+## Local Development
+
+LocalStack runs this function automatically. The `localstack/init/01-provision.sh`
+script creates the bucket, queue, IAM role, function and S3 notification — the
+same actions you would perform in the AWS console.
+
+See [DEPLOY_STEPS.md](../DEPLOY_STEPS.md#localstack) for the local flow and
+[DEPLOY_STEPS.md](../DEPLOY_STEPS.md#aws) for AWS deployment.

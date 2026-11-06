@@ -53,6 +53,10 @@ export function useCourseDetails(id: string | undefined) {
 
   const handleEnroll = async () => {
     if (!course) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
     if (enrolled) {
       const firstLecture = course.modules[0]?.lectures[0];
       if (firstLecture) navigate(`/learn/${course.id}/lecture/${firstLecture.id}`);

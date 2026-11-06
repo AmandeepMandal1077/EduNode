@@ -1,0 +1,13 @@
+{
+  "name": "storage-upload-trigger",
+  "version": "1.0.0",
+  "description": "Lambda function triggered by storage uploads to dispatch media jobs",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "package": "zip -r -q package.zip index.mjs package.json node_modules"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1085.0"
+  }
+}

@@ -9,8 +9,9 @@ export interface UploadSessionRequest {
 
 export interface UploadSessionResponse {
   uploadSessionId: string;
-  s3Key: string;
+  storageKey: string;
   presignedUrl: string;
+  uploadHeaders?: Record<string, string>;
   expiresAt: string;
 }
 

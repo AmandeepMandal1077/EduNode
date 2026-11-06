@@ -1,12 +1,17 @@
-FROM oven/bun:latest
+FROM oven/bun:1-alpine
 
 WORKDIR /app
 
-COPY package.json ./
-COPY bun.lock ./
+ENV NODE_ENV=production
 
-RUN bun install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
 COPY . .
 
-CMD ["bun", "run", "start"]
+RUN addgroup -S app && adduser -S app -G app
+USER app
+
+EXPOSE 3000
+
+CMD ["bun", "run", "src/index.ts"]

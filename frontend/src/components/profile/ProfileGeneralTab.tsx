@@ -119,7 +119,10 @@ export function ProfileGeneralTab({ user, setUser }: ProfileGeneralTabProps) {
                 );
                 const statusObj = await waitForUploadReady(uploadSessionId);
                 if (statusObj.status === "READY" || statusObj.status === "UPLOADED") {
-                  setUser({ ...user, avatarUrl: statusObj.finalUrl });
+                  setUser({
+                    ...user,
+                    avatarUrl: statusObj.finalUrl ?? user.avatarUrl,
+                  });
                 } else {
                   setGeneralError(`Upload failed with status: ${statusObj.status}`);
                 }

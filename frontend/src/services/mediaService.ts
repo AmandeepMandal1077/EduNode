@@ -1,14 +1,16 @@
 import axios from "axios";
 import { requestUploadSession, pollUploadStatus, type UploadSessionRequest } from "../api/mediaApi";
 
-export const uploadFileToS3 = async (
-  presignedUrl: string,
+export const uploadFileToStorage = async (
+  uploadUrl: string,
   file: File,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  uploadHeaders: Record<string, string> = {}
 ): Promise<void> => {
-  await axios.put(presignedUrl, file, {
+  await axios.put(uploadUrl, file, {
     headers: {
       "Content-Type": file.type,
+      ...uploadHeaders,
     },
     onUploadProgress: (progressEvent) => {
       if (onProgress) {
@@ -27,7 +29,7 @@ export const requestAndUpload = async (
   entityId: string,
   file: File,
   onProgress?: (percent: number) => void
-): Promise<{ uploadSessionId: string, s3Key: string }> => {
+): Promise<{ uploadSessionId: string, storageKey: string }> => {
   const session = await requestUploadSession({
     type,
     entityId,
@@ -35,8 +37,16 @@ export const requestAndUpload = async (
     contentType: file.type,
   });
 
-  await uploadFileToS3(session.presignedUrl, file, onProgress);
-  return { uploadSessionId: session.uploadSessionId, s3Key: session.s3Key };
+  await uploadFileToStorage(
+    session.presignedUrl,
+    file,
+    onProgress,
+    session.uploadHeaders
+  );
+  return {
+    uploadSessionId: session.uploadSessionId,
+    storageKey: session.storageKey,
+  };
 };
 
 export const waitForUploadReady = async (

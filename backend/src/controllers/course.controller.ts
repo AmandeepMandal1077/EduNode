@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { AuthenticatedRequest } from "../types/user.js";
 import mongoose from "mongoose";
 
@@ -14,7 +14,7 @@ import {
 } from "../cache/courses-cache.js";
 import { Announcement } from "../models/announcement.model.js";
 import { CoursePurchase } from "../models/coursePurchase.model.js";
-import { generatePresignedPutUrl } from "../utils/s3.js";
+import { getStorage } from "../storage/index.js";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -223,7 +223,38 @@ export const updateCourseDetails = asyncHandler(
 );
 
 /**
- * @desc Fetches complete details of a specific course by its ID.
+ * @desc Fetches a published course for anyone, without requiring a token.
+ * @input {Request} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @input {NextFunction} next - Passes the request on to the auth + owner handlers when the course is a draft.
+ * @output {Promise<void>} Sends the course data or calls next().
+ */
+export const getPublishedCourseDetails = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { courseId } = req.params;
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid courseId", 400);
+    }
+
+    const course = await Course.findOne({
+      _id: new mongoose.Types.ObjectId(courseId),
+      isPublished: true,
+    }).populate("instructor", "name bio avatar");
+
+    if (!course) {
+      return next();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Course fetched successfully",
+      data: { course },
+    });
+  },
+);
+
+/**
+ * @desc Fetches complete details of a draft course owned by the authenticated instructor.
  * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
  * @input {Response} res - The Express response object.
  * @output {Promise<void>} Sends a JSON response with the course data.
@@ -236,9 +267,14 @@ export const getCourseDetails = asyncHandler(
       throw new ApiError("Invalid courseId", 400);
     }
 
-    const course = await Course.findById(
-      new mongoose.Types.ObjectId(courseId),
-    ).populate("instructor", "name bio avatar");
+    const course = await Course.findOne({
+      _id: new mongoose.Types.ObjectId(courseId),
+      instructor: new mongoose.Types.ObjectId(userId),
+    }).populate("instructor", "name bio avatar");
+
+    if (!course) {
+      throw new ApiError("Course not found", 404);
+    }
 
     return res.status(200).json({
       success: true,
@@ -276,13 +312,20 @@ export const addLectureToCourse = asyncHandler(
     const uploadSessionId = uuidv4();
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
 
-    // Prepare S3 Key
+    // Prepare the object key. Layout is a contract with the trigger and worker.
     const tempLectureId = new mongoose.Types.ObjectId();
-    const s3Key = `root/courses/${courseId}/lectures/${tempLectureId}/${Date.now()}_${fileName}`;
+    const storageKey = `root/courses/${courseId}/lectures/${tempLectureId}/${Date.now()}_${fileName}`;
 
     let presignedUrl = "";
+    let uploadHeaders: Record<string, string> = {};
     try {
-      presignedUrl = await generatePresignedPutUrl(s3Key, contentType, 900);
+      const uploadTarget = await getStorage().createUploadTarget(
+        storageKey,
+        contentType,
+        900,
+      );
+      presignedUrl = uploadTarget.url;
+      uploadHeaders = uploadTarget.headers;
     } catch (error) {
       throw new ApiError("Failed to generate presigned upload URL", 500);
     }
@@ -299,7 +342,7 @@ export const addLectureToCourse = asyncHandler(
             title,
             description,
             courseId: course._id,
-            s3Key,
+            storageKey,
             uploadSessionId,
             presignedUrlExpiresAt: expiresAt,
             uploadStatus: EUploadStatus.PENDING_UPLOAD,
@@ -351,8 +394,9 @@ export const addLectureToCourse = asyncHandler(
       data: {
         lecture: lecture,
         presignedUrl,
+        uploadHeaders,
         uploadSessionId,
-        s3Key,
+        storageKey,
         expiresAt,
       },
     });
@@ -360,7 +404,48 @@ export const addLectureToCourse = asyncHandler(
 );
 
 /**
- * @desc Fetches all lectures for a specific course.
+ * @desc Fetches all lectures of a published course for anyone, without requiring a token.
+ * @input {Request} req - The Express request object containing the courseId parameter.
+ * @input {Response} res - The Express response object.
+ * @input {NextFunction} next - Passes the request on to the auth + owner handlers when the course is a draft.
+ * @output {Promise<void>} Sends the course's lectures or calls next().
+ */
+export const getPublishedCourseLectures = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { courseId } = req.params;
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new ApiError("Invalid courseId", 400);
+    }
+
+    const course = await Course.findOne({
+      _id: new mongoose.Types.ObjectId(courseId),
+      isPublished: true,
+    })
+      .select("lectures")
+      .populate({
+        path: "lectures",
+        match: {
+          $or: [
+            { uploadStatus: { $exists: false } },
+            { uploadStatus: EUploadStatus.READY },
+          ],
+        },
+      });
+
+    if (!course) {
+      return next();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Lectures fetched successfully",
+      data: { lectures: course },
+    });
+  },
+);
+
+/**
+ * @desc Fetches all lectures for a draft course owned by the authenticated instructor.
  * @input {AuthenticatedRequest} req - The Express request object containing the courseId parameter.
  * @input {Response} res - The Express response object.
  * @output {Promise<void>} Sends a JSON response with the course's lectures.
@@ -372,9 +457,10 @@ export const getCourseLectures = asyncHandler(
       throw new ApiError("Invalid courseId", 400);
     }
 
-    const lectures = await Course.findById(
-      new mongoose.Types.ObjectId(courseId),
-    )
+    const lectures = await Course.findOne({
+      _id: new mongoose.Types.ObjectId(courseId),
+      instructor: new mongoose.Types.ObjectId(req.userId),
+    })
       .select("lectures")
       .populate({
         path: "lectures",
@@ -385,6 +471,10 @@ export const getCourseLectures = asyncHandler(
           ],
         },
       });
+
+    if (!lectures) {
+      throw new ApiError("Course not found", 404);
+    }
 
     return res.status(200).json({
       success: true,
